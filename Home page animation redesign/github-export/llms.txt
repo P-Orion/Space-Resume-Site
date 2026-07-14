@@ -1,0 +1,39 @@
+# Orion Powers
+
+> Software engineer building AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi. Computer Science student at the Florida Institute of Technology, graduating December 2026. Based in Melbourne, Florida.
+
+Three professional engineering roles across defense (DoD), SaaS, and applied machine learning. Core areas: full-stack web development (React, Angular, TypeScript, FastAPI), machine learning (Azure ML, local LLMs via Ollama), and hardware prototyping (NFC, 3D printing, laser cutting). A DoD security clearance is in process. This file follows the [llms.txt](https://llmstxt.org) convention for AI agents and assistants — for the full interactive presentation, see the homepage.
+
+## Background
+
+- Current role: Software Engineer Intern at Modus Operandi (Oct 2024–present), building DoD decision-support software for the U.S. Air Force and Navy.
+- Education: B.S. Computer Science, Florida Institute of Technology, expected December 2026 (110/126 credit hours).
+- Location: Melbourne, Florida, USA.
+- Contact: orionthanhpowers@gmail.com · +1 (502) 232-8043 · [LinkedIn](https://linkedin.com/in/orion-powers)
+
+## Experience
+
+- **Modus Operandi** — Software Engineer Intern (Oct 2024–Present): engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics); led LOGEN's Angular 19→21 upgrade; built a Go.js knowledge-graph for LLM decision transparency; implemented Keycloak RBAC and CAPCO classification marking. Worked on-site with the Air Force's 363rd ISR Wing at Joint Base Langley-Eustis. Stack: Angular, TypeScript, FastAPI, Go.js, Keycloak.
+- **Hyperformant** — Software Engineer Intern (May 2024–Oct 2024): shipped a production SaaS platform in React/TypeScript; rebuilt the marketing site with interactive 3D (Figma/Spline → Svelte/Webflow). Stack: React, TypeScript, Svelte, Supabase, Webflow, Spline.
+- **RARE T Holdings** — Software Engineer (Dec 2022–Jun 2023): built Azure ML models that read and document invoices automatically, doubling pipeline throughput; created autonomous content workflows with the ChatGPT API and Power Automate. Stack: Azure ML, Java, TypeScript, ChatGPT API, Power Automate.
+
+## Projects
+
+- LLM Network Analyzer (2025): upload a packet capture, get a plain-English security briefing — Gemma 2 12B runs fully on-device via Ollama, six anomaly-detection categories, no packet ever leaves the machine. Stack: Python, FastAPI, Scapy, Angular, Ollama.
+- BrainBench (Senior Design, 2025–26): benchmarks small local LLMs (Qwen3, Gemma 3, Phi-3) on mathematical reasoning with a matched-subset statistical methodology; presented at the Northrop Grumman Engineering & Science Student Design Showcase; revised into IEEE conference format.
+- NFC Business Cards (2023): laser-engraved business cards with embedded NFC chips that open this site on tap — designed, programmed, and finished by hand.
+- Also built: a production SaaS platform and a marketing-site rebuild (Hyperformant), an ML invoice processor and an autonomous content workflow (RARE T Holdings), and several 3D-printed prototypes (Fusion 360/CAD).
+
+## Skills
+
+Languages: JavaScript, TypeScript, Python, Java, HTML/CSS. Frameworks: React, Angular, Svelte, Next.js, Tailwind CSS, FastAPI. Data & backend: SQL, MongoDB, Firebase, Supabase, REST, GraphQL, Keycloak, JWT. Cloud & tools: Git, Docker, AWS, Azure, CI/CD, Vercel. Design/UI: Figma, Framer, Webflow, responsive design, accessibility. Machine learning: TensorFlow, Azure ML, NLP, Ollama, local LLMs, prompt engineering. Agentic AI: Claude Code, MCP servers, multi-agent orchestration. Hardware: NFC, laser cutting, Fusion 360, 3D printing.
+
+## Links
+
+- [Portfolio homepage](https://orionpowers.com/): full résumé site — experience, education, projects, skills, contact.
+- [Résumé (PDF)](https://orionpowers.com/documents/Orion-Powers-Resume.pdf)
+- [LinkedIn](https://linkedin.com/in/orion-powers)
+
+## Optional
+
+- [NFC Business Cards — LinkedIn post](https://www.linkedin.com/posts/orion-powers_introducing-my-custom-engineered-nfc-business-activity-7239603602313400321-lHvd)

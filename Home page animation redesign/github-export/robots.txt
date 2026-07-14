@@ -1,0 +1,48 @@
+# orionpowers.com — this is a personal portfolio/résumé site.
+# Everything here is meant to be found, read, and cited — no crawler is blocked.
+
+User-agent: *
+Allow: /
+
+# --- AI assistants & answer engines (explicitly allowed) ---
+# OpenAI
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: Claude-User
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+
+# Google (AI training/features, separate from Googlebot search indexing)
+User-agent: Google-Extended
+Allow: /
+
+# Apple, Amazon, Meta, ByteDance, Common Crawl (feeds many third-party LLMs)
+User-agent: Applebot-Extended
+Allow: /
+User-agent: Amazonbot
+Allow: /
+User-agent: meta-externalagent
+Allow: /
+User-agent: Bytespider
+Allow: /
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://orionpowers.com/sitemap.xml
