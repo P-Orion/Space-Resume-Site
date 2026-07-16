@@ -52,7 +52,7 @@
       "@id": "https://orionpowers.com/#person",
       "name": "Orion Powers",
       "url": "https://orionpowers.com/",
-      "image": "https://orionpowers.com/images/profile.jpg",
+      "image": "https://orionpowers.com/images/profile.webp",
       "jobTitle": "Software Engineer",
       "description": "Software engineer building AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi.",
       "email": "mailto:orionthanhpowers@gmail.com",
@@ -101,7 +101,8 @@
      stuck fullscreen intro overlay) so this clean fallback is what's shown. */
   x-dc{display:none!important}
   body{background:#070709;color:#ece7db;font-family:Georgia,'Cormorant Garamond',serif}
-  #ax-noscript-fallback{max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
+  /* override the inline display:none (present so the fallback stays hidden when JS works) */
+  #ax-noscript-fallback{display:block!important;max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
   #ax-noscript-fallback h1{font-size:2.4em;margin:0 0 4px;color:#ece7db}
   #ax-noscript-fallback h2{color:#d3b078;border-top:1px solid #33302a;margin-top:2em;padding-top:.6em;font-size:1.5em}
   #ax-noscript-fallback h3{color:#ece7db;margin-bottom:.2em}
@@ -248,8 +249,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  html{scroll-behavior:smooth}
-  body{margin:0;background:#070709;overflow-x:clip}
+  html{scroll-behavior:smooth;overflow-x:hidden;width:100%}
+  body{margin:0;background:#070709;overflow-x:hidden;width:100%}
   ::selection{background:#d3b078;color:#070709}
   html.ax-cursor, html.ax-cursor *{cursor:none}
   #ax-nav::-webkit-scrollbar{display:none}
@@ -266,6 +267,18 @@
   @keyframes ax-rot{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
   @keyframes ax-rot-r{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(-360deg)}}
   @media (prefers-reduced-motion: reduce){.ax-anim{animation:none !important}}
+  /* ---- low-tier devices: strip the costliest GPU work (large-radius blur + backdrop-
+     filter compositing) instead of tuning every inline style by hand. Attribute selectors
+     match the existing inline styles directly, so the DC-authored markup stays untouched. ---- */
+  .ax-tier-low .ax-anim{animation:none !important}
+  /* the 4 hero nebula layers each carry their own 26-44px blur (4 separate GPU blur
+     passes) — zero each child's blur and blur the already-composited group ONCE instead,
+     at a smaller radius. Cheaper than any single one of the originals, and keeps the haze
+     look instead of going flat. */
+  .ax-tier-low #ax-hero-neb>div{filter:none !important}
+  .ax-tier-low #ax-hero-neb{filter:blur(18px)}
+  .ax-tier-low [style*="blur("]{filter:none !important}
+  .ax-tier-low [style*="backdrop-filter"]{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:rgba(7,7,9,.92) !important}
   /* ---- responsive hero + nav ---- */
   .ax-scroll-cue{transition:opacity .4s ease}
   /* the in-hero meta strip duplicates the fixed top bar (O·P) and always sits behind it — drop it so the top stays clean at every width */
@@ -273,6 +286,27 @@
   @media (max-width:760px){
     /* top nav can't fit 6 items on a phone — make it a left-aligned, swipeable strip with a soft edge fade */
     #ax-nav{justify-content:flex-start !important;gap:17.6px !important;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 30px),transparent 100%);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 30px),transparent 100%)}
+    /* the Education rocket trail's height was vh-based, tuned for landscape desktops where it
+       happens to land close to the SVG's own ~0.58 (700/1200) aspect ratio. On a tall narrow
+       phone that produced a container far taller than wide, so the cover-fit SVG (xMidYMid
+       slice) zoomed in hard and cropped out most of the swoop — the ship was only ever in
+       frame for a sliver of its flight — while the oversized blurred overlay (up to 864px,
+       more than one phone screen) cost extra paint/compositing for no visual benefit. Tying
+       the height to width instead keeps the aspect ratio (and the crop) close to the desktop
+       version regardless of orientation, and shrinks the paint area substantially.  */
+    #ax-rk-wrap{height:min(58vw,420px) !important}
+  }
+  @media (min-width:761px){
+    /* desktop only: the trail's original launch point (M-60,820) sits only just past the
+       viewBox edge, and on the wide/short containers typical of desktop windows the cover-fit
+       SVG (xMidYMid slice) crops very little off the sides — so the ship's fade-in and the
+       trail's draw-on both started already inside the visible frame instead of entering from
+       off-screen. Extending the launch point further down-left (well outside the cropped
+       viewport on any realistic desktop window) so the whole entrance happens off-canvas and
+       the ship arrives already in flight. Left untouched on mobile, where the trail is shown
+       close to full-length already (see the max-width:760px block above). */
+    #ax-rk-glow, #ax-rk-path{d:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30') !important}
+    #ax-rk-ship{offset-path:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30') !important}
   }
   @media (max-height:720px) and (min-width:761px){
     /* short desktop windows: pull the hero in and shrink the display name so the CTAs stay above the fold */
@@ -288,6 +322,21 @@
      reaches the <image-slot> custom element inside — it stays at its shadow-DOM default
      of 240x160px. Target the slots directly so they fill their project-card frames. */
   #slot-analyzer, #slot-brainbench, #slot-nfc{width:100% !important;height:100% !important;display:block !important}
+  /* Project cards (Selected works): title/media/body are separate DOM siblings so
+     mobile can stack them in a fixed title -> image -> text order via `order`, while
+     desktop repositions them into a two-column layout (image left or right) with
+     grid-template-areas — independent of DOM order. */
+  .ax-proj{display:grid;grid-template-columns:1fr;gap:clamp(22.4px,5vw,32px)}
+  .ax-proj-title{order:1}
+  .ax-proj-media{order:2;position:relative}
+  .ax-proj-body{order:3}
+  @media (min-width:761px){
+    .ax-proj{grid-template-columns:1fr 1fr;column-gap:clamp(22.4px,5vw,57.6px);row-gap:14.4px;align-items:center;grid-template-areas:"title media" "body media"}
+    .ax-proj.ax-proj-rev{grid-template-areas:"media title" "media body"}
+    .ax-proj-title{order:initial;grid-area:title}
+    .ax-proj-media{order:initial;grid-area:media}
+    .ax-proj-body{order:initial;grid-area:body}
+  }
 </style>
 </helmet>
 
@@ -483,7 +532,7 @@
           </div>
           <div style="position:absolute;inset:-12.8px;border:1px solid rgba(211,176,120,.3);border-radius:999px 999px 3px 3px;pointer-events:none"></div>
           <div style="overflow:hidden;border-radius:999px 999px 2px 2px;aspect-ratio:3/3.9">
-            <img src="images/profile.jpg" alt="Orion Powers" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;filter:saturate(.88) contrast(1.03)">
+            <img src="images/profile.webp" alt="Orion Powers" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;filter:saturate(.88) contrast(1.03)">
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:20.8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c"><span>Fig. 01</span><span>Orion — not the constellation</span></div>
         </div>
@@ -497,7 +546,7 @@
             <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Location</div><div style="font:400 11.2px Outfit,sans-serif;color:#ece7db">Melbourne, Florida</div></div>
             <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Email</div><a href="mailto:orionthanhpowers@gmail.com" style="font:400 11.2px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">orionthanhpowers@gmail.com</a></div>
             <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Phone</div><div style="font:400 11.2px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043</div></div>
-            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">LinkedIn</div><a href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="font:400 11.2px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">in/orion-powers ↗</a></div>
+            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">LinkedIn</div><a href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4.8px;font:400 11.2px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a></div>
           </div>
         </div>
       </div>
@@ -507,7 +556,7 @@
 
   <!-- EDUCATION -->
   <section id="ax-edu" data-screen-label="Education" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
-    <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:clamp(544px,105vh,864px);pointer-events:none;overflow:hidden">
+    <div id="ax-rk-wrap" aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:clamp(544px,105vh,864px);pointer-events:none;overflow:hidden">
       <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible">
         <defs>
           <linearGradient id="ax-rk-grad" x1="0" y1="1" x2="1" y2="0">
@@ -517,8 +566,8 @@
           </linearGradient>
           <filter id="ax-rk-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
         </defs>
-        <path id="ax-rk-glow" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="10" stroke-linecap="round" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
-        <path id="ax-rk-path" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.2" stroke-linecap="round"></path>
+        <path id="ax-rk-glow" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="10" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
+        <path id="ax-rk-path" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
         <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-60,820 C170,420 520,190 1560,-30');offset-rotate:auto">
           <path d="M11,0 C7,-3.6 -1,-3.4 -7,-2 L-7,2 C-1,3.4 7,3.6 11,0 Z" fill="#ece7db"></path>
           <path d="M-6.6,-2.2 L-11.5,-5.6 L-8.2,-1 Z" fill="#d3b078"></path>
@@ -778,54 +827,60 @@
       </h2>
 
       <!-- W01 — LLM Network Analyzer -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,272px),1fr));gap:clamp(22.4px,5vw,57.6px);align-items:center;margin-bottom:clamp(44.8px,9vh,89.6px)">
-        <div data-rv="100" style="order:1">
+      <div class="ax-proj" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
+        <div data-rv="0" class="ax-proj-title">
           <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·01 — PERSONAL, 2025</div>
-          <h3 style="margin:0 0 14.4px;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">LLM Network Analyzer</h3>
-          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Upload a packet capture, get a plain-English security briefing — Gemma 2 12B runs fully on-device via Ollama, so no packet ever leaves the machine. The hard part was getting a general-purpose local model to return consistent, six-category structured findings instead of free-form text; solved with constrained prompting and a streaming WebSocket pipeline, so results appear as they're generated, then export as a shareable report.</p>
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">Python · FastAPI · Scapy · Angular · Ollama · Gemma 2</div>
+          <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">LLM Network Analyzer</h3>
         </div>
-        <div data-rv="0" style="position:relative;order:2">
+        <div data-rv="60" class="ax-proj-media">
           <div style="overflow:hidden;border-radius:2px;aspect-ratio:16/10;background:#0c0c11">
-            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-analyzer" shape="rect" src="images/network-analyzer.png" fit="cover" placeholder="Drop a screenshot of the analyzer UI" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-analyzer" shape="rect" src="images/network-analyzer.webp" fit="cover" placeholder="Drop a screenshot of the analyzer UI" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
           </div>
           <span style="position:absolute;top:-7.2px;right:-7.2px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7)"></span>
           <span style="position:absolute;bottom:-7.2px;left:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7)"></span>
         </div>
+        <div data-rv="120" class="ax-proj-body">
+          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Upload a packet capture, get a plain-English security briefing — Gemma 2 12B runs fully on-device via Ollama, so no packet ever leaves the machine. The hard part was getting a general-purpose local model to return consistent, six-category structured findings instead of free-form text; solved with constrained prompting and a streaming WebSocket pipeline, so results appear as they're generated, then export as a shareable report.</p>
+          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">Python · FastAPI · Scapy · Angular · Ollama · Gemma 2</div>
+        </div>
       </div>
 
       <!-- W02 — BrainBench -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,272px),1fr));gap:clamp(22.4px,5vw,57.6px);align-items:center;margin-bottom:clamp(44.8px,9vh,89.6px)">
-        <div data-rv="0" style="position:relative">
+      <div class="ax-proj ax-proj-rev" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
+        <div data-rv="0" class="ax-proj-title">
+          <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·02 — SENIOR DESIGN, 2025–26</div>
+          <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">BrainBench</h3>
+        </div>
+        <div data-rv="60" class="ax-proj-media">
           <div style="overflow:hidden;border-radius:2px;aspect-ratio:16/10;background:#0c0c11">
-            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-brainbench" shape="rect" src="images/brainbench-slide1.png" fit="cover" placeholder="Drop a BrainBench dashboard or showcase photo" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-brainbench" shape="rect" src="images/brainbench-slide1.webp" fit="cover" placeholder="Drop a BrainBench dashboard or showcase photo" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
           </div>
           <span style="position:absolute;top:-7.2px;left:-7.2px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7)"></span>
           <span style="position:absolute;bottom:-7.2px;right:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7)"></span>
         </div>
-        <div data-rv="100">
-          <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·02 — SENIOR DESIGN, 2025–26</div>
-          <h3 style="margin:0 0 14.4px;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">BrainBench</h3>
+        <div data-rv="120" class="ax-proj-body">
           <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Comparing small local LLMs on math reasoning is easy to get wrong — naive benchmarks let mismatched problem difficulty or inconsistent prompting skew the results. Built a matched-subset statistical methodology to control for that, then ran Qwen3, Gemma 3, and Phi-3 head-to-head. Presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase and revised into IEEE conference format.</p>
           <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">LLM Evaluation · Statistical Analysis · Ollama · IEEE Format</div>
         </div>
       </div>
 
       <!-- W06 — NFC Business Cards -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,272px),1fr));gap:clamp(22.4px,5vw,57.6px);align-items:center;margin-bottom:clamp(44.8px,9vh,89.6px)">
-        <div data-rv="100" style="order:1">
+      <div class="ax-proj" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
+        <div data-rv="0" class="ax-proj-title">
           <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·06 — PERSONAL, 2023</div>
-          <h3 style="margin:0 0 14.4px;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">NFC Business Cards</h3>
-          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Laser-engraved cards with embedded NFC chips that open my site on tap — designed, programmed and finished by hand.</p>
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">NFC · Laser Cutting · Hardware</div>
-          <a href="https://www.linkedin.com/posts/orion-powers_introducing-my-custom-engineered-nfc-business-activity-7239603602313400321-lHvd" target="_blank" rel="noopener" style="display:inline-block;margin-top:12.8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn ↗</a>
+          <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">NFC Business Cards</h3>
         </div>
-        <div data-rv="0" style="position:relative;order:2">
+        <div data-rv="60" class="ax-proj-media">
           <div style="overflow:hidden;border-radius:2px;aspect-ratio:16/10;background:#0c0c11">
-            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-nfc" shape="rect" src="images/nfc-cards.jpg" fit="cover" placeholder="Drop a photo of the NFC cards" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
+            <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="slot-nfc" shape="rect" src="images/nfc-cards.webp" fit="cover" placeholder="Drop a photo of the NFC cards" hint-size="100%,100%" style="display:block;width:100%;height:100%"></x-import>
           </div>
           <span style="position:absolute;top:-7.2px;right:-7.2px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7)"></span>
           <span style="position:absolute;bottom:-7.2px;left:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7)"></span>
+        </div>
+        <div data-rv="120" class="ax-proj-body">
+          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Laser-engraved cards with embedded NFC chips that open my site on tap — designed, programmed and finished by hand.</p>
+          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">NFC · Laser Cutting · Hardware</div>
+          <a href="https://www.linkedin.com/posts/orion-powers_introducing-my-custom-engineered-nfc-business-activity-7239603602313400321-lHvd" target="_blank" rel="noopener" style="display:inline-block;margin-top:12.8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
         </div>
       </div>
 
@@ -846,7 +901,7 @@
               <p style="margin:0 0 14.4px;font:300 10.8px/1.7 Outfit,sans-serif;color:#a09a8c">{{ p.desc }}</p>
               <div style="margin-top:auto;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">{{ p.tags }}</div>
               <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
-                <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top:12.8px;align-self:flex-start;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn ↗</a>
+                <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top:12.8px;align-self:flex-start;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
               </sc-if>
             </div>
           </sc-for>
@@ -878,6 +933,15 @@
             <span style="position:absolute;inset:-8px;border-radius:999px;border:1px solid rgba(211,176,120,.8);box-shadow:0 0 30px rgba(211,176,120,.22)"></span>
             <span style="position:absolute;inset:-14.4px;border-radius:999px;border:1px solid rgba(211,176,120,.3)"></span>
             <div style="position:absolute;inset:0;border-radius:999px;overflow:hidden;border:2px solid #d3b078"><img src="images/prof-luginbuhl.webp" alt="Dr. David Luginbuhl" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:50% 14%"></div>
+            <!-- twin stars riding the two existing decorative rings, counter-rotating -->
+            <span class="ax-anim" aria-hidden="true" style="position:absolute;left:50%;top:50%;width:121.6px;height:121.6px;transform:translate(-50%,-50%);border-radius:999px;pointer-events:none;animation:ax-rot 22s linear infinite">
+              <span style="position:absolute;left:50%;top:0;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(246,223,168,.9),rgba(246,223,168,0) 70%);filter:blur(1px)"></span>
+              <span style="position:absolute;left:50%;top:0;width:4.8px;height:4.8px;transform:translate(-50%,-50%);border-radius:999px;background:#f6dfa8;box-shadow:0 0 8px 2px rgba(246,223,168,.95),0 0 20px 4px rgba(211,176,120,.55)"></span>
+            </span>
+            <span class="ax-anim" aria-hidden="true" style="position:absolute;left:50%;top:50%;width:134.4px;height:134.4px;transform:translate(-50%,-50%);border-radius:999px;pointer-events:none;animation:ax-rot-r 28s linear infinite">
+              <span style="position:absolute;left:50%;top:100%;width:14.4px;height:14.4px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(236,231,219,.85),rgba(236,231,219,0) 70%);filter:blur(1px)"></span>
+              <span style="position:absolute;left:50%;top:100%;width:4px;height:4px;transform:translate(-50%,-50%);border-radius:999px;background:#ece7db;box-shadow:0 0 7px 1.5px rgba(236,231,219,.9),0 0 18px 3px rgba(211,176,120,.5)"></span>
+            </span>
           </div>
           <div style="font:500 clamp(20.8px,3vw,32px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:8px">Dr. David <span style="font-style:italic;color:#d3b078">Luginbuhl</span></div>
           <div style="font:300 clamp(10.8px,1.4vw,12px)/1.6 Outfit,sans-serif;color:#a09a8c;max-width:272px">Associate Professor, Computer Science &amp; Electrical Engineering</div>
@@ -889,11 +953,11 @@
           <div style="display:flex;flex-direction:column;border-top:1px solid rgba(236,231,219,.14)">
             <a data-cursor="EMAIL ✦" href="mailto:dluginbuhl@fit.edu" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12.8px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
               <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Email</span>
-              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">dluginbuhl@fit.edu <span style="color:#d3b078">↗</span></span>
+              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">dluginbuhl@fit.edu <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
             </a>
             <a data-cursor="CALL ✦" href="tel:+13216747156" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12.8px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
               <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Phone</span>
-              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (321) 674-7156 <span style="color:#d3b078">↗</span></span>
+              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (321) 674-7156 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
             </a>
           </div>
         </div>
@@ -954,14 +1018,14 @@
       <h2 data-mask style="margin:0 0 clamp(19.2px,4vh,30.4px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
         <span style="display:block;overflow:hidden"><span class="mline" style="display:block">The next mission <span style="font-style:italic;color:#d3b078">starts here.</span></span></span>
       </h2>
-      <div data-rv="60" style="display:inline-flex;align-self:center;align-items:center;gap:9.6px;padding:8px 14.4px 8px 12.8px;margin:0 0 clamp(27.2px,5.5vh,48px);border:1px solid rgba(211,176,120,.32);border-radius:999px;background:rgba(211,176,120,.05)">
+      <div id="ax-contact-badge" data-rv="60" style="display:inline-flex;align-self:center;align-items:center;gap:9.6px;padding:8px 14.4px 8px 12.8px;margin:0 0 clamp(27.2px,5.5vh,48px);border:1px solid rgba(211,176,120,.32);border-radius:999px;background:rgba(211,176,120,.05)">
         <span style="position:relative;display:inline-flex;width:6.4px;height:6.4px">
           <span style="position:absolute;inset:0;border-radius:999px;background:#d3b078;animation:ax-pulse 2.4s ease-out infinite"></span>
           <span style="position:relative;width:6.4px;height:6.4px;border-radius:999px;background:#d3b078"></span>
         </span>
         <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#c9b48c">Graduating Dec 2026 · Open to full-time and freelance work</span>
       </div>
-      <div data-rv="100" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),1fr));gap:clamp(14.4px,2.5vw,22.4px);align-items:stretch">
+      <div id="ax-contact-cards" data-rv="100" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),1fr));gap:clamp(14.4px,2.5vw,22.4px);align-items:stretch">
 
         <!-- Contact Information card -->
         <div style="position:relative;border-radius:6px;padding:1px;overflow:hidden;isolation:isolate">
@@ -972,15 +1036,15 @@
             <div style="display:flex;flex-direction:column;flex:1;border-top:1px solid rgba(236,231,219,.14)">
               <a data-cursor="SEND ✦" href="mailto:orionthanhpowers@gmail.com" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
                 <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Email</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">orionthanhpowers@gmail.com <span style="color:#d3b078">↗</span></span>
+                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">orionthanhpowers@gmail.com <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <a data-cursor="CALL ✦" href="tel:+15022328043" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
                 <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Phone</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043 <span style="color:#d3b078">↗</span></span>
+                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <a data-cursor="OPEN ✦" href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
                 <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">LinkedIn</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">/in/orion-powers <span style="color:#d3b078">↗</span></span>
+                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">/in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <div style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14)">
                 <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Location</span>
@@ -999,7 +1063,7 @@
             <p style="margin:0 0 20.8px;font:300 12px/1.75 Outfit,sans-serif;color:#a8a294">Experience, skills, and projects — condensed to a single professional page.</p>
             <div style="display:flex;flex-wrap:wrap;gap:9.6px;margin-bottom:20.8px">
               <a data-cursor="SAVE ✦" href="documents/Orion-Powers-Resume.pdf" download style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:#d3b078;color:#070709;text-decoration:none;border-radius:3px;font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:background .3s,transform .3s" style-hover="background:#f0dcb4;transform:translateY(-2px)">Download PDF <span style="font-size:10.4px">↓</span></a>
-              <a data-cursor="OPEN ✦" href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:transparent;color:#ece7db;text-decoration:none;border-radius:3px;border:1px solid rgba(236,231,219,.24);font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s" style-hover="border-color:rgba(211,176,120,.7);color:#d3b078">View Online <span style="font-size:10.4px">↗</span></a>
+              <a data-cursor="OPEN ✦" href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:transparent;color:#ece7db;text-decoration:none;border-radius:3px;border:1px solid rgba(236,231,219,.24);font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s" style-hover="border-color:rgba(211,176,120,.7);color:#d3b078">View Online <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
             </div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding-top:12px;border-top:1px solid rgba(236,231,219,.14)">
               <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Format</span>
@@ -1036,6 +1100,26 @@ class Component extends DCLogic {
     this._introDone = false;
     this._reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._fine = matchMedia('(pointer:fine)').matches;
+
+    // ---- device-capability tier: scale animation cost to what the device can afford ----
+    // Signals are all cheap, synchronous and widely supported-or-undefined (features that
+    // don't exist just fall through to the safer branch). Nothing here blocks first paint.
+    {
+      const nav = navigator;
+      const cores = nav.hardwareConcurrency || 4;
+      const mem = nav.deviceMemory || 4; // Chrome/Edge only; other browsers assume mid-tier
+      const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+      const saveData = !!(conn && conn.saveData);
+      const slowNet = !!(conn && /2g/.test(conn.effectiveType || ''));
+      const coarse = matchMedia('(pointer:coarse)').matches;
+      let tier = 'high';
+      if (saveData || slowNet || cores <= 2 || mem <= 2) tier = 'low';
+      else if (cores <= 4 || mem <= 4 || coarse) tier = 'mid';
+      this._tier = tier;
+      this._low = tier === 'low';
+      this._mid = tier === 'mid';
+      document.documentElement.classList.add('ax-tier-' + tier);
+    }
     this._lastY = -1;
     this._topbarOn = false;
     this._starsArr = [];
@@ -1081,6 +1165,8 @@ class Component extends DCLogic {
     this._launchWrap = document.getElementById('ax-launch');
     this._skillsSec = document.getElementById('ax-skills');
     this._contactSec = document.getElementById('ax-contact');
+    this._ctBadge = document.getElementById('ax-contact-badge');
+    this._ctCards = document.getElementById('ax-contact-cards');
     this._dust = [];
     this._dustHot = false;
     this._dustDrawn = false;
@@ -1115,8 +1201,15 @@ class Component extends DCLogic {
     addEventListener('resize', this._onResize);
     document.addEventListener('visibilitychange', this._onVis);
 
+    // low-tier devices: cap the paint loop at ~30fps instead of chasing 60 and dropping
+    // frames unevenly (uneven drops read as stutter; a steady lower rate reads as smooth)
+    this._frameMinDt = this._low ? 30 : 0;
+    this._lastFrameT = 0;
     const tick = (now) => {
-      if (!this._hidden) this._frame(now);
+      if (!this._hidden && (now - this._lastFrameT >= this._frameMinDt)) {
+        this._lastFrameT = now;
+        this._frame(now);
+      }
       this._raf = requestAnimationFrame(tick);
     };
     this._raf = requestAnimationFrame(tick);
@@ -1143,7 +1236,7 @@ class Component extends DCLogic {
   _measure() {
     this._vw = innerWidth;
     this._vh = innerHeight;
-    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    const dpr = Math.min(devicePixelRatio || 1, this._low ? 1 : 1.5);
     this._canvas.width = Math.round(this._vw * dpr);
     this._canvas.height = Math.round(this._vh * dpr);
     this._ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1155,8 +1248,16 @@ class Component extends DCLogic {
     sizeCv(this._fx, this._fxCtx, this._vw, this._vh);
     if (this._skillsSec) sizeCv(this._orbitCv, this._orbitCtx, this._skillsSec.offsetWidth, this._skillsSec.offsetHeight);
     if (this._contactSec) {
-      // the finale canvas fills the Contact section (one viewport tall), so the whole
-      // mission — pad to catch — fits on screen at once
+      // the finale canvas fills the Contact section (one viewport tall on desktop, so
+      // the whole mission — pad to catch — fits on screen at once). On phones the two
+      // info cards stack to a single column and push the section far taller than one
+      // screen, so _stepLaunch confines the actual flight to a compact stage pinned
+      // below the header text instead (see _layoutLaunchStage) — otherwise most of it
+      // plays out behind the opaque cards, or straight through the title/badge copy.
+      // _layoutLaunchStage runs FIRST because it grows the section (margin-top on the
+      // cards) — measuring offsetHeight before that would size the canvas for the
+      // section's pre-push height and leave it stretched short of the real height.
+      this._layoutLaunchStage();
       this._lnW = this._contactSec.offsetWidth;
       this._lnH = this._contactSec.offsetHeight;
       sizeCv(this._launchCv, this._launchCtx, this._lnW, this._lnH);
@@ -1175,11 +1276,42 @@ class Component extends DCLogic {
     this._lastY = -1;
   }
 
+  // Height of the mobile launch stage itself — a dedicated band for the rocket's flight,
+  // separate from the header text above it (see _layoutLaunchStage/_lnYOff) — so the
+  // mission plays in open canvas instead of crossing through the headline/badge copy.
+  _lnStageH() { return Math.max(190, Math.min(250, (this._vh || innerHeight) * 0.30)); }
+
+  // Reserves real layout space for the mobile launch stage by pushing the contact cards
+  // down with margin-top, and records _lnYOff — how far (in section-local px) _stepLaunch
+  // must shift the whole scene down — so the flight band sits BELOW the badge instead of
+  // overlapping the title/badge text above it. Without the push, the cards sit right under
+  // the badge and the rocket's flight renders behind them; without the offset, the rocket
+  // still crosses directly over the header copy even though it no longer touches the cards.
+  _layoutLaunchStage() {
+    const sec = this._contactSec, cards = this._ctCards, badge = this._ctBadge;
+    if (!sec || !cards || !badge) return;
+    const narrow = this._vw < 760;
+    if (!narrow || this._reduced || (this.props.launchFinale ?? true) === false) {
+      cards.style.marginTop = '';
+      this._lnYOff = 0;
+      return;
+    }
+    cards.style.marginTop = '';
+    const secTop = sec.getBoundingClientRect().top;
+    const badgeBottom = badge.getBoundingClientRect().bottom - secTop;
+    const naturalCardsTop = cards.getBoundingClientRect().top - secTop;
+    const gap = 14;
+    const stageH = this._lnStageH();
+    this._lnYOff = badgeBottom + gap;
+    cards.style.marginTop = Math.max(0, this._lnYOff + stageH - naturalCardsTop) + 'px';
+  }
+
   _buildStars() {
     const density = this.props.starDensity ?? 1;
     const isSmall = this._vw < 700;
     const base = (this._vw * this._vh) / (isSmall ? 14000 : 9000);
-    const n = Math.round(Math.min(280, Math.max(45, base)) * density);
+    const tierFactor = this._low ? 0.4 : this._mid ? 0.7 : 1;
+    const n = Math.round(Math.min(280, Math.max(30, base * tierFactor)) * density);
     const arr = [];
     for (let i = 0; i < n; i++) {
       arr.push({
@@ -1207,9 +1339,10 @@ class Component extends DCLogic {
       if (!this._curMoved) { this._curMoved = true; this._rx = e.clientX; this._ry = e.clientY; }
       this._nx = e.clientX / this._vw - 0.5;
       this._ny = e.clientY / this._vh - 0.5;
-      const spawn = this._dustHot ? 3 : 1;
+      const dustCap = this._low ? 50 : this._mid ? 120 : 220;
+      const spawn = this._low ? 1 : this._dustHot ? 3 : 1;
       for (let i = 0; i < spawn; i++) {
-        if (this._dust.length > 220) break;
+        if (this._dust.length > dustCap) break;
         this._dust.push({
           x: e.clientX + (Math.random() - 0.5) * (this._dustHot ? 14 : 7),
           y: e.clientY + (Math.random() - 0.5) * (this._dustHot ? 14 : 7),
@@ -1311,7 +1444,8 @@ class Component extends DCLogic {
         ctx.beginPath(); ctx.arc(px, py, pr, 0, 6.283); ctx.fill();
       }
       const pastEarlySections = y >= (this._ambientGateY || 0);
-      if ((this.props.meteors ?? true) && pastEarlySections && now > this._nextMeteor && this._meteors.length < 3) {
+      const ambientFxOn = (this.props.meteors ?? true) && !this._low;
+      if (ambientFxOn && pastEarlySections && now > this._nextMeteor && this._meteors.length < (this._mid ? 2 : 3)) {
         this._nextMeteor = now + 4200 + Math.random() * 5200;
         const roll = Math.random();
         let sx, sy;
@@ -1337,7 +1471,7 @@ class Component extends DCLogic {
         ctx.strokeStyle = g; ctx.lineWidth = 1.1;
         ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * m.len, m.y - m.vy * m.len); ctx.stroke();
       }
-      if ((this.props.meteors ?? true) && pastEarlySections && now > this._nextComet && this._comets.length < 1) {
+      if (ambientFxOn && pastEarlySections && now > this._nextComet && this._comets.length < 1) {
         this._nextComet = now + 30000 + Math.random() * 25000;
         this._comets.push({
           x: w * (0.55 + Math.random() * 0.5), y: -30,
@@ -1535,7 +1669,7 @@ class Component extends DCLogic {
           this._launched = true;
           this._plume = [];
           this._lnSteam = []; this._lnTrail = []; this._lnTrailT = 0;
-          this._lnQ = 1; this._lnDt = 0; this._lnPrev = 0;
+          this._lnQ = this._low ? 0.55 : this._mid ? 0.8 : 1; this._lnDt = 0; this._lnPrev = 0;
           if (this._launchCv) this._launchCv.style.opacity = '1';
           this._launch = { t0: performance.now() };
         } else if (!e.isIntersecting) {
@@ -1571,7 +1705,16 @@ class Component extends DCLogic {
   _stepLaunch(now) {
     const sec = this._contactSec, ctx = this._launchCtx;
     if (!sec || !ctx) { this._launch = null; return; }
-    const w = this._lnW || sec.offsetWidth, h = this._lnH || sec.offsetHeight;
+    const w = this._lnW || sec.offsetWidth, hFull = this._lnH || sec.offsetHeight;
+    // On phones the section is much taller than one screen (the two info cards stack
+    // full-width below), so the mission geometry uses a compact stage height pinned
+    // below the header text instead of the full, content-inflated section — see
+    // _layoutLaunchStage, which reserves matching space (above the cards, below the
+    // badge) so the flight overlaps neither. hFull (the real canvas size) is still used
+    // for clearing/culling below; yOff shifts the whole scene down past the header copy.
+    const narrowScene = (this._vw || innerWidth) < 760;
+    const h = narrowScene ? this._lnStageH() : hFull;
+    const yOff = narrowScene ? (this._lnYOff || 0) : 0;
     const el = (now - this._launch.t0) / 1000;
     const dur = 13.5;
     const p = Math.min(1, el / dur);
@@ -1579,7 +1722,7 @@ class Component extends DCLogic {
     const smooth = (x) => x * x * (3 - 2 * x);
     const smoother = (x) => x * x * x * (x * (x * 6 - 15) + 10);
     const lerp = (a, b, u) => a + (b - a) * u;
-    if (!this._lnSteam) { this._lnSteam = []; this._lnTrail = []; this._lnTrailT = 0; this._lnQ = 1; this._lnDt = 0; this._lnPrev = 0; }
+    if (!this._lnSteam) { this._lnSteam = []; this._lnTrail = []; this._lnTrailT = 0; this._lnQ = this._low ? 0.55 : this._mid ? 0.8 : 1; this._lnDt = 0; this._lnPrev = 0; }
 
     // adaptive quality: if the device can't hold ~30fps, shed particles once
     const fdt = this._lnPrev ? Math.min(80, now - this._lnPrev) : 16.7;
@@ -1793,7 +1936,9 @@ class Component extends DCLogic {
       if (this._lnTrail.length > 34) this._lnTrail.shift();
     }
 
-    ctx.clearRect(0, 0, w, h);
+    ctx.clearRect(0, 0, w, hFull);
+    ctx.save();
+    if (yOff) ctx.translate(0, yOff);
 
     // ground hairline (brighter at pad + tower), pad, catch tower
     const gl = ctx.createLinearGradient(0, 0, w, 0);
@@ -1839,7 +1984,7 @@ class Component extends DCLogic {
     for (let i = this._plume.length - 1; i >= 0; i--) {
       const qp = this._plume[i];
       qp.x += qp.vx; qp.y += qp.vy; qp.vy *= 0.99; qp.vx *= 0.98; qp.life -= qp.decay;
-      if (qp.life <= 0 || qp.y > h + 20) { this._plume.splice(i, 1); continue; }
+      if (qp.life <= 0 || qp.y > hFull + 20) { this._plume.splice(i, 1); continue; }
       ctx.globalAlpha = qp.life * 0.7;
       ctx.fillStyle = qp.life > 0.6 ? '#f2b97c' : '#d3b078';
       ctx.beginPath(); ctx.arc(qp.x, qp.y, qp.r * (0.4 + qp.life * 0.8), 0, 6.283); ctx.fill();
@@ -1925,13 +2070,14 @@ class Component extends DCLogic {
       ctx.fillText(capTxt.split('').join(' '), w / 2, h * 0.965);
       ctx.globalAlpha = 1; ctx.textAlign = 'left';
     }
+    ctx.restore();
     // one-shot: hold the caught booster in the arms a beat, then fade the scene so it never
     // sits on the Contact content, and stop the loop. Re-entering restarts it.
     const holdEnd = dur + 1.6;
     const sceneA = 1 - cl(holdEnd, holdEnd + 1.4, el);
     if (this._launchCv) this._launchCv.style.opacity = sceneA.toFixed(3);
     if (sceneA <= 0.001) {
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, w, hFull);
       if (this._launchCv) this._launchCv.style.opacity = '';
       sec.style.transform = '';
       this._launch = null;
@@ -2604,12 +2750,12 @@ class Component extends DCLogic {
       });
     });
     const archiveItems = [
-      { tag: 'W·03 — ORIONPOWERS.COM, 2026', title: 'This Very Website', desc: "The site you're on — designed and engineered end-to-end. Component architecture, a custom animation system, performance-tuned hooks, and accessibility built in from the start.", tags: 'Next.js · React · TypeScript · Framer Motion · Tailwind', img: 'images/website-hero.png', pos: 'center', href: null },
-      { tag: 'W·09 — PERSONAL, 2022–24', title: '3D Printed Prototypes', desc: 'From an F-22 Raptor to a Batman mask for a cat — parametric CAD models designed in Fusion 360, sliced and printed.', tags: 'Fusion 360 · CAD · 3D Printing', img: 'images/3d-prints.jpg', pos: 'center', href: 'https://www.linkedin.com/posts/orion-powers_3dprinting-creativity-stem-activity-7241878854884028416-z-Sl' },
-      { tag: 'W·04 — HYPERFORMANT, 2024', title: 'SaaS Platform', desc: 'A production SaaS product shipped end-to-end — REST APIs, authentication, and the data layer in between.', tags: 'React · TypeScript · Supabase · REST', img: 'images/saas.png', pos: 'center top', href: null },
-      { tag: 'W·05 — HYPERFORMANT, 2024', title: 'Marketing Website Revamp', desc: 'A ground-up rebuild of the Hyperformant marketing site with interactive 3D — designed to convert, and it did.', tags: 'Svelte · Figma · Spline · Webflow', img: 'images/marketing-revamp.png', pos: 'center top', href: null },
-      { tag: 'W·07 — RARE T HOLDINGS, 2023', title: 'ML Invoice Processor', desc: 'Machine-learning models on Azure that read, process and document invoices — doubling accounting efficiency.', tags: 'Azure ML · Java · OCR', img: 'images/invoice-network.png', pos: 'center', href: null },
-      { tag: 'W·08 — RARE T HOLDINGS, 2023', title: 'Autonomous Content Workflow', desc: 'Self-running content pipelines on the ChatGPT API and Power Automate — +30% generation efficiency, +25% retention.', tags: 'ChatGPT API · Power Automate', img: 'images/content-creator.png', pos: 'center', href: null }
+      { tag: 'W·03 — ORIONPOWERS.COM, 2026', title: 'This Very Website', desc: "The site you're on — designed and engineered end-to-end. Component architecture, a custom animation system, performance-tuned hooks, and accessibility built in from the start.", tags: 'Next.js · React · TypeScript · Framer Motion · Tailwind', img: 'images/website-hero.webp', pos: 'center', href: null },
+      { tag: 'W·09 — PERSONAL, 2022–24', title: '3D Printed Prototypes', desc: 'From an F-22 Raptor to a Batman mask for a cat — parametric CAD models designed in Fusion 360, sliced and printed.', tags: 'Fusion 360 · CAD · 3D Printing', img: 'images/3d-prints.webp', pos: 'center', href: 'https://www.linkedin.com/posts/orion-powers_3dprinting-creativity-stem-activity-7241878854884028416-z-Sl' },
+      { tag: 'W·04 — HYPERFORMANT, 2024', title: 'SaaS Platform', desc: 'A production SaaS product shipped end-to-end — REST APIs, authentication, and the data layer in between.', tags: 'React · TypeScript · Supabase · REST', img: 'images/saas.webp', pos: 'center top', href: null },
+      { tag: 'W·05 — HYPERFORMANT, 2024', title: 'Marketing Website Revamp', desc: 'A ground-up rebuild of the Hyperformant marketing site with interactive 3D — designed to convert, and it did.', tags: 'Svelte · Figma · Spline · Webflow', img: 'images/marketing-revamp.webp', pos: 'center top', href: null },
+      { tag: 'W·07 — RARE T HOLDINGS, 2023', title: 'ML Invoice Processor', desc: 'Machine-learning models on Azure that read, process and document invoices — doubling accounting efficiency.', tags: 'Azure ML · Java · OCR', img: 'images/invoice-network.webp', pos: 'center', href: null },
+      { tag: 'W·08 — RARE T HOLDINGS, 2023', title: 'Autonomous Content Workflow', desc: 'Self-running content pipelines on the ChatGPT API and Power Automate — +30% generation efficiency, +25% retention.', tags: 'ChatGPT API · Power Automate', img: 'images/content-creator.webp', pos: 'center', href: null }
     ].map((p, i) => Object.assign({}, p, { delay: (i * 70) + 'ms', hasLink: !!p.href }));
     return {
       skillGroups,

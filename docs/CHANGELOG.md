@@ -12,6 +12,209 @@ Format:
 
 ---
 
+## 2026-07-16 — Desktop: Education rocket now launches from off-screen
+- **`index.html`, new `@media (min-width:761px)` rule next to the mobile rocket-trail fix.**
+  The trail's launch point (`M-60,820`) sits only just past the SVG's `viewBox` edge; on the
+  wide/short containers typical of desktop windows the cover-fit SVG (`xMidYMid slice`) crops
+  very little off the sides, so the ship's fade-in and the trail's draw-on both started already
+  inside the visible frame instead of entering from off-screen — the requested effect.
+- Fix: added a desktop-only CSS override (`d`/`offset-path` on `#ax-rk-glow`, `#ax-rk-path`,
+  `#ax-rk-ship`) that extends the launch point further down-left
+  (`M-420,1000 L-60,820 C170,420 520,190 1560,-30`) — well outside the cropped viewport on any
+  realistic desktop window — so the whole entrance happens off-canvas and the ship arrives
+  already in flight. `getTotalLength()` in `_initRocket()` reads the rendered (CSS-overridden)
+  path dynamically, so the draw-on animation adjusts automatically. Mobile is untouched — it
+  already shows the trail close to full-length (see the mobile rocket-trail fix entry below).
+
+## 2026-07-16 — Fix: Starship launch/catch finale was hidden and oversized on phones
+- **`index.html`, Contact section (`ax-contact`) — `_stepLaunch` (~line 1693), `_measure`
+  (~line 1224), new `_lnStageH`/`_layoutLaunchStage` methods (~line 1264-1292), plus new
+  `id="ax-contact-badge"` / `id="ax-contact-cards"` on the existing badge and cards-grid
+  elements (~line 1009, 1016).** The finale canvas is sized to the Contact section's full
+  `offsetHeight` so the whole pad-to-catch mission fits in the space at once — true on
+  desktop, where the two info cards sit side by side with wide open margins left/right for
+  the pad and tower. On phones the cards stack to one column and fill nearly the full
+  width, and the section grows well past one screen tall to fit them; the rocket's flight
+  (sized to that inflated height) ended up rendered almost entirely *behind* the opaque
+  cards, with only a sliver visible in the gap between them.
+- Fix: below the site's existing 760px "narrow" breakpoint, `_stepLaunch` confines the
+  mission geometry to a compact stage height (`_lnStageH()`, 190–250px based on viewport
+  height) instead of the full content height, and shifts the whole scene down past the
+  header copy with a single `ctx.translate(0, yOff)` (`_lnYOff`, set by
+  `_layoutLaunchStage`) so the stage sits in its own open band *below* the badge rather
+  than crossing through the headline/badge text. `_layoutLaunchStage` (called from
+  `_measure`, so it re-runs on resize) reserves that exact space by pushing the cards grid
+  down with a measured `margin-top` (`_lnYOff + stageH`, relative to the badge's own
+  measured bottom) — enough that the stage never overlaps the badge above it or the cards
+  below it, no more. Desktop/tablet width (≥760px) is untouched (`margin-top` clears back
+  to `''`, `yOff` is 0).
+- Verified with headless Chromium at 390px (iPhone 13): full launch → separation → ship
+  to orbit → booster boostback/landing/catch sequence now plays entirely in its own open
+  band below the header text, never touching the badge or the cards. Spot-checked
+  700–1440px widths (including the 2-column band just under 760px, where the stage still
+  applies) and confirmed 1440px desktop is pixel-identical to before the change.
+
+## 2026-07-16 — Fix: Projects section had inconsistent mobile stacking order
+- **`index.html`, root `<style>` block (new `.ax-proj*` rules) + Projects section (`ax-work`),
+  all three project rows (W·01 LLM Network Analyzer, W·02 BrainBench, W·06 NFC Business Cards,
+  ~line 808-865).** On phones the two-column desktop grid collapses to one column, and each
+  project's title/paragraph/tags lived in the same block as either the first or second grid
+  child (alternating per row, for the desktop zigzag layout) — so on mobile some projects
+  stacked text-then-image and others image-then-text, depending on which side the image sat on
+  at desktop width.
+- Split each project row into three sibling blocks — `.ax-proj-title` (eyebrow + `<h3>`),
+  `.ax-proj-media` (image), `.ax-proj-body` (paragraph + tags + optional link) — so DOM order is
+  always title → media → body. Mobile (`.ax-proj`, single column) uses flex/grid `order` to keep
+  that sequence for every project regardless of desktop side. At `min-width:761px` (matching the
+  site's existing desktop breakpoint), `.ax-proj` switches to a 2-column grid with
+  `grid-template-areas` (`"title media" / "body media"`, or `"media title" / "media body"` when
+  `.ax-proj-rev` is present) to reproduce the original alternating image-left/image-right desktop
+  layout — positioning is independent of DOM order, so the mobile fix required no desktop-only
+  markup duplication.
+- Verified with headless Chromium screenshots at 390px (title → image → text for all three
+  projects) and 1280px (original alternating two-column zigzag intact).
+
+## 2026-07-16 — Fix: Education rocket trail didn't fit phone screens
+- **`index.html`, Education section (`ax-edu`), rocket-trail overlay (~line 545-560) + new
+  `@media (max-width:760px)` rule.** The overlay's height was `clamp(544px,105vh,864px)` —
+  tuned for landscape desktops, where it happens to land close to the SVG's own ~0.58
+  (700/1200) aspect ratio. On a tall narrow phone that produced a container far taller than
+  wide, so the cover-fit SVG (`xMidYMid slice`) zoomed in hard and cropped out most of the
+  swoop — the ship was only ever in frame for a sliver of its 5.6s flight — while the
+  oversized blurred overlay (up to 864px tall, more than one phone screen) cost extra
+  paint/compositing for no visual benefit.
+- Fix: added `id="ax-rk-wrap"` to the overlay div and, under `max-width:760px`, set
+  `height:min(58vw,420px) !important` — tying height to viewport *width* instead of *height*
+  keeps the aspect ratio (and the crop) close to the desktop version regardless of phone
+  orientation, and shrinks the paint area substantially (better scroll/animation
+  performance on mobile). Also added `vector-effect="non-scaling-stroke"` to the two trail
+  `<path>`s (`ax-rk-glow`, `ax-rk-path`) so their stroke width stays a constant, legible
+  screen-pixel width instead of shrinking toward invisibility at the smaller mobile scale.
+
+## 2026-07-16 — Fix: noscript fallback never showed with JavaScript disabled
+- **`index.html`, `<noscript>` `<style>` block (`#ax-noscript-fallback`).** The crawlable /
+  no-JS fallback carries an inline `style="display:none"` (so it stays hidden on the normal
+  JS path, where the CDN-failure watchdog reveals it only on failure). The `<noscript>`
+  stylesheet rule that was meant to reveal it under scripting-disabled lacked `!important`,
+  so it could not override that inline style — the fallback stayed `display:none` and a no-JS
+  visitor (or a crawler that doesn't run JS) saw a blank page. Added `display:block!important`
+  to the `#ax-noscript-fallback` rule inside the `<noscript>` block only.
+- Verified with headless Chromium at `javaScriptEnabled:false`: body text was empty before the
+  fix, and renders the full name/bio/experience/education/projects/skills/reference/contact
+  fallback after. The JS-enabled render is unaffected (a `<noscript>` stylesheet is inert when
+  scripting is on).
+
+## 2026-07-16 — Orbiting stars now ride the photo's existing decorative rings
+- **`index.html`, Reference section (`ax-reference`), professor photo wrapper (~line 907-918).**
+  Follow-up to the twin orbiting stars: resized the two rotating spans from their own separate
+  148.8px/168px rings down to 121.6px/134.4px — exactly matching the two existing static
+  decorative rings already drawn around the photo (`inset:-8px` and `inset:-14.4px`) — and
+  dropped the extra `border`/`drop-shadow` I'd added on the rotating spans themselves (that was
+  a third, redundant ring; a rotating circular border is visually static anyway).
+- Why: user wants the stars to actually travel along the rings that already exist around the
+  photo, not float on new rings drawn further out.
+
+## 2026-07-16 — Hyper-optimized for weak/mid/strong devices (images + adaptive animation tier)
+- **`images/`.** Converted the 10 largest photo/screenshot assets (project cards + profile +
+  archive) from PNG/JPG to WebP (`quality:80`) via `sharp`: `network-analyzer`, `brainbench-slide1`,
+  `content-creator`, `invoice-network`, `website-hero`, `saas`, `marketing-revamp`, `3d-prints`,
+  `nfc-cards`, `profile`. Total payload for those files dropped ~1.32 MB → ~0.70 MB (~45%).
+  Deleted the superseded originals; updated every `src`/`img:` reference in `index.html`
+  (including the `Person` JSON-LD `image` field) to the `.webp` filenames. Left `og-image.png`
+  as PNG (re-compressed in place, lossless) since some social-share crawlers don't render WebP
+  OG images reliably; left `fit-seal.png`, `apple-touch-icon.png`, `favicon.svg`,
+  `prof-luginbuhl.webp` untouched (already optimal or too small to matter).
+- **`index.html`, `componentDidMount` (device-tier block right after `this._fine`).** Added a
+  synchronous device-capability tier check (`this._tier` = `'low' | 'mid' | 'high'`, plus
+  `this._low`/`this._mid` booleans) from `navigator.hardwareConcurrency`, `navigator.deviceMemory`,
+  `navigator.connection.saveData`/`effectiveType`, and `matchMedia('(pointer:coarse)')` — all
+  synchronous, all optional-chained so missing APIs just fall through to a safer tier. Stamps
+  `ax-tier-{low,mid,high}` on `<html>`.
+- **`index.html`, root `<style>` block.** Added `.ax-tier-low` rules that strip the costliest
+  paint work instead of hand-tuning every inline style: `.ax-anim{animation:none}` stops all
+  decorative rotation/drift; the 4 hero nebula layers (`#ax-hero-neb>div`, each carrying its own
+  26–44px blur — 4 separate GPU blur passes) have their per-element blur zeroed and the
+  already-composited group blurred **once** instead, at a smaller 18px radius — cheaper than any
+  single one of the originals, and keeps the haze look instead of going flat; the remaining
+  `[style*="blur("]` matches (small 1px glint blurs elsewhere) are zeroed outright, and
+  `[style*="backdrop-filter"]` (the fixed top bar) is swapped for a flat, more-opaque solid
+  background. Attribute/child selectors target the existing DC-authored inline styles directly,
+  so no markup/runtime changes needed.
+- **`_measure()`, `_buildStars()`, `_frame()` (starfield/meteor/comet/dust), `_initCursor()`
+  (cursor dust trail), `_initLaunch()`/`_stepLaunch()` (Starship finale).** All scaled by tier:
+  DPR capped at 1 (low) vs 1.5 (mid/high); star count multiplied by 0.4/0.7/1; ambient
+  meteors/comets disabled entirely on low tier (the one-shot welcome star on load is untouched —
+  it's a single object, not a recurring cost); cursor dust-trail cap and spawn rate cut on low
+  tier; the launch finale's existing self-adaptive quality knob (`_lnQ`, already sheds particles
+  if it detects <30fps) now *seeds* lower on low/mid tier instead of starting at full quality and
+  stepping down after the fact.
+- **`componentDidMount`, the main `tick()` RAF loop.** Low tier now runs the whole `_frame()` at a
+  capped ~30fps (`this._frameMinDt = 30`) instead of chasing 60 and dropping frames unevenly —
+  uneven drops read as stutter/jank, a steady lower rate reads as smooth. Mid/high tier unchanged
+  (uncapped, still gated on `!this._hidden`).
+- Why: user asked to "hyper optimize" the site across weak/medium/strong phones and laptops so it
+  isn't "laggy, slow or glitchy." The finale scene already had per-frame adaptive quality
+  shedding and IntersectionObserver-gated canvases going in; the gap was (1) large image payload
+  hurting weak/slow-network devices on first load, and (2) the starfield/nebula/cursor-trail
+  layers running at full cost unconditionally on every device instead of scaling with what the
+  hardware can actually afford. `prefers-reduced-motion` and `pointer:fine` gating were already
+  respected and are untouched by this change — the new tier logic is additive and independent.
+
+## 2026-07-16 — Fixed unwanted horizontal scroll on mobile
+- **`index.html`, root `<style>` block (~line 251-252).** Changed `html{scroll-behavior:smooth}` /
+  `body{margin:0;background:#070709;overflow-x:clip}` to set `overflow-x:hidden;width:100%`
+  explicitly on **both** `html` and `body`, instead of relying on `overflow-x:clip` on `body`
+  alone (which only reaches the viewport via the CSS overflow-propagation rule, and depends on
+  browser support for the `clip` value — spotty on some mobile browsers).
+- Why: user reported that on phones the page could be dragged left/right instead of only
+  scrolling up/down. Several large decorative absolutely-positioned glyphs (the background
+  roman numerals "III"/"IV"/"V" etc. and the "01"/"02"/"03" experience-timeline numbers) render
+  wider than a phone viewport at some sizes; `overflow-x:hidden` on both root elements clips
+  that bleed unconditionally, without depending on propagation/`clip` support. Verified with a
+  headless Playwright pass at a 375px viewport: `document.documentElement.scrollWidth` now
+  equals `window.innerWidth` exactly, and `scrollX` cannot be moved off `0` by any means
+  (`scrollTo`, `scrollBy`, wheel) — horizontal scrolling is no longer possible.
+
+## 2026-07-14 — Orbiting stars around the Reference photo: slowed down, visible orbit rings
+- **`index.html`, Reference section (`ax-reference`), professor photo wrapper (~line 877-889).**
+  Follow-up to the twin counter-orbiting stars added earlier today: (1) slowed both way down —
+  `ax-rot` 7s→22s, `ax-rot-r` 9s→28s — per user feedback the original speed was too fast; (2) gave
+  each orbit ring a visible track (`border:1px solid rgba(211,176,120,.32)` on the inner/clockwise
+  ring, `border:1px dashed rgba(211,176,120,.22)` on the outer/counter-clockwise ring, each with a
+  faint `drop-shadow` glow) so the star reads as traveling along a line instead of floating loose,
+  matching the astrolabe-ring look used in the Hero section.
+- Why: user asked the stars "stay on the orbit lines" — previously the rotating containers had no
+  border, so only the star+glow was visible with no line marking its circular path.
+
+## 2026-07-14 — Replaced remaining ↗ glyphs site-wide with gold link icons
+- **`index.html`**: all remaining `↗` text glyphs replaced with the same inline
+  gold (`#d3b078`) SVG chain-link icon used in the About section — Projects
+  "View on LinkedIn" links (~line 821, ~849), Reference contact card email/phone
+  (~line 901, 905), Reach Out contact card email/phone/LinkedIn (~line 984, 988,
+  992), and the Résumé card's "View Online" button (~line 1011). Icon size scaled
+  to each context's font size (8px/9px/10px).
+- Why: same root cause as the About section fix — Windows renders the bare `↗`
+  character via the system color-emoji font, ignoring the surrounding CSS
+  `color`, so several links showed a blue arrow instead of gold. SVG icons render
+  consistently across platforms.
+
+## 2026-07-14 — Gold link icon for LinkedIn in About section
+- **`index.html`, About section (`ax-about`), LinkedIn row (~line 500).**
+  Replaced the plain `↗` text glyph after "in/orion-powers" with an inline SVG
+  chain-link icon, stroked gold (`#d3b078`).
+- Why: on Windows, the bare `↗` character was being rendered by the system emoji
+  font as a colored (blue) glyph instead of inheriting the surrounding gold/cream
+  text color. An SVG icon renders consistently across platforms.
+
+## 2026-07-14 — Twin counter-orbiting stars around the Reference photo
+- **`index.html`, Reference section (`ax-reference`), professor photo wrapper (~line 877-889).**
+  Added two absolutely-positioned `.ax-anim` orbit rings centered on Dr. Luginbuhl's photo, each
+  carrying a small glowing star at its edge — one spins with `ax-rot` (clockwise, 7s), the other
+  with `ax-rot-r` (counter-clockwise, 9s), reusing the existing astrolabe-ring keyframes/pattern
+  from the Hero section instead of inventing new ones.
+- Why: requested visual flourish — two stars orbiting the recommendation photo in opposite
+  directions. `ax-anim` class means they respect `prefers-reduced-motion` automatically.
+
 ## 2026-07-14 — Load-performance pass + problem/approach/result framing for top 2 projects
 - **`defer` on the `support.js` script tag (`index.html`, head).** It was a plain blocking
   `<script src>` right before `</head>`, so the browser paused HTML parsing entirely until it

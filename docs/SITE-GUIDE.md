@@ -24,6 +24,18 @@ skills are regenerated from source there — this hand-written guide never state
 - **`image-slot.js`** — drag-and-drop image placeholder component used by the DC runtime.
 - Rendering model: this is a **DC (design-canvas) artifact export**. The `data-props`
   attribute on the script tag exposes editor toggles (see §5).
+- **SEO / share / AI-discoverability layer** (in `<head>`, before `support.js`): `<title>`,
+  meta description, canonical, `theme-color`, favicon/apple-touch-icon links, Open Graph +
+  Twitter card tags (image = `images/og-image.png`), and a JSON-LD `@graph`
+  (`Person` / `WebSite` / `ProfilePage`). **Rule: only put facts in the JSON-LD that are also
+  visible in the rendered page** — if you change the bio, job, or skills, update the JSON-LD to
+  match. Paired with the root-level `robots.txt` / `sitemap.xml` / `llms.txt` (see §3 Assets).
+- **`#ax-noscript-fallback`** — a plain semantic-HTML mirror of the whole résumé right after
+  `<body>`, carrying inline `display:none`. Two things reveal it: (a) a `<noscript>` `<style>`
+  that overrides the inline hide with `display:block!important` for scripting-disabled visitors
+  and crawlers that don't run JS; (b) a small inline watchdog that shows it (and hides `<x-dc>`)
+  if React/ReactDOM haven't loaded from the CDN after ~9 s. **It duplicates the résumé content —
+  keep it in sync when experience/education/projects/skills change** (same discipline as `llms.txt`).
 
 ### Design tokens (colors reused everywhere)
 | Token | Value | Use |
@@ -119,10 +131,37 @@ Next.js, Svelte, TensorFlow, GraphQL, Git, NLP, Tailwind, Keycloak, Supabase`
 ### Contact (unnumbered — no roman-numeral header, it's the finale/launch scene) — résumé
 download links to `documents/Orion-Powers-Resume.pdf`.
 
+The Starship launch/catch finale (canvas `ax-launch-cv`, driven by `_initLaunch()` /
+`_stepLaunch()`) is meant to fill the Contact section in one viewport, pad to catch. On
+desktop that's literally true — the two info cards sit side by side with open margins on
+either side for the pad and tower. Below the site's 760px "narrow" breakpoint the cards
+stack to one full-width column and the section runs taller than one screen, so
+`_stepLaunch` instead confines the mission to a compact stage (`_lnStageH()`, ~190–250px,
+scaled off viewport height) and shifts the whole scene down past the header text with one
+`ctx.translate(0, yOff)` — `yOff` (`_lnYOff`) is set by `_layoutLaunchStage()` (called from
+`_measure()`, so it tracks resize/orientation change) to the badge's measured bottom edge
+plus a small gap, so the stage sits in its own open band *below* the badge rather than
+drawing through the headline/badge copy. That same method reserves the matching layout
+space by pushing the cards grid (`id="ax-contact-cards"`) down with a measured
+`margin-top` — `yOff + stageH` relative to the badge (`id="ax-contact-badge"`) — so the
+stage clears the cards too. Without this the flight renders mostly behind the opaque
+cards on phones (and, without the `yOff` push, would still cross the header text even
+once it cleared the cards) — see CHANGELOG 2026-07-16.
+
 ### Assets on disk
-- `images/`: `profile.jpg`, `prof-luginbuhl.webp`, `fit-seal.png`, `3d-prints.jpg`,
-  `nfc-cards.jpg`, `invoice-network.png`, `marketing-revamp.png`, `content-creator.png`,
-  `saas.png`, `website-hero.png` (hero shot for the "This Very Website" project card).
+- `images/`: `profile.webp`, `prof-luginbuhl.webp`, `fit-seal.png`, `3d-prints.webp`,
+  `nfc-cards.webp`, `invoice-network.webp`, `marketing-revamp.webp`, `content-creator.webp`,
+  `saas.webp`, `website-hero.webp` (hero shot for the "This Very Website" project card). All
+  photo/screenshot assets are WebP (converted from PNG/JPG for payload — see CHANGELOG
+  2026-07-16); `og-image.png` stays PNG for social-share crawler compatibility.
+- `images/` (site chrome): `favicon.svg` (gold Orion-star mark on near-black), `apple-touch-icon.png`
+  (180×180, rendered from the SVG), `og-image.png` (1200×630 share card, a screenshot of the
+  live hero — regenerate by screenshotting the hero at that viewport if the hero changes).
+- Root-level discoverability files (served at the site root, **not** referenced from the page):
+  `robots.txt` (allows all crawlers incl. the named AI bots; points to the sitemap),
+  `sitemap.xml` (single-page site — one `<loc>`, update `<lastmod>` on meaningful changes),
+  `llms.txt` ([llmstxt.org](https://llmstxt.org) AI-agent summary — mirror of the résumé facts;
+  keep in sync with the page content the same way as the noscript fallback below).
 - `documents/`: `Orion-Powers-Resume.pdf`.
 
 ---
@@ -170,8 +209,15 @@ scene auto-handles N layers, but the section height (`height:340vh` on `#ax-exp-
 the layer-swap math in `// ---- scroll-driven work ----` assume **3** — if you change the
 count, re-check both.
 
-**Add / edit a project:** the three project cards live at ~485–568. Duplicate a card,
-update the `W·0N — …` eyebrow, title, description, and tech line.
+**Add / edit a project:** the three project cards live in the Projects section (`ax-work`,
+§V), each a `.ax-proj` grid with three sibling children — `.ax-proj-title` (eyebrow + `<h3>`),
+`.ax-proj-media` (image + corner accents), `.ax-proj-body` (paragraph + tech line + optional
+link). DOM order is always title → media → body; that's also the mobile stacking order (via
+CSS `order`). At desktop widths (`min-width:761px`) `grid-template-areas` repositions them into
+the two-column zigzag — add class `ax-proj-rev` to the row to put the image on the *left*
+(matches BrainBench); omit it for image-on-right (matches LLM Network Analyzer / NFC Business
+Cards). Duplicate a whole `.ax-proj` row, update the `W·0N — …` eyebrow, title, description, and
+tech line — keep all three children present or the `grid-template-areas` mapping breaks.
 
 **Update skills:** edit the `names` array at ~line 1304.
 
@@ -187,7 +233,46 @@ search for `orionthanhpowers@gmail.com`.
 
 ---
 
-## 7. Gotchas
+## 7. Device-tier performance system
+
+`componentDidMount` classifies the visitor's device into `this._tier` (`'low' | 'mid' | 'high'`,
+plus `this._low`/`this._mid` booleans) right after the existing `_reduced`/`_fine` flags, from
+`navigator.hardwareConcurrency`, `navigator.deviceMemory`, `navigator.connection`
+(`saveData`/`effectiveType`), and `matchMedia('(pointer:coarse)')`. All signals are synchronous
+and optional — missing APIs (e.g. `deviceMemory` outside Chromium) just fall through to a safer
+tier, so this never blocks first paint or needs a network round-trip. The tier is stamped on
+`<html>` as `ax-tier-low` / `ax-tier-mid` / `ax-tier-high`.
+
+What scales with tier (search each identifier to find the exact spot):
+- **`<style>` block:** `.ax-tier-low` rules strip the costliest paint work via attribute/child
+  selectors on the existing inline styles — no markup changes needed. `.ax-anim{animation:none}`
+  stops all decorative rotations/nebula drift; the 4 hero nebula layers under `#ax-hero-neb`
+  (each carrying its own 26–44px blur) have their per-element blur zeroed and the
+  already-composited `#ax-hero-neb` group blurred **once** instead at a smaller 18px radius —
+  one cheap blur pass instead of four expensive ones, keeping the haze look instead of going
+  flat; remaining `[style*="blur("]` matches (small 1px glints elsewhere) are zeroed outright;
+  the top bar's `backdrop-filter` blur is swapped for a flatter, more opaque solid background.
+- **`_measure()`:** canvas DPR capped at 1 (low) vs 1.5 (mid/high) — shared by all four canvases
+  (`ax-stars`, `ax-fx`, `ax-orbit`, `ax-launch-cv`).
+- **`_buildStars()`:** star count multiplied by an extra `0.4` (low) / `0.7` (mid) / `1` (high)
+  tier factor, on top of the existing viewport-size and `starDensity` prop scaling.
+- **`_frame()`:** ambient meteors/comets (not the one-shot welcome star, which is a single object
+  and stays regardless of tier) are disabled entirely on low tier and capped lower on mid tier.
+- **`_initCursor()`:** cursor dust-trail cap and per-move spawn rate cut on low tier (only
+  applies to fine-pointer devices in the first place — touch devices never run this).
+- **`_initLaunch()` / `_stepLaunch()`:** the Starship finale already self-adapts quality
+  (`_lnQ`) by measuring live frame time and shedding particles if it can't hold ~30fps — that
+  knob now *seeds* lower on low/mid tier instead of always starting at full quality and stepping
+  down reactively after the first stutter.
+- **Main `tick()` RAF loop:** low tier caps the whole `_frame()` call at ~30fps
+  (`this._frameMinDt = 30`) instead of chasing 60 and dropping frames unevenly. Mid/high tier is
+  uncapped (still gated on `!this._hidden`, unchanged).
+
+This is additive and independent of `prefers-reduced-motion` (`this._reduced`) — a low-tier
+device with motion allowed still gets a lighter, but present, animation; `_reduced` is the
+separate "no motion at all" path and both can be true at once.
+
+## 8. Gotchas
 
 - **Must serve over HTTP.** `file://` breaks the sibling-file fetches. See CLAUDE.md.
 - **First load needs internet** (unpkg React/Babel + Google Fonts). Offline = blank page.

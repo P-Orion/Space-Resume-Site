@@ -5,23 +5,23 @@
 > straight from source, so they cannot drift. Narrative/judgment lives in
 > [`SITE-GUIDE.md`](SITE-GUIDE.md).
 
-- **Generated:** 2026-07-14
+- **Generated:** 2026-07-16
 - **Source:** `Home page animation redesign/github-export/index.html`
-- **Lines:** 2630   ·   **Last modified:** 2026-07-14   ·   **Content hash:** `56b29229617c`
+- **Lines:** 2776   ·   **Last modified:** 2026-07-16   ·   **Content hash:** `c7ac2eaa843f`
 
 ## Sections (by `data-screen-label`)
 
 | Line | id | Screen label |
 |-----:|----|--------------|
-| 295 | `ax-intro` | Intro |
-| 369 | `ax-hero` | Hero |
-| 454 | `ax-about` | About |
-| 509 | `ax-edu` | Education |
-| 649 | `ax-skills` | Skills |
-| 702 | `ax-exp-pin` | Experience |
-| 768 | `ax-work` | Projects |
-| 860 | `ax-reference` | Reference |
-| 905 | `ax-contact` | Contact |
+| 344 | `ax-intro` | Intro |
+| 418 | `ax-hero` | Hero |
+| 503 | `ax-about` | About |
+| 558 | `ax-edu` | Education |
+| 698 | `ax-skills` | Skills |
+| 751 | `ax-exp-pin` | Experience |
+| 817 | `ax-work` | Projects |
+| 915 | `ax-reference` | Reference |
+| 969 | `ax-contact` | Contact |
 
 ## Nav order (top bar)
 
@@ -47,6 +47,6 @@ React · TypeScript · Python · Angular · FastAPI · SQL · MongoDB · Docker 
 
 ## Assets
 
-**images/** (15): `3d-prints.jpg`, `apple-touch-icon.png`, `brainbench-slide1.png`, `content-creator.png`, `favicon.svg`, `fit-seal.png`, `invoice-network.png`, `marketing-revamp.png`, `network-analyzer.png`, `nfc-cards.jpg`, `og-image.png`, `prof-luginbuhl.webp`, `profile.jpg`, `saas.png`, `website-hero.png`
+**images/** (15): `3d-prints.webp`, `apple-touch-icon.png`, `brainbench-slide1.webp`, `content-creator.webp`, `favicon.svg`, `fit-seal.png`, `invoice-network.webp`, `marketing-revamp.webp`, `network-analyzer.webp`, `nfc-cards.webp`, `og-image.png`, `prof-luginbuhl.webp`, `profile.webp`, `saas.webp`, `website-hero.webp`
 
 **documents/** (1): `Orion-Powers-Resume.pdf`
