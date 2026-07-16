@@ -295,18 +295,12 @@
        the height to width instead keeps the aspect ratio (and the crop) close to the desktop
        version regardless of orientation, and shrinks the paint area substantially.  */
     #ax-rk-wrap{height:min(58vw,420px) !important}
-  }
-  @media (min-width:761px){
-    /* desktop only: the trail's original launch point (M-60,820) sits only just past the
-       viewBox edge, and on the wide/short containers typical of desktop windows the cover-fit
-       SVG (xMidYMid slice) crops very little off the sides — so the ship's fade-in and the
-       trail's draw-on both started already inside the visible frame instead of entering from
-       off-screen. Extending the launch point further down-left (well outside the cropped
-       viewport on any realistic desktop window) so the whole entrance happens off-canvas and
-       the ship arrives already in flight. Left untouched on mobile, where the trail is shown
-       close to full-length already (see the max-width:760px block above). */
-    #ax-rk-glow, #ax-rk-path{d:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30') !important}
-    #ax-rk-ship{offset-path:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30') !important}
+    /* the glow trail's feGaussianBlur filter re-rasterizes its (160%-padded, viewport-tall)
+       region on every frame while strokeDashoffset animates — cheap to composite on a desktop
+       GPU, but the single biggest jank source on phone GPUs/software rasterizers. Drop the
+       filter and fake the glow with a plain wider, dimmer stroke instead — still reads as a
+       soft trail at phone viewing distance, at a fraction of the paint cost. */
+    #ax-rk-glow{filter:none !important;stroke-width:6 !important;opacity:.25 !important}
   }
   @media (max-height:720px) and (min-width:761px){
     /* short desktop windows: pull the hero in and shrink the display name so the CTAs stay above the fold */
@@ -566,9 +560,9 @@
           </linearGradient>
           <filter id="ax-rk-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
         </defs>
-        <path id="ax-rk-glow" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="10" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
-        <path id="ax-rk-path" d="M-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
-        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-60,820 C170,420 520,190 1560,-30');offset-rotate:auto">
+        <path id="ax-rk-glow" d="M-420,1000 L-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="10" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
+        <path id="ax-rk-path" d="M-420,1000 L-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30');offset-rotate:auto">
           <path d="M11,0 C7,-3.6 -1,-3.4 -7,-2 L-7,2 C-1,3.4 7,3.6 11,0 Z" fill="#ece7db"></path>
           <path d="M-6.6,-2.2 L-11.5,-5.6 L-8.2,-1 Z" fill="#d3b078"></path>
           <path d="M-6.6,2.2 L-11.5,5.6 L-8.2,1 Z" fill="#d3b078"></path>
@@ -1281,29 +1275,26 @@ class Component extends DCLogic {
   // mission plays in open canvas instead of crossing through the headline/badge copy.
   _lnStageH() { return Math.max(190, Math.min(250, (this._vh || innerHeight) * 0.30)); }
 
-  // Reserves real layout space for the mobile launch stage by pushing the contact cards
-  // down with margin-top, and records _lnYOff — how far (in section-local px) _stepLaunch
-  // must shift the whole scene down — so the flight band sits BELOW the badge instead of
-  // overlapping the title/badge text above it. Without the push, the cards sit right under
-  // the badge and the rocket's flight renders behind them; without the offset, the rocket
-  // still crosses directly over the header copy even though it no longer touches the cards.
+  // Pins the mobile launch stage into the empty space ABOVE the badge — behind the
+  // "VII · REACH OUT" divider and the h2 headline — instead of reserving its own band
+  // below the badge. That space has no opaque boxes over it (unlike the info cards,
+  // which are solid-fill and would hide the flight entirely), so the mission reads as
+  // a true background layer for the section without ever pushing the cards out of their
+  // natural position. Records _lnYOff — how far (in section-local px) _stepLaunch must
+  // shift the whole scene down from the section top.
   _layoutLaunchStage() {
     const sec = this._contactSec, cards = this._ctCards, badge = this._ctBadge;
     if (!sec || !cards || !badge) return;
+    cards.style.marginTop = '';
     const narrow = this._vw < 760;
     if (!narrow || this._reduced || (this.props.launchFinale ?? true) === false) {
-      cards.style.marginTop = '';
       this._lnYOff = 0;
       return;
     }
-    cards.style.marginTop = '';
     const secTop = sec.getBoundingClientRect().top;
-    const badgeBottom = badge.getBoundingClientRect().bottom - secTop;
-    const naturalCardsTop = cards.getBoundingClientRect().top - secTop;
-    const gap = 14;
+    const badgeTop = badge.getBoundingClientRect().top - secTop;
     const stageH = this._lnStageH();
-    this._lnYOff = badgeBottom + gap;
-    cards.style.marginTop = Math.max(0, this._lnYOff + stageH - naturalCardsTop) + 'px';
+    this._lnYOff = Math.max(0, badgeTop - stageH);
   }
 
   _buildStars() {
@@ -1707,11 +1698,12 @@ class Component extends DCLogic {
     if (!sec || !ctx) { this._launch = null; return; }
     const w = this._lnW || sec.offsetWidth, hFull = this._lnH || sec.offsetHeight;
     // On phones the section is much taller than one screen (the two info cards stack
-    // full-width below), so the mission geometry uses a compact stage height pinned
-    // below the header text instead of the full, content-inflated section — see
-    // _layoutLaunchStage, which reserves matching space (above the cards, below the
-    // badge) so the flight overlaps neither. hFull (the real canvas size) is still used
-    // for clearing/culling below; yOff shifts the whole scene down past the header copy.
+    // full-width below), so the mission geometry uses a compact stage height instead of
+    // the full, content-inflated section — see _layoutLaunchStage, which pins that stage
+    // into the empty space above the badge (behind the divider/headline) so the flight
+    // plays as a background behind the section instead of pushing the cards down. hFull
+    // (the real canvas size) is still used for clearing/culling below; yOff shifts the
+    // whole scene down from the section top to that pinned stage position.
     const narrowScene = (this._vw || innerWidth) < 760;
     const h = narrowScene ? this._lnStageH() : hFull;
     const yOff = narrowScene ? (this._lnYOff || 0) : 0;
@@ -2490,10 +2482,22 @@ class Component extends DCLogic {
       return;
     }
     const dur = 5600, ease = 'cubic-bezier(.5,.05,.3,1)';
+    // The trail must land on exactly the same offset/value pairs as the ship's offsetDistance
+    // keyframes (not just the same start/end) — WAAPI applies a single top-level `easing` per
+    // *segment* between keyframes, so a 2-keyframe strokeDashoffset animation (start->end) paces
+    // differently frame-to-frame than the ship's 4-keyframe offsetDistance animation even with
+    // identical duration/easing, and the drawn line drifts away from the ship mid-flight. Reusing
+    // the ship's own stops as the trail's draw-fraction keeps the line's tip glued to the ship.
+    const trail = (len) => [
+      { strokeDashoffset: len },
+      { strokeDashoffset: len * 0.97, offset: 0.05 },
+      { strokeDashoffset: len * 0.04, offset: 0.92 },
+      { strokeDashoffset: 0 }
+    ];
     const launch = () => {
       this._rkAnims = [
-        core.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, easing: ease, fill: 'forwards' }),
-        glow.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, easing: ease, fill: 'forwards' }),
+        core.animate(trail(L), { duration: dur, easing: ease, fill: 'forwards' }),
+        glow.animate(trail(L), { duration: dur, easing: ease, fill: 'forwards' }),
         ship.animate([
           { offsetDistance: '0%', opacity: 0 },
           { offsetDistance: '3%', opacity: 1, offset: 0.05 },

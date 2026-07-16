@@ -12,6 +12,46 @@ Format:
 
 ---
 
+## 2026-07-16 — Education rocket: trail glued to ship, off-screen launch on mobile too, mobile perf
+- **`index.html`, `_initRocket()` (~line 2472) and the rocket's SVG markup (~line 553-571).**
+  Three follow-up fixes to the rocket animation, all in Education (`ax-edu`):
+  1. **Trail no longer trails behind the ship.** `core`/`glow` (the gold arc) previously animated
+     `strokeDashoffset` with just 2 keyframes (start→end) while the ship's `offsetDistance`
+     animated with 4 keyframes (0%→3%→96%→100%, timed at 0/.05/.92/1). WAAPI applies a top-level
+     `easing` *per segment between keyframes*, so a 2-keyframe animation paces differently frame-
+     to-frame than a 4-keyframe one even with identical duration/easing — the drawn line and the
+     ship's actual position drifted apart mid-flight. Fix: the trail now uses the same 4 offsets
+     as the ship, with `strokeDashoffset` values derived from the ship's own `offsetDistance`
+     values at each stop, so the trail's tip is mathematically pinned to the ship's position at
+     every frame instead of merely sharing start/end points.
+  2. **Off-screen launch on mobile.** The `@media (min-width:761px)` override that extended the
+     launch point off-canvas (`M-420,1000 L-60,820 C…`) was desktop-only; mobile still used the
+     short `M-60,820 C…` path, which — despite the assumption in the prior changelog entry below —
+     was not reliably cropped off mobile's near-viewBox-aspect container, so the ship visibly
+     started already on-screen. The extended path is now the *only* path (set directly on
+     `#ax-rk-glow`/`#ax-rk-path`/`#ax-rk-ship` in the markup), and the now-redundant
+     `min-width:761px` override block was deleted.
+  3. **Mobile jank.** `#ax-rk-glow` carries an SVG `feGaussianBlur` filter (`stdDeviation:7`,
+     160%-padded region) that gets re-rasterized every frame while `strokeDashoffset` animates —
+     inexpensive to composite on a desktop GPU, but the dominant jank source on phone GPUs /
+     software rasterizers (and not caught by the existing `.ax-tier-low [style*="blur("]` rule,
+     since the filter is set via the `filter` attribute, not an inline `style` blur). Added
+     `#ax-rk-glow{filter:none;stroke-width:6;opacity:.25}` inside the existing `max-width:760px`
+     block — same soft-trail look at phone viewing distance, without the per-frame filter repaint.
+
+## 2026-07-16 — Mobile Starship finale now plays as a background instead of pushing the contact cards down
+- **`index.html`, `_layoutLaunchStage` (~line 1279) and `_stepLaunch`'s narrow-scene comment
+  (~line 1700).** The previous mobile fix (see the "hidden and oversized on phones" entry
+  below) confined the launch/catch mission to a compact stage, but reserved layout space for
+  it by pushing `#ax-contact-cards` down with `margin-top`. That made the animation read as
+  its own block appearing *before* the contact info while scrolling, instead of behind it.
+- Fix: `_layoutLaunchStage` no longer sets `cards.style.marginTop`. Instead it pins the
+  compact stage (`_lnYOff`) into the empty space *above* `#ax-contact-badge` — behind the
+  "VII · REACH OUT" divider and the h2 headline — which has no opaque boxes over it (unlike
+  the info cards, which are solid-fill and would hide the flight entirely). The cards now
+  stay in their natural document position; the mission plays as a true background layer for
+  the section, matching how it already behaves on desktop.
+
 ## 2026-07-16 — Desktop: Education rocket now launches from off-screen
 - **`index.html`, new `@media (min-width:761px)` rule next to the mobile rocket-trail fix.**
   The trail's launch point (`M-60,820`) sits only just past the SVG's `viewBox` edge; on the
