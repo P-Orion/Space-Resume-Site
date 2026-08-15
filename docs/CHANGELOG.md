@@ -12,6 +12,190 @@ Format:
 
 ---
 
+## 2026-08-15 — Intro tweaks: nudge name up, warm subtitle to gold
+- **`index.html`** (`#ax-intro` block ~line 384-385): nudged the "ORION POWERS" block up
+  a touch (`margin-top:-14px` on the name wrapper) and recolored the subtitle
+  ("Software Engineer · Melbourne, Florida") from the dull grey-brown `#8f897c` to the
+  theme gold `#d3b078` so it reads gold instead of muddy.
+- Why: user follow-up.
+
+## 2026-08-15 — Intro/loading screen: 40% larger + gold accent under the name
+- **`index.html`** (intro overlay, `#ax-intro` block ~line 348-389): scaled the loading
+  screen up ~40% — constellation SVG `min(120px,32vw)`→`min(168px,44.8vw)`, subtitle
+  `8px`→`11.2px`, name `clamp(20.8px,5vw,32px)`→`clamp(29.1px,7vw,44.8px)`, and the
+  column gap/padding to match (`27.2/19.2`→`38/26.9`).
+- Added a sleek gold accent rule (`#ax-intro-rule`) beneath the name: a hairline
+  gradient line (edge-fading gold with a soft glow) that draws in via `scaleX` after the
+  name appears. Reveal wired in `_runIntro` (~line 2701) at 1050ms.
+- Why: user request to enlarge the loading text/animation and add a gold accent around
+  "Orion Powers". No anchors renamed; new `#ax-intro-rule` id added.
+
+## 2026-08-15 — Education rocket: faster flight
+- **`index.html`** (`_initRocket`, ~line 2530): sped up the flight — duration divisor
+  0.3375 → 0.55 units/ms (~1.6× faster). No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: bend the arc more
+- **`index.html`** (paths ~line 575-577): raised the crest and reached it sooner for a
+  stronger bow: `M-260,800 C80,180 1050,-20 1560,-30` on all three path defs. Still a single
+  smooth cubic, x/y monotonic. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: deepen the arc (was too straight)
+- **`index.html`** (paths ~line 575-577): pulled the single-cubic control points off the
+  chord for a pronounced upward bow — steep rise from bottom-left, curving over and flattening
+  along the top: `M-260,800 C0,380 950,-10 1560,-30` on all three path defs. Still one smooth
+  curve, x/y monotonic so no wiggle. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: one smooth single-curve arc
+- **`index.html`** (paths ~line 575-577): the trajectory was two cubic segments joined at a
+  point, so it visibly changed curvature mid-flight. Replaced with a single cubic Bézier
+  (one `C`) for one clean sleek arc, both control points above the chord so it stays concave
+  (bottom-left → top-right, rises then flattens): `M-260,800 C200,520 820,90 1560,-30` on all
+  three path defs. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: fix trajectory (was an inverse arc)
+- **`index.html`** (paths ~line 572-574): the previous left-entry path was concave the wrong
+  way (bulged below its chord → looked like an inverse arc). Replaced with a proper
+  bottom-left→top-right swoosh that rises steeply then flattens, concave up-left like the
+  original: `M-260,800 C40,700 120,430 340,300 C720,110 1150,10 1560,-30` on all three path
+  defs. Kept the goldier gradient. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: enter from the left + goldier, sleeker streak
+- **`index.html`** (SVG defs/paths, ~line 565-574): reshaped the flight path to enter from
+  off the LEFT edge at mid-height and sweep up to the top-right, replacing the old
+  bottom-left/dip lead-in. New `d` (`M-400,440 C160,415 620,300 980,190 C1200,120 1420,20
+  1560,-30`) applied to `#ax-rk-glow`, `#ax-rk-path`, and the ship's (now-unused) offset-path.
+- Re-tuned the `#ax-rk-grad` gradient: richer gold, bright at the rocket end
+  (`#f6cf7c`, .95) fading to transparent at the tail for a sleek taper. Trimmed stroke widths
+  (glow 10→9, core 2.2→2) to match.
+- Note: `_initRocket` samples the streak from `#ax-rk-path`'s `d`, so the path change flows
+  through automatically. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: lengthen the streak
+- **`index.html`** (`_initRocket`): `TAIL` 0.6 → 0.85 (streak length as a fraction of the
+  flight path). Purely a length tweak; sync/behavior unchanged.
+
+## 2026-08-15 — Education rocket: streak is now a real sub-path (kills the lag for good)
+- **`index.html`** (`_initRocket`, ~line 2488): stopped drawing the trail with
+  `stroke-dashoffset` entirely. On these `non-scaling-stroke` paths the dash is measured in
+  screen px while the rocket (`getPointAtLength`) is in user units, so every scale attempt
+  kept leaving the streak behind. Now each frame rebuilds the streak's own `d` by sampling
+  the flight path from `start`→`lead` (user units) and places the rocket at that same `lead` —
+  streak tip and rocket are the identical point, so it can't lag.
+- `TAIL` 0.4 → 0.6 (50% longer). Removed the end-of-flight fade: the gold streak stays drawn
+  once the flight completes (clears only when you scroll away, so it replays on return).
+- Uses a detached reference `<path>` to sample the full geometry while core/glow hold the
+  short streak. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: fix comet-tail scale (streak was lagging + short)
+- **`index.html`** (`_initRocket`, ~line 2497): the comet tail lagged the rocket and looked
+  short because `getScreenCTM()` was returning a ~1 scale, so the screen-pixel dash was out of
+  step with the user-unit rocket position (`getPointAtLength`). Both symptoms = one wrong
+  scale factor.
+- Replaced with a deterministic slice scale: `max(svgRect.w/viewBox.w, svgRect.h/viewBox.h)`.
+  Now the tail's leading end lands exactly on the rocket. Also bumped `TAIL` 0.34 → 0.4.
+- Why: the streak must start with, and stay glued to, the rocket. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: switch to a sleek comet tail (no full-arc draw-on)
+- **`index.html`** (`_initRocket`, ~line 2487): the "draw the whole path on" model painted a
+  permanent gold arc across the entire section, which read as clunky/lagging. Replaced with a
+  short **comet tail**: each frame draws a single dash of length `TAIL` (34% of the on-screen
+  path) whose leading end sits at fraction `p`, and the rocket is placed at that same point.
+  The tail now emanates from the rocket and travels with it; the whole thing fades out (wrap
+  opacity) as it leaves frame, so nothing is left painted behind.
+- Ship positioned via the SVG `transform` attribute (unambiguous user units) instead of CSS
+  transform. Dash pattern uses on-screen px (`L × getScreenCTM scale`) so the tail's tip
+  matches `getPointAtLength`'s fraction. Same rAF loop / IntersectionObserver trigger.
+- Why: user wanted the original "streak straight out of the rocket" look, not a full static arc.
+
+## 2026-08-15 — Revamp Education rocket: rocket now rides the tip of its own streak
+- **`index.html`** (`_initRocket`, ~line 2487): replaced the two-animation design (ship on
+  CSS `offset-path` + trail on WAAPI `stroke-dashoffset`) with a single rAF loop. Each frame
+  computes one eased progress `p`, draws the streak to fraction `p`, then places the ship AT
+  that point via `getPointAtLength(p * L)` with the tangent angle. The rocket is positioned
+  on the tip of its streak by construction, so it can never lead/lag the trail.
+- Ship now positioned via CSS `transform` (offset-path disabled); trail dash still measured
+  in on-screen px (`L × getScreenCTM scale`) to match the user-unit path fraction. Eased with
+  an inline JS cubic-bezier(.5,.05,.3,1). Same IntersectionObserver trigger as before.
+- Why: on a curved path the two independent animations drifted (per-segment easing), leaving
+  the streak far behind the rocket. No anchors/structure changed.
+
+## 2026-08-15 — Fix Education rocket trail lag / pre-launch visibility (units bug)
+- **`index.html`** (`_initRocket`, ~line 2487): the trail is drawn with
+  `stroke-dasharray`/`stroke-dashoffset`, but both paths (`#ax-rk-path`, `#ax-rk-glow`) use
+  `vector-effect:non-scaling-stroke`, which measures the dash in **screen px**. The code was
+  seeding the dash from `getTotalLength()` (**user units**), while the ship's `offset-path`
+  also runs in user units and the SVG is scaled by `preserveAspectRatio slice`.
+- Result: dash length ≠ on-screen path length, so a slice of the trail showed before launch
+  and the draw rate didn't match the ship (trail lagged badly).
+- Fix: added `screenLen()` = `L × (uniform CTM scale from getScreenCTM)`; dash-array/offset,
+  `hide()`, and the `trail()` keyframes now use that on-screen length (`Ls`), recomputed at
+  each launch for resize/rotation. Trail tip now stays glued to the rocket. No anchors/structure changed.
+
+## 2026-08-15 — Redo Education rocket launch timing & fix stray trail
+- **`index.html`** (`_initRocket`, ~line 2510): rewrote the launch trigger and reset. The
+  rocket now launches when the section top scrolls into the top ~70% of the viewport
+  (IntersectionObserver `rootMargin: '0px 0px -30% 0px'`, single `threshold: 0`) — i.e. a
+  beat *before* the section is fully on screen — instead of firing late at `cover > 0.45`.
+- Added a `hide()` helper that re-pins the trail to its fully-hidden base
+  (`strokeDashoffset = L`, ship `opacity 0`) both before every launch and inside `reset()`.
+- Why: the old `reset()` only cancelled the animations, so a completed flight's
+  `fill:'forwards'` end-state (fully-drawn trail) lingered and the trail appeared statically
+  on arrival, then "reappeared" out of sync with the ship. Trail/ship stay glued via the
+  existing matched keyframe offsets; no structure/anchors changed.
+
+## 2026-07-17 — Fix: Work Experience section stuck on "Modus Operandi", never rotated
+- **`index.html`** (~line 252-253, global `<style>`): `html`/`body` overflow rule. Root
+  cause traced to commit `65cf475` ("Convert project/hero images to WebP..."), which
+  changed `body{overflow-x:clip}` to `overflow-x:hidden` and newly added
+  `overflow-x:hidden` to `html` (previously html had no `overflow` at all). Reverted to
+  `html{...}` with no overflow-x, and `body{...overflow-x:clip...}`.
+- Why: this DC-runtime's generated `support.js` force-injects `html,body{height:100%}`
+  (`FULL_PAGE_CSS`) on every standalone page load. Once `html`'s overflow is anything but
+  the CSS-initial `visible`, the spec's "body overflow propagates to the viewport" rule
+  stops applying, so `<body>` becomes its own `height:100%`, independently-scrolling box
+  instead of the document/viewport scrolling. The page still *looked* like it scrolled
+  normally (native scrolling of body's own overflow box is visually identical), but
+  `window.scrollY` — which every scroll-driven effect in this file reads via `const y =
+  scrollY` in `_frame()` — froze at 0 forever. That silently broke the Experience section's
+  pinned scroll-rotation (~340vh sticky section, `_expLayers`/`_pinTop`/`_pinRange`), plus
+  the (less visually obvious) hero parallax and topbar nav-highlight. Confirmed via
+  Playwright mobile + desktop emulation: before the fix `document.documentElement.
+  scrollHeight` reported only `innerHeight` (viewport-clamped) and `scrollY` never moved;
+  after the fix it reports full content height and the Experience layers correctly
+  rotate Modus Operandi → Hyperformant → RARE T Holdings while scrolling.
+
+## 2026-07-17 — Professor Recommendation card: bigger label + affiliation text
+- **`index.html`** — in the animated reference card (~line 940-945): renamed the
+  "Academic Reference" label to "Professor Recommendation" and bumped it from `8px` to
+  `14px`; enlarged the "Florida Institute of Technology" line from `7.2px` to `12px`.
+  The noscript/fallback `<h2>` (~line 214) was renamed to match.
+- Why: user-requested rename + readability bump on the small mono labels.
+
+## 2026-07-17 — Starship launch: more vertical liftoff before the pitch-over
+- **`index.html`, `_stepLaunch()` (~line 1757-1758, Contact section finale).** Tuned two
+  constants in the single continuous rotation formula that drives the booster/stack's
+  attitude through the whole pad-to-catch flight: `A_LEAN` (0.12 → 0.22, how far into the
+  flight the ascent lean ramps in) and `tiltMax` (0.60 → 0.40 rad, how far it leans over
+  during that ascent/boostback plateau). The stack now rides close to vertical for longer
+  right off the pad before gently arcing toward the tower, instead of leaning ~34° almost
+  immediately.
+- Why: user feedback that the liftoff read as leaning too early/too much; wanted a more
+  vertical launch with a smooth transition into the existing flip/glide/catch. Only these
+  two constants changed — the position spline, flip/descent timings (`A_SEP`,
+  `A_FLIPEND`, `A_DESCSTART`, `A_FLIPBACK`, `A_KICKPEAK/END`), and catch logic are
+  untouched, since the rotation formula converges back to `horizAngle` at `A_FLIPEND`
+  regardless of `tiltMax` — the flip/glide/landing/catch sequence is unaffected.
+- Verified with Playwright screenshots at 1440×900 and 390×844 (mobile) across the full
+  ~13.5s flight timeline (ignition → vertical ascent → separation → boostback → glide →
+  descent → catch) — liftoff reads noticeably more vertical, catch sequence unchanged on
+  both viewport sizes, no new console errors.
+
+## 2026-07-17 — Rename "Academic Reference" to "Professor Recommendation"
+- **`index.html`** — both copies of the section header updated: the noscript/fallback
+  `<h2>` (~line 214) and the animated card's monospace label (~line 945, also bumped
+  from `8px` to `14px` font size per request).
+- Why: user-requested rename + larger label text; no content/copy changes otherwise.
+
 ## 2026-07-16 — Education rocket: trail glued to ship, off-screen launch on mobile too, mobile perf
 - **`index.html`, `_initRocket()` (~line 2472) and the rocket's SVG markup (~line 553-571).**
   Three follow-up fixes to the rocket animation, all in Education (`ax-edu`):

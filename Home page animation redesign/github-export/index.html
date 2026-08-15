@@ -211,7 +211,7 @@
 </article>
 </section>
 <section>
-<h2>Academic Reference</h2>
+<h2>Professor Recommendation</h2>
 <p><strong>Dr. David Luginbuhl</strong> — Associate Professor, Computer Science &amp; Electrical Engineering, Florida Institute of Technology. <a href="mailto:dluginbuhl@fit.edu">dluginbuhl@fit.edu</a> · <a href="tel:+13216747156">+1 (321) 674-7156</a>.</p>
 </section>
 <section>
@@ -249,8 +249,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  html{scroll-behavior:smooth;overflow-x:hidden;width:100%}
-  body{margin:0;background:#070709;overflow-x:hidden;width:100%}
+  /* overflow-x must be 'clip' (not 'hidden') and must NOT appear on <html> at all: this
+     DC-runtime's FULL_PAGE_CSS (support.js) force-sets html/body to height:100% on every
+     standalone page load, and if html's overflow is anything but the initial 'visible',
+     the CSS spec's "body overflow propagates to the viewport" rule stops applying — body
+     becomes its OWN height:100%-clipped, independently-scrolling box instead of the page
+     scrolling normally. The page still looks like it scrolls fine (body's internal scroll
+     is visually identical), but window.scrollY freezes at 0 forever, silently breaking
+     every scroll-driven effect in this file (Experience pin/rotation, hero parallax,
+     topbar nav highlight, progress bar) — see docs/CHANGELOG.md. */
+  html{scroll-behavior:smooth;width:100%}
+  body{margin:0;background:#070709;overflow-x:clip;width:100%}
   ::selection{background:#d3b078;color:#070709}
   html.ax-cursor, html.ax-cursor *{cursor:none}
   #ax-nav::-webkit-scrollbar{display:none}
@@ -336,8 +345,8 @@
 
 <!-- ===== INTRO OVERLAY ===== -->
 <div id="ax-intro" data-screen-label="Intro" style="position:fixed;inset:0;z-index:60;background:#070709;display:flex;align-items:center;justify-content:center;transition:opacity .9s ease;cursor:pointer">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:27.2px;padding:19.2px">
-    <svg id="ax-intro-const" viewBox="0 0 200 260" style="width:min(120px,32vw);height:auto;overflow:visible">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:38px;padding:26.9px">
+    <svg id="ax-intro-const" viewBox="0 0 200 260" style="width:min(168px,44.8vw);height:auto;overflow:visible">
       <line class="cline" x1="50" y1="5" x2="22" y2="50" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
       <line class="cline" x1="22" y1="50" x2="32" y2="93" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
       <line class="cline" x1="32" y1="93" x2="47" y2="112" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
@@ -372,8 +381,11 @@
       <circle cx="64" cy="255" r="2.4" style="fill:#ece7db"></circle>
       <circle cx="138" cy="242" r="3.2" style="fill:#d3b078"></circle>
     </svg>
-    <div id="ax-intro-sub" style="opacity:0;transform:translateY(10px);transition:opacity .8s ease,transform .8s ease;font:500 8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#8f897c;text-align:center">Software Engineer · Melbourne, Florida</div>
-    <div id="ax-intro-name" style="opacity:0;transform:translateY(12px);transition:opacity .9s ease,transform .9s ease;font:500 clamp(20.8px,5vw,32px) 'Cormorant Garamond',serif;letter-spacing:.14em;color:#ece7db">ORION POWERS</div>
+    <div id="ax-intro-sub" style="opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s ease;font:500 11.2px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;text-align:center">Software Engineer · Melbourne, Florida</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:15px;margin-top:-14px">
+      <div id="ax-intro-name" style="opacity:0;transform:translateY(17px);transition:opacity .9s ease,transform .9s ease;font:500 clamp(29.1px,7vw,44.8px) 'Cormorant Garamond',serif;letter-spacing:.14em;color:#ece7db">ORION POWERS</div>
+      <div id="ax-intro-rule" style="opacity:0;transform:scaleX(0);transition:opacity .9s ease,transform 1s cubic-bezier(.22,.61,.36,1);width:min(300px,64vw);height:1px;background:linear-gradient(90deg,transparent,rgba(211,176,120,.85) 22%,#e6cd97 50%,rgba(211,176,120,.85) 78%,transparent);box-shadow:0 0 6px rgba(211,176,120,.35)"></div>
+    </div>
   </div>
 </div>
 
@@ -554,15 +566,15 @@
       <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible">
         <defs>
           <linearGradient id="ax-rk-grad" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stop-color="#f2b97c" stop-opacity=".9"></stop>
-            <stop offset=".5" stop-color="#e8c894" stop-opacity=".5"></stop>
-            <stop offset="1" stop-color="#ece7db" stop-opacity=".25"></stop>
+            <stop offset="0" stop-color="#caa24f" stop-opacity="0"></stop>
+            <stop offset=".5" stop-color="#e6bd6e" stop-opacity=".55"></stop>
+            <stop offset="1" stop-color="#f6cf7c" stop-opacity=".95"></stop>
           </linearGradient>
           <filter id="ax-rk-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
         </defs>
-        <path id="ax-rk-glow" d="M-420,1000 L-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="10" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
-        <path id="ax-rk-path" d="M-420,1000 L-60,820 C170,420 520,190 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
-        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-420,1000 L-60,820 C170,420 520,190 1560,-30');offset-rotate:auto">
+        <path id="ax-rk-glow" d="M-260,800 C80,180 1050,-20 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="9" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
+        <path id="ax-rk-path" d="M-260,800 C80,180 1050,-20 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-260,800 C80,180 1050,-20 1560,-30');offset-rotate:auto">
           <path d="M11,0 C7,-3.6 -1,-3.4 -7,-2 L-7,2 C-1,3.4 7,3.6 11,0 Z" fill="#ece7db"></path>
           <path d="M-6.6,-2.2 L-11.5,-5.6 L-8.2,-1 Z" fill="#d3b078"></path>
           <path d="M-6.6,2.2 L-11.5,5.6 L-8.2,1 Z" fill="#d3b078"></path>
@@ -939,10 +951,10 @@
           </div>
           <div style="font:500 clamp(20.8px,3vw,32px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:8px">Dr. David <span style="font-style:italic;color:#d3b078">Luginbuhl</span></div>
           <div style="font:300 clamp(10.8px,1.4vw,12px)/1.6 Outfit,sans-serif;color:#a09a8c;max-width:272px">Associate Professor, Computer Science &amp; Electrical Engineering</div>
-          <div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-top:8px">Florida Institute of Technology</div>
+          <div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-top:8px">Florida Institute of Technology</div>
         </div>
         <div style="background:#0a0a0d;padding:clamp(25.6px,4.5vw,44.8px);display:flex;flex-direction:column;justify-content:center">
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:14.4px">Academic Reference</div>
+          <div style="font:500 14px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:14.4px">Professor Recommendation</div>
           <p style="margin:0 0 22.4px;font:300 clamp(11.6px,1.5vw,13.6px)/1.8 Outfit,sans-serif;color:#a8a294">Dr. Luginbuhl has taught me twice, years apart — first the fundamentals of software development, later the theory behind programming languages — and watched me grow from a first-year student into an engineer ready to ship real systems. He's offered to vouch for that trajectory personally. Reach out directly.</p>
           <div style="display:flex;flex-direction:column;border-top:1px solid rgba(236,231,219,.14)">
             <a data-cursor="EMAIL ✦" href="mailto:dluginbuhl@fit.edu" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12.8px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
@@ -1754,8 +1766,8 @@ class Component extends DCLogic {
     const A_SEP = 0.32, A_FLIPEND = 0.50, A_DESCSTART = 0.70, A_REST = 0.97;
     const A_FLIPBACK = 0.76, A_KICKPEAK = 0.89, A_KICKEND = 0.967;  // braking kick, upright -> upright
     const A_GONE = 0.64;                                 // ship considered vanished by here
-    const A_LEAN = 0.12;                                  // ascent lean reached quickly, right off the pad
-    const tiltMax = 0.60, horizAngle = Math.PI / 2;       // ascent lean, then fully horizontal
+    const A_LEAN = 0.22;                                  // liftoff rides mostly vertical before the gravity turn eases in
+    const tiltMax = 0.40, horizAngle = Math.PI / 2;       // shallow ascent lean, then fully horizontal
     const kickAngle = 25 * Math.PI / 180;                 // peak lean of the pre-catch braking kick
 
     // ===== ONE continuous position spline for the primary body: pad -> separation ->
@@ -2475,48 +2487,91 @@ class Component extends DCLogic {
     const glow = document.getElementById('ax-rk-glow');
     const ship = document.getElementById('ax-rk-ship');
     if (!sec || !core || !glow || !ship) return;
-    const L = core.getTotalLength();
-    [core, glow].forEach((p) => { p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
-    if (this._reduced) {
-      [core, glow].forEach((p) => { p.style.strokeDashoffset = 0; });
-      return;
-    }
-    const dur = 5600, ease = 'cubic-bezier(.5,.05,.3,1)';
-    // The trail must land on exactly the same offset/value pairs as the ship's offsetDistance
-    // keyframes (not just the same start/end) — WAAPI applies a single top-level `easing` per
-    // *segment* between keyframes, so a 2-keyframe strokeDashoffset animation (start->end) paces
-    // differently frame-to-frame than the ship's 4-keyframe offsetDistance animation even with
-    // identical duration/easing, and the drawn line drifts away from the ship mid-flight. Reusing
-    // the ship's own stops as the trail's draw-fraction keeps the line's tip glued to the ship.
-    const trail = (len) => [
-      { strokeDashoffset: len },
-      { strokeDashoffset: len * 0.97, offset: 0.05 },
-      { strokeDashoffset: len * 0.04, offset: 0.92 },
-      { strokeDashoffset: 0 }
-    ];
+    ship.style.offsetPath = 'none';   // we position the ship ourselves; kill the CSS motion path
+
+    // THE STREAK IS A REAL SUB-PATH, not a dash. Every earlier attempt drew the trail with
+    // stroke-dashoffset, which on these vector-effect:non-scaling-stroke paths is measured in
+    // SCREEN pixels while the rocket (getPointAtLength) lives in USER units — so any scale
+    // error between the two put the streak behind the rocket. Here we rebuild the streak's own
+    // `d` each frame by sampling the flight path from `start`→`lead` in user units, and place
+    // the rocket at that same `lead`. Streak tip and rocket come from the identical
+    // getPointAtLength call: they are the same point, so the streak can never lag.
+    const FULL_D = core.getAttribute('d');
+    const ref = document.createElementNS('http://www.w3.org/2000/svg', 'path'); // detached, for sampling
+    ref.setAttribute('d', FULL_D);
+    const L = ref.getTotalLength();
+    const TAIL = 0.85;                 // streak length as a fraction of the path
+    const SAMPLES = 40;
+    // Build the streak polyline from `start` (tail) up to `lead` (the rocket), in user units.
+    const streakD = (p) => {
+      const lead = Math.max(0, Math.min(L, p * L));
+      if (lead <= 1) return '';
+      const start = Math.max(0, lead - L * TAIL);
+      let d = '';
+      for (let i = 0; i <= SAMPLES; i++) {
+        const pt = ref.getPointAtLength(start + (lead - start) * (i / SAMPLES));
+        d += (i ? 'L' : 'M') + pt.x.toFixed(1) + ',' + pt.y.toFixed(1);
+      }
+      return d;
+    };
+    const drawStreak = (p) => { const d = streakD(p) || 'M0,0'; core.setAttribute('d', d); glow.setAttribute('d', d); };
+    const placeShip = (p) => {
+      const len = Math.max(0.01, Math.min(L, p * L));
+      const a = ref.getPointAtLength(len);
+      const b = ref.getPointAtLength(Math.min(L, len + 1));
+      const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      ship.setAttribute('transform', 'translate(' + a.x + ' ' + a.y + ') rotate(' + ang + ')');
+    };
+    const hide = () => { core.setAttribute('d', 'M0,0'); glow.setAttribute('d', 'M0,0'); ship.style.opacity = '0'; };
+    if (this._reduced) { core.setAttribute('d', FULL_D); glow.setAttribute('d', FULL_D); return; }
+    hide();
+
+    // Duration scales with the path length; the divisor is speed (units/ms) — higher = faster.
+    const dur = Math.round(L / 0.55);
+    // JS cubic-bezier(.5,.05,.3,1) — maps linear time t to eased progress p.
+    const ease = (() => {
+      const x1 = 0.5, y1 = 0.05, x2 = 0.3, y2 = 1;
+      const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+      const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+      const fx = (t) => ((ax * t + bx) * t + cx) * t;
+      const dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+      return (x) => {
+        let t = x;
+        for (let i = 0; i < 8; i++) { const e = fx(t) - x, d = dx(t); if (Math.abs(e) < 1e-4 || !d) break; t -= e / d; }
+        return ((ay * t + by) * t + cy) * t;
+      };
+    })();
+
+    const frame = (now) => {
+      const t = Math.min(1, (now - this._rkT0) / dur);
+      const p = ease(t);
+      drawStreak(p);
+      placeShip(p);
+      ship.style.opacity = (p < 0.05 ? p / 0.05 : 1).toFixed(3);  // fade in off the pad; then stay
+      this._rkRAF = t < 1 ? requestAnimationFrame(frame) : 0;      // on finish: streak stays drawn, no fade
+    };
     const launch = () => {
-      this._rkAnims = [
-        core.animate(trail(L), { duration: dur, easing: ease, fill: 'forwards' }),
-        glow.animate(trail(L), { duration: dur, easing: ease, fill: 'forwards' }),
-        ship.animate([
-          { offsetDistance: '0%', opacity: 0 },
-          { offsetDistance: '3%', opacity: 1, offset: 0.05 },
-          { offsetDistance: '96%', opacity: 1, offset: 0.92 },
-          { offsetDistance: '100%', opacity: 0 }
-        ], { duration: dur, easing: ease, fill: 'forwards' })
-      ];
+      hide();
+      this._rkPlaying = true;
+      this._rkT0 = performance.now();
+      cancelAnimationFrame(this._rkRAF);
+      this._rkRAF = requestAnimationFrame(frame);
     };
     const reset = () => {
-      (this._rkAnims || []).forEach((a) => a.cancel());
-      this._rkAnims = null;
+      cancelAnimationFrame(this._rkRAF); this._rkRAF = 0;
+      this._rkPlaying = false;
+      hide();
     };
+    // Launch when the section's top scrolls up into the top ~70% of the viewport — a beat
+    // BEFORE the section is fully on screen — so the whole swoop plays out as the user
+    // arrives. rootMargin pulls the root's bottom up 30%; a single 0 threshold is a clean
+    // one-shot enter/leave trigger.
     this._rkIO = new IntersectionObserver((es) => {
       es.forEach((e) => {
-        const cover = e.intersectionRect.height / Math.max(1, innerHeight);
-        if (e.isIntersecting && cover > 0.45) { if (!this._rkAnims) launch(); }
-        else if (!e.isIntersecting) { reset(); }
+        if (e.isIntersecting) { if (!this._rkPlaying) launch(); }
+        else { reset(); }
       });
-    }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) });
+    }, { rootMargin: '0px 0px -30% 0px', threshold: 0 });
     this._rkIO.observe(sec);
   }
 
@@ -2646,6 +2701,10 @@ class Component extends DCLogic {
       const nm = document.getElementById('ax-intro-name');
       nm.style.opacity = '1'; nm.style.transform = 'none';
     }, 850));
+    this._t.push(setTimeout(() => {
+      const rl = document.getElementById('ax-intro-rule');
+      if (rl) { rl.style.opacity = '1'; rl.style.transform = 'none'; }
+    }, 1050));
     this._t.push(setTimeout(() => finish(false), 2450));
     ov.addEventListener('pointerdown', () => finish(false), { once: true });
     ov.addEventListener('wheel', () => finish(false), { once: true, passive: true });
