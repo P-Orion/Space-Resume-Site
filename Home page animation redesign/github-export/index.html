@@ -24,6 +24,15 @@
 <link rel="preload" as="script" href="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous">
 <link rel="preload" as="script" href="./image-slot.js">
 
+<!-- Perf: fonts, requested during initial parse. `preconnect` opens the TLS connections
+     to both font hosts up front; the stylesheet itself is what unblocks the woff2 fetches,
+     so it is a plain <link rel="stylesheet"> rather than a preload+swap dance. The family
+     list must mirror the note in the x-dc <helmet> below. display=swap keeps text visible
+     with the fallback while the webfonts arrive. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+
 <!-- Open Graph / Twitter share card -->
 <meta property="og:type" content="profile">
 <meta property="og:site_name" content="Orion Powers">
@@ -107,9 +116,9 @@
   #ax-noscript-fallback h2{color:#d3b078;border-top:1px solid #33302a;margin-top:2em;padding-top:.6em;font-size:1.5em}
   #ax-noscript-fallback h3{color:#ece7db;margin-bottom:.2em}
   #ax-noscript-fallback a{color:#d3b078}
-  #ax-noscript-fallback .tag{color:#8f897c;font-family:monospace;font-size:.85em;text-transform:uppercase;letter-spacing:.08em}
+  #ax-noscript-fallback .tag{color:#ffffff;font-family:monospace;font-size:.85em;text-transform:uppercase;letter-spacing:.08em}
   #ax-noscript-fallback ul{padding-left:1.2em}
-  #ax-noscript-fallback .meta{color:#a8a294;font-size:.95em}
+  #ax-noscript-fallback .meta{color:#ffffff;font-size:.95em}
 </style>
 </noscript>
 <div id="ax-noscript-fallback" style="display:none">
@@ -245,9 +254,12 @@
 </script>
 <x-dc>
 <helmet data-dc-atomics>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Perf: the Google Fonts preconnect + stylesheet used to live here. The runtime only
+     hoists <helmet> into <head> AFTER support.js + React have downloaded, parsed and
+     mounted, so the font request did not even start until ~2-3s in on a mid-tier phone
+     and every heading re-laid-out when it finally swapped. They now sit in the real
+     <head> (see the block next to the React preloads) so the fetch begins during initial
+     HTML parse. Keep the two copies in sync if the family list ever changes. -->
 <style>
   /* overflow-x must be 'clip' (not 'hidden') and must NOT appear on <html> at all: this
      DC-runtime's FULL_PAGE_CSS (support.js) force-sets html/body to height:100% on every
@@ -321,6 +333,32 @@
     /* not enough vertical room for the scroll cue without crowding the CTAs — it's decorative, so drop it */
     .ax-scroll-cue{opacity:0 !important;pointer-events:none}
   }
+  /* Experience is a pinned scene: the whole card has exactly one viewport height to live
+     in, and the sticky frame clips anything that doesn't fit. Card 01 is the tallest (four
+     bullets), so on short windows it used to run past the bottom of the frame. Step the
+     type and vertical rhythm down with viewport height instead of letting the tail clip.
+     Height-only queries — a short *wide* window is the case that hurts; phones scroll the
+     scene at their own full height and are handled by the base clamps. */
+  @media (max-height:800px) and (min-width:761px){
+    /* the vh terms are picked to equal the base clamp values exactly at 800px tall, so the
+       card scales down continuously as the window shortens rather than snapping at the
+       breakpoint */
+    #ax-exp-pin .ax-exp-meta{margin-bottom:9.6px !important}
+    #ax-exp-pin .ax-exp-co{font-size:clamp(33.6px,8.8vh,70.4px) !important}
+    #ax-exp-pin .ax-exp-role{font-size:clamp(15.2px,2.8vh,22.4px) !important;margin:6.4px 0 15.2px !important}
+    #ax-exp-pin .ax-exp-bullets{gap:8px !important}
+    #ax-exp-pin .ax-exp-bullet{font-size:clamp(15.2px,2.3vh,18.4px) !important;line-height:1.62 !important}
+    #ax-exp-pin .ax-exp-tags{margin-top:16px !important}
+  }
+  @media (max-height:600px) and (min-width:761px){
+    /* laptop-in-split-screen territory: buy the last of the room back from the frame padding */
+    #ax-exp-pin > div{padding-bottom:clamp(20px,4.5vh,40px) !important}
+    #ax-exp-pin .ax-exp-co{font-size:clamp(25.6px,7.6vh,44.8px) !important}
+    #ax-exp-pin .ax-exp-role{margin:4.8px 0 11.2px !important}
+    #ax-exp-pin .ax-exp-bullets{gap:6.4px !important}
+    #ax-exp-pin .ax-exp-bullet{font-size:clamp(13.6px,2.2vh,15.2px) !important;line-height:1.5 !important}
+    #ax-exp-pin .ax-exp-tags{margin-top:11.2px !important}
+  }
   /* x-import's inline style="width:100%;height:100%" only sizes its wrapper div, never
      reaches the <image-slot> custom element inside — it stays at its shadow-DOM default
      of 240x160px. Target the slots directly so they fill their project-card frames. */
@@ -346,7 +384,7 @@
 <!-- ===== INTRO OVERLAY ===== -->
 <div id="ax-intro" data-screen-label="Intro" style="position:fixed;inset:0;z-index:60;background:#070709;display:flex;align-items:center;justify-content:center;transition:opacity .9s ease;cursor:pointer">
   <div style="display:flex;flex-direction:column;align-items:center;gap:38px;padding:26.9px">
-    <svg id="ax-intro-const" viewBox="0 0 200 260" style="width:min(168px,44.8vw);height:auto;overflow:visible">
+    <svg id="ax-intro-const" viewBox="0 0 200 260" style="width:min(268px,62vw,34vh);height:auto;overflow:visible">
       <line class="cline" x1="50" y1="5" x2="22" y2="50" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
       <line class="cline" x1="22" y1="50" x2="32" y2="93" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
       <line class="cline" x1="32" y1="93" x2="47" y2="112" style="stroke:rgba(211,176,120,.75);stroke-width:.9"></line>
@@ -381,7 +419,7 @@
       <circle cx="64" cy="255" r="2.4" style="fill:#ece7db"></circle>
       <circle cx="138" cy="242" r="3.2" style="fill:#d3b078"></circle>
     </svg>
-    <div id="ax-intro-sub" style="opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s ease;font:500 11.2px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;text-align:center">Software Engineer · Melbourne, Florida</div>
+    <div id="ax-intro-sub" style="opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s ease;font:500 12.5px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;text-align:center">Software Engineer · Melbourne, Florida</div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:15px;margin-top:-14px">
       <div id="ax-intro-name" style="opacity:0;transform:translateY(17px);transition:opacity .9s ease,transform .9s ease;font:500 clamp(29.1px,7vw,44.8px) 'Cormorant Garamond',serif;letter-spacing:.14em;color:#ece7db">ORION POWERS</div>
       <div id="ax-intro-rule" style="opacity:0;transform:scaleX(0);transition:opacity .9s ease,transform 1s cubic-bezier(.22,.61,.36,1);width:min(300px,64vw);height:1px;background:linear-gradient(90deg,transparent,rgba(211,176,120,.85) 22%,#e6cd97 50%,rgba(211,176,120,.85) 78%,transparent);box-shadow:0 0 6px rgba(211,176,120,.35)"></div>
@@ -408,51 +446,51 @@
 <div id="ax-topbar" style="position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:22.4px;padding:17.6px clamp(17.6px,4.5vw,38.4px);opacity:0;transform:translateY(-10px);transition:opacity .55s ease,transform .55s ease;pointer-events:none;background:linear-gradient(rgba(7,7,9,.78),rgba(7,7,9,.38));backdrop-filter:blur(14px) saturate(120%);-webkit-backdrop-filter:blur(14px) saturate(120%);border-bottom:1px solid rgba(211,176,120,.16)">
   <a href="#ax-hero" style="flex:0 0 auto;font:600 22.4px 'Cormorant Garamond',serif;color:#d3b078;text-decoration:none;letter-spacing:.06em">O·P</a>
   <nav id="ax-nav" style="flex:1 1 auto;min-width:0;display:flex;justify-content:center;align-items:center;gap:clamp(16px,3vw,33.6px);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-    <a class="ax-nav-link" data-nav="ax-about" href="#ax-about" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">About</a>
-    <a class="ax-nav-link" data-nav="ax-edu" href="#ax-edu" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Education</a>
-    <a class="ax-nav-link" data-nav="ax-skills" href="#ax-skills" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Skills</a>
-    <a class="ax-nav-link" data-nav="ax-exp-pin" href="#ax-exp-pin" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Experience</a>
-    <a class="ax-nav-link" data-nav="ax-work" href="#ax-work" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Projects</a>
-    <a class="ax-nav-link" data-nav="ax-contact" href="#ax-contact" style="position:relative;flex:0 0 auto;font:600 clamp(9.6px,1.1vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Contact</a>
+    <a class="ax-nav-link" data-nav="ax-about" href="#ax-about" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">About</a>
+    <a class="ax-nav-link" data-nav="ax-edu" href="#ax-edu" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Education</a>
+    <a class="ax-nav-link" data-nav="ax-skills" href="#ax-skills" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Skills</a>
+    <a class="ax-nav-link" data-nav="ax-exp-pin" href="#ax-exp-pin" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Experience</a>
+    <a class="ax-nav-link" data-nav="ax-work" href="#ax-work" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Projects</a>
+    <a class="ax-nav-link" data-nav="ax-contact" href="#ax-contact" style="position:relative;flex:0 0 auto;font:600 clamp(11px,1.2vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:6.4px 0;transition:color .3s ease" style-hover="color:#ece7db">Contact</a>
   </nav>
 </div>
 
 <!-- ===== PAGE CONTENT ===== -->
-<div style="position:relative;z-index:1;color:#ece7db;font-family:Outfit,system-ui,sans-serif">
+<div id="ax-page" style="position:relative;z-index:1;color:#ece7db;font-family:Outfit,system-ui,sans-serif">
 
   <!-- HERO -->
   <section id="ax-hero" data-screen-label="Hero" style="position:relative;min-height:100svh;overflow:hidden">
     <!-- hero nebula haze — layered, slow-morphing -->
     <div id="ax-hero-neb" aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 62%,transparent 100%);mask-image:linear-gradient(to bottom,#000 62%,transparent 100%)">
-      <div class="ax-anim" style="position:absolute;left:4%;top:8%;width:58vmax;height:40vmax;border-radius:50%;background:radial-gradient(ellipse at 42% 50%,rgba(211,176,120,.17),rgba(211,176,120,.055) 46%,transparent 70%);filter:blur(34px);animation:ax-neb-a 30s ease-in-out infinite;will-change:transform"></div>
-      <div class="ax-anim" style="position:absolute;right:0;top:26%;width:50vmax;height:36vmax;border-radius:50%;background:radial-gradient(ellipse at 58% 42%,rgba(242,185,124,.13),rgba(242,185,124,.045) 48%,transparent 72%);filter:blur(40px);animation:ax-neb-b 38s ease-in-out infinite;animation-delay:-9s;will-change:transform"></div>
-      <div class="ax-anim" style="position:absolute;left:26%;bottom:0;width:52vmax;height:32vmax;border-radius:50%;background:radial-gradient(ellipse,rgba(200,164,104,.11),transparent 66%);filter:blur(44px);animation:ax-neb-a 44s ease-in-out infinite reverse;will-change:transform"></div>
-      <div class="ax-anim" style="position:absolute;left:34%;top:18%;width:30vmax;height:22vmax;border-radius:50%;background:radial-gradient(ellipse,rgba(242,185,124,.09),transparent 62%);filter:blur(26px);animation:ax-neb-b 24s ease-in-out infinite reverse;animation-delay:-5s;will-change:transform"></div>
+      <div class="ax-anim" style="position:absolute;left:4%;top:8%;width:58vmax;height:40vmax;border-radius:50%;background:radial-gradient(ellipse at 42% 50%,rgba(222,186,106,.095),rgba(222,186,106,.03) 42%,transparent 62%);filter:blur(34px);animation:ax-neb-a 30s ease-in-out infinite;will-change:transform"></div>
+      <div class="ax-anim" style="position:absolute;right:0;top:26%;width:50vmax;height:36vmax;border-radius:50%;background:radial-gradient(ellipse at 58% 42%,rgba(242,196,116,.07),rgba(242,196,116,.024) 44%,transparent 64%);filter:blur(40px);animation:ax-neb-b 38s ease-in-out infinite;animation-delay:-9s;will-change:transform"></div>
+      <div class="ax-anim" style="position:absolute;left:26%;bottom:0;width:52vmax;height:32vmax;border-radius:50%;background:radial-gradient(ellipse,rgba(211,174,94,.058),transparent 58%);filter:blur(44px);animation:ax-neb-a 44s ease-in-out infinite reverse;will-change:transform"></div>
+      <div class="ax-anim" style="position:absolute;left:34%;top:18%;width:30vmax;height:22vmax;border-radius:50%;background:radial-gradient(ellipse,rgba(242,196,116,.048),transparent 54%);filter:blur(26px);animation:ax-neb-b 24s ease-in-out infinite reverse;animation-delay:-5s;will-change:transform"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(78% 58% at 50% 46%,transparent 38%,rgba(7,7,9,.6) 88%)"></div>
     </div>
     <div id="ax-hero-inner" style="position:relative;box-sizing:border-box;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(83.2px,15vh,120px) clamp(14.4px,5vw,48px) clamp(76.8px,13vh,102.4px);will-change:transform,opacity">
 
-      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60vmin;height:60vmin;background:radial-gradient(circle,rgba(211,176,120,.09),transparent 62%);pointer-events:none"></div>
+      <div style="position:absolute;z-index:0;left:50%;top:50%;transform:translate(-50%,-50%);width:60vmin;height:60vmin;background:radial-gradient(circle,rgba(222,186,106,.045),transparent 54%);pointer-events:none"></div>
 
-      <div id="ax-hero-const" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(46vh,304px);pointer-events:none;will-change:transform">
-        <svg viewBox="0 0 200 260" style="width:100%;height:auto;opacity:.13;animation:ax-float 14s ease-in-out infinite;display:block">
-          <line x1="50" y1="5" x2="22" y2="50" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="22" y1="50" x2="32" y2="93" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="32" y1="93" x2="47" y2="112" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="47" y1="112" x2="112" y2="121" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="47" y1="112" x2="91" y2="91" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="91" y1="91" x2="112" y2="121" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="112" y1="121" x2="190" y2="112" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="177" y1="87" x2="190" y2="112" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="190" y1="112" x2="188" y2="128" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="188" y1="128" x2="182" y2="152" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="182" y1="152" x2="172" y2="158" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="47" y1="112" x2="80" y2="190" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="112" y1="121" x2="98" y2="176" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="98" y1="176" x2="90" y2="184" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="90" y1="184" x2="80" y2="190" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="80" y1="190" x2="64" y2="255" style="stroke:#d3b078;stroke-width:.8"></line>
-          <line x1="98" y1="176" x2="138" y2="242" style="stroke:#d3b078;stroke-width:.8"></line>
+      <div id="ax-hero-const" style="position:absolute;z-index:1;left:50%;top:50%;transform:translate(-50%,-50%);width:min(46vh,304px);pointer-events:none;will-change:transform">
+        <svg viewBox="0 0 200 260" style="width:100%;height:auto;opacity:.44;animation:ax-float 14s ease-in-out infinite;display:block;filter:drop-shadow(0 0 3px rgba(10,9,12,.85)) drop-shadow(0 0 7px rgba(242,196,116,.4))">
+          <line x1="50" y1="5" x2="22" y2="50" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="22" y1="50" x2="32" y2="93" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="32" y1="93" x2="47" y2="112" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="47" y1="112" x2="112" y2="121" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="47" y1="112" x2="91" y2="91" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="91" y1="91" x2="112" y2="121" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="112" y1="121" x2="190" y2="112" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="177" y1="87" x2="190" y2="112" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="190" y1="112" x2="188" y2="128" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="188" y1="128" x2="182" y2="152" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="182" y1="152" x2="172" y2="158" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="47" y1="112" x2="80" y2="190" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="112" y1="121" x2="98" y2="176" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="98" y1="176" x2="90" y2="184" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="90" y1="184" x2="80" y2="190" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="80" y1="190" x2="64" y2="255" style="stroke:#e8c78d;stroke-width:1.15"></line>
+          <line x1="98" y1="176" x2="138" y2="242" style="stroke:#e8c78d;stroke-width:1.15"></line>
           <circle cx="50" cy="5" r="1.8" style="fill:#ece7db"></circle>
           <circle cx="22" cy="50" r="1.8" style="fill:#ece7db"></circle>
           <circle cx="32" cy="93" r="1.8" style="fill:#ece7db"></circle>
@@ -473,11 +511,11 @@
       </div>
 
       <div class="ax-hero-meta" style="position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12.8px;padding:19.2px clamp(16px,4vw,35.2px);flex-wrap:wrap">
-        <span data-hseq style="display:inline-flex;align-items:baseline;gap:11.2px"><span style="font:600 19.2px 'Cormorant Garamond',serif;color:#d3b078;letter-spacing:.06em">O·P</span><span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#8f897c">Portfolio — MMXXVI</span></span>
-        <span data-hseq style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8f897c">Melbourne, FL · 28.08°N 80.60°W</span>
+        <span data-hseq style="display:inline-flex;align-items:baseline;gap:11.2px"><span style="font:600 19.2px 'Cormorant Garamond',serif;color:#d3b078;letter-spacing:.06em">O·P</span><span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#ffffff">Portfolio — MMXXVI</span></span>
+        <span data-hseq style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#ffffff">Melbourne, FL · 28.08°N 80.60°W</span>
       </div>
 
-      <div data-hseq style="display:inline-flex;align-items:center;gap:9.6px;font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:clamp(19.2px,4vh,32px)">
+      <div data-hseq style="display:inline-flex;align-items:center;gap:9.6px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:clamp(19.2px,4vh,32px)">
         <span style="width:27.2px;height:1px;background:rgba(211,176,120,.45)"></span>
         Software Engineer · Florida Tech CS · Dec 2026
         <span style="width:27.2px;height:1px;background:rgba(211,176,120,.45)"></span>
@@ -488,16 +526,16 @@
         <span id="ax-name-l2" style="display:block;font-size:clamp(40px,11.8vw,124.8px);font-style:italic;font-weight:500;color:#d3b078;margin-top:clamp(-4.8px,-.6vw,-11.2px)"><span class="ax-lt" style="display:inline-block">P</span><span class="ax-lt" style="display:inline-block">o</span><span class="ax-lt" style="display:inline-block">w</span><span class="ax-lt" style="display:inline-block">e</span><span class="ax-lt" style="display:inline-block">r</span><span class="ax-lt" style="display:inline-block">s</span></span>
       </h1>
 
-      <p data-hseq style="font:300 clamp(12px,1.6vw,15.2px)/1.7 Outfit,sans-serif;color:#a8a294;max-width:496px;margin:clamp(20.8px,4vh,33.6px) 0 0">I build AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi — and bring a designer's eye to every interface I ship.</p>
+      <p data-hseq style="font:300 clamp(14.5px,1.9vw,17.5px)/1.65 Outfit,sans-serif;color:#ffffff;max-width:496px;margin:clamp(20.8px,4vh,33.6px) 0 0">I build AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi — and bring a designer's eye to every interface I ship.</p>
 
       <div data-hseq style="display:flex;flex-wrap:wrap;justify-content:center;gap:11.2px;margin-top:clamp(22.4px,4.5vh,36.8px)">
-        <a href="#ax-work" data-mag style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border:1px solid rgba(211,176,120,.6);padding:13.6px 27.2px;border-radius:2px;transition:background .3s,color .3s;will-change:transform" style-hover="background:#d3b078;color:#070709">View the work</a>
-        <a href="#ax-contact" data-mag style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#ece7db;text-decoration:none;border:1px solid rgba(236,231,219,.22);padding:13.6px 27.2px;border-radius:2px;transition:border-color .3s;will-change:transform" style-hover="border-color:rgba(236,231,219,.6)">Get in touch</a>
-        <a href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8f897c;text-decoration:none;padding:13.6px 16px;transition:color .3s" style-hover="color:#ece7db">Résumé ↓</a>
+        <a href="#ax-work" data-mag style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border:1px solid rgba(211,176,120,.6);padding:13.6px 27.2px;border-radius:2px;transition:background .3s,color .3s;will-change:transform" style-hover="background:#d3b078;color:#070709">View the work</a>
+        <a href="#ax-contact" data-mag style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#ece7db;text-decoration:none;border:1px solid rgba(236,231,219,.22);padding:13.6px 27.2px;border-radius:2px;transition:border-color .3s;will-change:transform" style-hover="border-color:rgba(236,231,219,.6)">Get in touch</a>
+        <a href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#ffffff;text-decoration:none;padding:13.6px 16px;transition:color .3s" style-hover="color:#ece7db">Résumé ↓</a>
       </div>
 
       <div data-hseq class="ax-scroll-cue" style="position:absolute;bottom:20.8px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:9.6px">
-        <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.4em;text-transform:uppercase;color:#6d675c">Scroll</span>
+        <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.4em;text-transform:uppercase;color:#ffffff">Scroll</span>
         <span style="position:relative;width:1px;height:41.6px;background:rgba(236,231,219,.15);display:block;overflow:hidden">
           <span style="position:absolute;top:0;left:0;width:1px;height:12.8px;background:#d3b078;animation:ax-drop 2.1s ease-in-out infinite"></span>
         </span>
@@ -508,10 +546,10 @@
   <!-- ABOUT -->
   <section id="ax-about" data-screen-label="About" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
     <div style="position:relative;max-width:944px;margin:0 auto">
-      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(16px,3vh,25.6px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">I</div>
+      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">I</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">I&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">ABOUT ME</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">ABOUT ME</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <h2 data-mask style="margin:0 0 clamp(32px,6vh,51.2px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
@@ -527,11 +565,11 @@
               <span style="position:absolute;left:50%;top:0;width:28.8px;height:28.8px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(211,176,120,.55),rgba(211,176,120,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:50%;top:0;width:7.2px;height:7.2px;transform:translate(-50%,-50%);border-radius:999px;background:#f6dfa8;box-shadow:0 0 10px 2px rgba(246,223,168,.95),0 0 28px 6px rgba(211,176,120,.55)"></span>
             </span>
-            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:min(448px,124vw);height:min(448px,124vw);border-radius:999px;border:1.5px dashed rgba(211,176,120,.28);filter:drop-shadow(0 0 5px rgba(211,176,120,.4)) drop-shadow(0 0 12px rgba(211,176,120,.2));animation:ax-rot-r 110s linear infinite">
+            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(min(288px, 86vw) + 25.6px + 2 * clamp(18px, 5.5vw, 32px));height:calc(min(288px, 86vw) + 25.6px + 2 * clamp(18px, 5.5vw, 32px));border-radius:999px;border:1.5px dashed rgba(211,176,120,.28);filter:drop-shadow(0 0 5px rgba(211,176,120,.4)) drop-shadow(0 0 12px rgba(211,176,120,.2));animation:ax-rot-r 93s linear infinite">
               <span style="position:absolute;left:50%;top:100%;width:30.4px;height:30.4px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(211,176,120,.5),rgba(211,176,120,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:50%;top:100%;color:#f6dfa8;font-size:12px;line-height:1;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(246,223,168,.9),0 0 24px rgba(211,176,120,.6)">✦</span>
             </span>
-            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:min(520px,138vw);height:min(520px,138vw);border-radius:999px;border:1px solid rgba(211,176,120,.18);filter:drop-shadow(0 0 4px rgba(211,176,120,.3));animation:ax-rot 160s linear infinite">
+            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(min(288px, 86vw) + 25.6px + 4 * clamp(18px, 5.5vw, 32px));height:calc(min(288px, 86vw) + 25.6px + 4 * clamp(18px, 5.5vw, 32px));border-radius:999px;border:1px solid rgba(211,176,120,.18);filter:drop-shadow(0 0 4px rgba(211,176,120,.3));animation:ax-rot 136s linear infinite">
               <span style="position:absolute;left:85.355%;top:14.645%;width:20.8px;height:20.8px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(236,231,219,.45),rgba(236,231,219,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:85.355%;top:14.645%;width:4.8px;height:4.8px;transform:translate(-50%,-50%);border-radius:999px;background:#ece7db;box-shadow:0 0 8px 1.5px rgba(236,231,219,.9),0 0 18px 3px rgba(236,231,219,.5)"></span>
             </span>
@@ -540,19 +578,19 @@
           <div style="overflow:hidden;border-radius:999px 999px 2px 2px;aspect-ratio:3/3.9">
             <img src="images/profile.webp" alt="Orion Powers" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;filter:saturate(.88) contrast(1.03)">
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:20.8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c"><span>Fig. 01</span><span>Orion — not the constellation</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:20.8px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#ffffff"><span>Fig. 01</span><span>Orion — not the constellation</span></div>
         </div>
 
         <div style="max-width:480px">
-          <p data-rv="0" style="margin:0 0 17.6px;font:300 clamp(12.8px,1.7vw,15.2px)/1.85 Outfit,sans-serif;color:#c4beb0">I'm a Computer Science student at the Florida Institute of Technology, graduating December 2026 — three engineering roles in, with a DoD security clearance in process.</p>
-          <p data-rv="60" style="margin:0 0 17.6px;font:300 clamp(12px,1.5vw,13.6px)/1.85 Outfit,sans-serif;color:#a09a8c">At Modus Operandi I build decision-support software for the Department of Defense — targeting analysis for the U.S. Air Force, logistics resilience for the Navy — and worked on-site at Joint Base Langley-Eustis with the Air Force intelligence wing that uses it. Before that: a production SaaS platform shipped at Hyperformant, and an accounting pipeline made twice as fast with machine learning at RARE T Holdings.</p>
-          <p data-rv="120" style="margin:0 0 32px;font:300 clamp(12px,1.5vw,13.6px)/1.85 Outfit,sans-serif;color:#a09a8c">From front-end architecture to ML models to laser-engraved NFC hardware — I like building the whole thing, and building it beautifully.</p>
+          <p data-rv="0" style="margin:0 0 17.6px;font:300 clamp(15px,1.9vw,17.5px)/1.8 Outfit,sans-serif;color:#ffffff">I'm a Computer Science student at the Florida Institute of Technology, graduating December 2026 — three engineering roles in, with a DoD security clearance in process.</p>
+          <p data-rv="60" style="margin:0 0 17.6px;font:300 clamp(14px,1.7vw,16px)/1.8 Outfit,sans-serif;color:#ffffff">At Modus Operandi I build decision-support software for the Department of Defense — targeting analysis for the U.S. Air Force, logistics resilience for the Navy — and worked on-site at Joint Base Langley-Eustis with the Air Force intelligence wing that uses it. Before that: a production SaaS platform shipped at Hyperformant, and an accounting pipeline made twice as fast with machine learning at RARE T Holdings.</p>
+          <p data-rv="120" style="margin:0 0 32px;font:300 clamp(14px,1.7vw,16px)/1.8 Outfit,sans-serif;color:#ffffff">From front-end architecture to ML models to laser-engraved NFC hardware — I like building the whole thing, and building it beautifully.</p>
 
           <div data-rv="160" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0 32px">
-            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Location</div><div style="font:400 11.2px Outfit,sans-serif;color:#ece7db">Melbourne, Florida</div></div>
-            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Email</div><a href="mailto:orionthanhpowers@gmail.com" style="font:400 11.2px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">orionthanhpowers@gmail.com</a></div>
-            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">Phone</div><div style="font:400 11.2px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043</div></div>
-            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-bottom:5.6px">LinkedIn</div><a href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4.8px;font:400 11.2px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a></div>
+            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff;margin-bottom:5.6px">Location</div><div style="font:400 13.5px Outfit,sans-serif;color:#ece7db">Melbourne, Florida</div></div>
+            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff;margin-bottom:5.6px">Email</div><a href="mailto:orionthanhpowers@gmail.com" style="font:400 13.5px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">orionthanhpowers@gmail.com</a></div>
+            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff;margin-bottom:5.6px">Phone</div><div style="font:400 13.5px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043</div></div>
+            <div style="border-top:1px solid rgba(236,231,219,.13);padding:11.2px 0"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff;margin-bottom:5.6px">LinkedIn</div><a href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4.8px;font:400 13.5px Outfit,sans-serif;color:#ece7db;text-decoration:none" style-hover="color:#d3b078">in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a></div>
           </div>
         </div>
       </div>
@@ -562,19 +600,19 @@
 
   <!-- EDUCATION -->
   <section id="ax-edu" data-screen-label="Education" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
-    <div id="ax-rk-wrap" aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:clamp(544px,105vh,864px);pointer-events:none;overflow:hidden">
+    <div id="ax-rk-wrap" aria-hidden="true" style="position:absolute;left:0;right:0;top:clamp(40px,6vh,96px);height:clamp(544px,105vh,864px);pointer-events:none;overflow:hidden">
       <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible">
         <defs>
-          <linearGradient id="ax-rk-grad" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stop-color="#caa24f" stop-opacity="0"></stop>
-            <stop offset=".5" stop-color="#e6bd6e" stop-opacity=".55"></stop>
-            <stop offset="1" stop-color="#f6cf7c" stop-opacity=".95"></stop>
+          <linearGradient id="ax-rk-grad" gradientUnits="userSpaceOnUse" x1="0" y1="700" x2="1200" y2="0">
+            <stop offset="0" stop-color="#f2b97c" stop-opacity=".9"></stop>
+            <stop offset=".5" stop-color="#e8c894" stop-opacity=".5"></stop>
+            <stop offset="1" stop-color="#ece7db" stop-opacity=".25"></stop>
           </linearGradient>
-          <filter id="ax-rk-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
+          <filter id="ax-rk-blur" x="-6%" y="-6%" width="112%" height="112%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
         </defs>
-        <path id="ax-rk-glow" d="M-260,800 C80,180 1050,-20 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="9" stroke-linecap="round" vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
-        <path id="ax-rk-path" d="M-260,800 C80,180 1050,-20 1560,-30" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
-        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-260,800 C80,180 1050,-20 1560,-30');offset-rotate:auto">
+        <path id="ax-rk-glow" d="M-9,700 C177,378 423,178 1193,14" fill="none" stroke="url(#ax-rk-grad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"  vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
+        <path id="ax-rk-path" d="M-9,700 C177,378 423,178 1193,14" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"  vector-effect="non-scaling-stroke"></path>
+        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-9,700 C177,378 423,178 1193,14');offset-rotate:auto">
           <path d="M11,0 C7,-3.6 -1,-3.4 -7,-2 L-7,2 C-1,3.4 7,3.6 11,0 Z" fill="#ece7db"></path>
           <path d="M-6.6,-2.2 L-11.5,-5.6 L-8.2,-1 Z" fill="#d3b078"></path>
           <path d="M-6.6,2.2 L-11.5,5.6 L-8.2,1 Z" fill="#d3b078"></path>
@@ -585,33 +623,33 @@
     </div>
     <div style="position:relative;max-width:720px;margin:0 auto;text-align:center">
       <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">II</div>
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">II</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">II&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">EDUCATION</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">EDUCATION</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <div data-rv="0" style="display:inline-flex;align-items:center;justify-content:center;width:89.6px;height:89.6px;border-radius:999px;background:rgba(236,231,219,.05);border:1px solid rgba(236,231,219,.14);margin-bottom:24px">
         <img src="images/fit-seal.png" alt="Florida Tech seal" loading="lazy" decoding="async" style="width:52.8px;height:52.8px;object-fit:contain;opacity:.95">
       </div>
       <h2 data-rv="60" style="margin:0 0 14.4px;font:500 clamp(25.6px,5vw,54.4px)/1.1 'Cormorant Garamond',serif;color:#ece7db;text-wrap:balance">Florida Institute of Technology</h2>
-      <div data-rv="120" style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:17.6px">B.S. Computer Science — Expected December 2026</div>
-      <p data-rv="180" style="margin:0 auto;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:464px">Coursework from operating systems and computer networks to graduate-level machine learning — capped by BrainBench, a senior-design study of small local LLMs presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase.</p>
+      <div data-rv="120" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:17.6px">B.S. Computer Science — Expected December 2026</div>
+      <p data-rv="180" style="margin:0 auto;font:300 clamp(13.5px,1.6vw,15.5px)/1.75 Outfit,sans-serif;color:#ffffff;max-width:464px">Coursework from operating systems and computer networks to graduate-level machine learning — capped by BrainBench, a senior-design study of small local LLMs presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase.</p>
       <div data-rv="240" style="max-width:416px;margin:clamp(32px,6vh,44.8px) auto 0;text-align:left">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12.8px;margin-bottom:9.6px">
-          <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c">Degree progress</span>
-          <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#d3b078">110 / 126 CREDIT HOURS</span>
+          <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff">Degree progress</span>
+          <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#d3b078">110 / 126 CREDIT HOURS</span>
         </div>
         <div style="position:relative;height:2px;background:rgba(236,231,219,.12);border-radius:99px">
           <div style="position:absolute;left:0;top:0;bottom:0;width:87.3%;background:linear-gradient(90deg,rgba(211,176,120,.45),#d3b078);border-radius:99px"></div>
           <span style="position:absolute;left:87.3%;top:50%;transform:translate(-50%,-50%);color:#d3b078;font-size:8.8px;line-height:1;text-shadow:0 0 10px rgba(211,176,120,.8)">✦</span>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#4f4a42"><span>Aug 2023</span><span>Dec 2026</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#ffffff"><span>Aug 2023</span><span>Dec 2026</span></div>
       </div>
     </div>
     <div style="position:relative;max-width:944px;margin:clamp(51.2px,9vh,88px) auto 0;text-align:left">
       <div data-rv="80" style="display:flex;align-items:center;gap:16px;margin:0 0 clamp(19.2px,3.5vh,28.8px)">
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#ece7db">Honors &amp; Certifications</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#ece7db">Honors &amp; Certifications</span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <div data-rv="140" style="position:relative;border:1px solid rgba(211,176,120,.45);background:linear-gradient(120deg,rgba(211,176,120,.12),rgba(211,176,120,.035) 55%,rgba(10,10,13,.4));padding:clamp(22.4px,4.5vw,44.8px);display:flex;align-items:center;justify-content:space-between;gap:22.4px;flex-wrap:wrap;margin-bottom:11.2px">
@@ -620,9 +658,9 @@
         <span style="position:absolute;bottom:-1px;left:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.9);border-left:1px solid rgba(211,176,120,.9)"></span>
         <span style="position:absolute;bottom:-1px;right:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.9);border-right:1px solid rgba(211,176,120,.9)"></span>
         <div style="min-width:min(100%,224px)">
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:11.2px">Academic Honor</div>
+          <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:11.2px">Academic Honor</div>
           <div style="font:500 clamp(28.8px,4.8vw,52.8px)/1.05 'Cormorant Garamond',serif;color:#ece7db">Dean's <span style="font-style:italic;color:#d3b078">List</span></div>
-          <div style="margin-top:9.6px;font:300 clamp(10.8px,1.4vw,12px)/1.7 Outfit,sans-serif;color:#a09a8c">Florida Institute of Technology</div>
+          <div style="margin-top:9.6px;font:300 clamp(13px,1.5vw,14.5px)/1.65 Outfit,sans-serif;color:#ffffff">Florida Institute of Technology</div>
         </div>
         <div style="position:relative;width:94.4px;height:94.4px;flex:none;display:flex;align-items:center;justify-content:center">
           <span style="position:absolute;inset:0;border-radius:999px;border:1px solid rgba(211,176,120,.7);box-shadow:0 0 30px rgba(211,176,120,.2)"></span>
@@ -634,66 +672,66 @@
       <div data-rv="200" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,184px),1fr));gap:1px;background:rgba(236,231,219,.12);border:1px solid rgba(236,231,219,.12)">
         <div style="background:#0a0a0d;padding:clamp(17.6px,3vw,27.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="color:#d3b078;font-size:9.6px;margin-bottom:14.4px">✦</div>
-          <div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c;margin-bottom:8px">Merit Scholarship</div>
-          <div style="font:500 clamp(15.2px,1.9vw,20.8px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">Florida Tech Academic Scholar</div>
-          <div style="font:300 10.4px/1.6 Outfit,sans-serif;color:#8f897c">Florida Institute of Technology</div>
+          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Merit Scholarship</div>
+          <div style="font:500 clamp(17.6px,2vw,21.6px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">Florida Tech Academic Scholar</div>
+          <div style="font:300 13px/1.55 Outfit,sans-serif;color:#ffffff">Florida Institute of Technology</div>
         </div>
         <div style="background:#0a0a0d;padding:clamp(17.6px,3vw,27.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="color:#d3b078;font-size:9.6px;margin-bottom:14.4px">✦</div>
-          <div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c;margin-bottom:8px">Grant</div>
-          <div style="font:500 clamp(15.2px,1.9vw,20.8px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">Panther Fund Grant Recipient</div>
-          <div style="font:300 10.4px/1.6 Outfit,sans-serif;color:#8f897c">Florida Institute of Technology</div>
+          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Grant</div>
+          <div style="font:500 clamp(17.6px,2vw,21.6px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">Panther Fund Grant Recipient</div>
+          <div style="font:300 13px/1.55 Outfit,sans-serif;color:#ffffff">Florida Institute of Technology</div>
         </div>
         <div style="background:#0a0a0d;padding:clamp(17.6px,3vw,27.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="color:#d3b078;font-size:9.6px;margin-bottom:14.4px">✦</div>
-          <div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c;margin-bottom:8px">Certification</div>
-          <div style="font:500 clamp(15.2px,1.9vw,20.8px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">L3Harris 3D Print Certified</div>
-          <div style="font:300 10.4px/1.6 Outfit,sans-serif;color:#8f897c">L3Harris Student Design Center</div>
+          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Certification</div>
+          <div style="font:500 clamp(17.6px,2vw,21.6px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">L3Harris 3D Print Certified</div>
+          <div style="font:300 13px/1.55 Outfit,sans-serif;color:#ffffff">L3Harris Student Design Center</div>
         </div>
         <div style="background:#0a0a0d;padding:clamp(17.6px,3vw,27.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="color:#d3b078;font-size:9.6px;margin-bottom:14.4px">✦</div>
-          <div style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c;margin-bottom:8px">Certification</div>
-          <div style="font:500 clamp(15.2px,1.9vw,20.8px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">L3Harris Laser Cut Certified</div>
-          <div style="font:300 10.4px/1.6 Outfit,sans-serif;color:#8f897c">L3Harris Student Design Center</div>
+          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Certification</div>
+          <div style="font:500 clamp(17.6px,2vw,21.6px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">L3Harris Laser Cut Certified</div>
+          <div style="font:300 13px/1.55 Outfit,sans-serif;color:#ffffff">L3Harris Student Design Center</div>
         </div>
       </div>
       <div data-rv="0" style="display:flex;align-items:center;gap:16px;margin:clamp(44.8px,8vh,70.4px) 0 clamp(19.2px,3.5vh,28.8px)">
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#ece7db">Leadership</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#ece7db">Leadership</span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <div data-rv="0" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,368px),1fr));gap:1px;background:rgba(236,231,219,.12);border:1px solid rgba(236,231,219,.12)">
         <div style="background:#0a0a0d;padding:clamp(20.8px,3.5vw,35.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:9.6px;margin-bottom:14.4px;flex-wrap:wrap">
-            <span style="font:600 clamp(10.4px,1.35vw,12.8px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">IEEE Computer Society</span>
-            <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#8f897c">2023 — PRESENT</span>
+            <span style="font:600 clamp(12px,1.4vw,14px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">IEEE Computer Society</span>
+            <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#ffffff">2023 — PRESENT</span>
           </div>
           <div style="font:500 clamp(19.2px,2.6vw,28.8px)/1.15 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:11.2px">Founder &amp; <span style="font-style:italic;color:#d3b078">Vice President</span></div>
-          <p style="margin:0;font:300 clamp(10.8px,1.4vw,12px)/1.75 Outfit,sans-serif;color:#a09a8c">Founded Florida Tech's IEEE-CS chapter and built its programming from zero — workshops, hackathons, and events connecting students with industry.</p>
+          <p style="margin:0;font:300 clamp(13px,1.5vw,14.5px)/1.7 Outfit,sans-serif;color:#ffffff">Founded Florida Tech's IEEE-CS chapter and built its programming from zero — workshops, hackathons, and events connecting students with industry.</p>
         </div>
         <div style="background:#0a0a0d;padding:clamp(20.8px,3.5vw,35.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:9.6px;margin-bottom:14.4px;flex-wrap:wrap">
-            <span style="font:600 clamp(10.4px,1.35vw,12.8px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">Drone Club</span>
-            <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#8f897c">FPV DIVISION</span>
+            <span style="font:600 clamp(12px,1.4vw,14px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">Drone Club</span>
+            <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#ffffff">FPV DIVISION</span>
           </div>
           <div style="font:500 clamp(19.2px,2.6vw,28.8px)/1.15 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:11.2px">Executive, <span style="font-style:italic;color:#d3b078">FPV Division</span></div>
-          <p style="margin:0;font:300 clamp(10.8px,1.4vw,12px)/1.75 Outfit,sans-serif;color:#a09a8c">Run racing events and pilot-training programs — growing a competitive FPV community that flies fast and by the book.</p>
+          <p style="margin:0;font:300 clamp(13px,1.5vw,14.5px)/1.7 Outfit,sans-serif;color:#ffffff">Run racing events and pilot-training programs — growing a competitive FPV community that flies fast and by the book.</p>
         </div>
         <div style="background:#0a0a0d;padding:clamp(20.8px,3.5vw,35.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:9.6px;margin-bottom:14.4px;flex-wrap:wrap">
-            <span style="font:600 clamp(10.4px,1.35vw,12.8px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">FITSEC</span>
-            <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#8f897c">2023 — PRESENT</span>
+            <span style="font:600 clamp(12px,1.4vw,14px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">FITSEC</span>
+            <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#ffffff">2023 — PRESENT</span>
           </div>
           <div style="font:500 clamp(19.2px,2.6vw,28.8px)/1.15 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:11.2px">Cybersecurity <span style="font-style:italic;color:#d3b078">Team Member</span></div>
-          <p style="margin:0;font:300 clamp(10.8px,1.4vw,12px)/1.75 Outfit,sans-serif;color:#a09a8c">Compete on Florida Tech's cyber team — CTFs, penetration testing, and ethical hacking.</p>
+          <p style="margin:0;font:300 clamp(13px,1.5vw,14.5px)/1.7 Outfit,sans-serif;color:#ffffff">Compete on Florida Tech's cyber team — CTFs, penetration testing, and ethical hacking.</p>
         </div>
         <div style="background:#0a0a0d;padding:clamp(20.8px,3.5vw,35.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:9.6px;margin-bottom:14.4px;flex-wrap:wrap">
-            <span style="font:600 clamp(10.4px,1.35vw,12.8px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">Pi Kappa Alpha</span>
-            <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#8f897c">2023 — PRESENT</span>
+            <span style="font:600 clamp(12px,1.4vw,14px) 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078">Pi Kappa Alpha</span>
+            <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#ffffff">2023 — PRESENT</span>
           </div>
           <div style="font:500 clamp(19.2px,2.6vw,28.8px)/1.15 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:11.2px">Community &amp; <span style="font-style:italic;color:#d3b078">Philanthropy</span></div>
-          <p style="margin:0;font:300 clamp(10.8px,1.4vw,12px)/1.75 Outfit,sans-serif;color:#a09a8c">Run philanthropy drives and campus events with Florida Tech's Pike chapter.</p>
+          <p style="margin:0;font:300 clamp(13px,1.5vw,14.5px)/1.7 Outfit,sans-serif;color:#ffffff">Run philanthropy drives and campus events with Florida Tech's Pike chapter.</p>
         </div>
       </div>
     </div>
@@ -703,10 +741,10 @@
   <!-- SKILLS -->
   <section id="ax-skills" data-screen-label="Skills" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
     <div style="position:relative;max-width:944px;margin:0 auto">
-      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(16px,3vh,25.6px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">III</div>
+      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">III</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">III&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">SKILLS</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">SKILLS</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <h2 data-mask style="margin:0 0 clamp(32px,6vh,51.2px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
@@ -719,28 +757,28 @@
         <span style="position:absolute;bottom:-1px;left:-1px;width:14.4px;height:14.4px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);z-index:2"></span>
         <span style="position:absolute;bottom:-1px;right:-1px;width:14.4px;height:14.4px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);z-index:2"></span>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12.8px;flex-wrap:wrap;padding:clamp(14.4px,2.5vw,22.4px) clamp(16px,3vw,28.8px);border-bottom:1px solid rgba(236,231,219,.12)">
-          <span style="font:600 clamp(11.2px,1.6vw,13.6px) 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078">Skill Set</span>
-          <span style="font:500 clamp(9.6px,1.3vw,11.2px) 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8f897c">{{ skillCount }} skills · 9 groups — select a group</span>
+          <span style="font:600 clamp(12.5px,1.7vw,15px) 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078">Skill Set</span>
+          <span style="font:500 clamp(11px,1.4vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#ffffff">{{ skillCount }} skills · 9 groups — select a group</span>
         </div>
         <div style="display:flex;flex-direction:{{ skDir }};height:{{ skHeight }};background:rgba(236,231,219,.1);gap:1px">
           <sc-for list="{{ skillGroups }}" as="g" hint-placeholder-count="8">
             <div onMouseEnter="{{ g.activate }}" onClick="{{ g.activate }}" style="position:relative;overflow:hidden;min-width:0;flex:{{ g.flex }};height:{{ g.h }};background:{{ g.bg }};transition:flex .85s cubic-bezier(.22,1,.36,1),height .85s cubic-bezier(.22,1,.36,1),background .5s;cursor:pointer">
               <div style="position:absolute;inset:0;display:flex;flex-direction:{{ g.tabDir }};align-items:center;justify-content:space-between;gap:11.2px;padding:{{ g.tabPad }};opacity:{{ g.tabOp }};transition:opacity .4s">
-                <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;color:#6d675c;flex-shrink:0">{{ g.num }}</span>
-                <span style="font:500 {{ g.catSize }} 'JetBrains Mono',monospace;letter-spacing:{{ g.catLs }};text-transform:uppercase;color:#8f897c;white-space:{{ g.catWs }};overflow:hidden;text-overflow:ellipsis;word-break:break-word;text-align:center;line-height:1.4;width:100%">{{ g.cat }}</span>
+                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;color:#ffffff;flex-shrink:0">{{ g.num }}</span>
+                <span style="font:500 {{ g.catSize }} 'JetBrains Mono',monospace;letter-spacing:{{ g.catLs }};text-transform:uppercase;color:#ffffff;white-space:{{ g.catWs }};overflow:hidden;text-overflow:ellipsis;word-break:break-word;text-align:center;line-height:1.4;width:100%">{{ g.cat }}</span>
                 <span style="color:#d3b078;font-size:8px;line-height:1;flex-shrink:0">✦</span>
               </div>
               <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;gap:14.4px;padding:clamp(17.6px,3vw,32px);opacity:{{ g.bodyOp }};transition:opacity .55s .18s;pointer-events:{{ g.pe }}">
                 <div style="width:{{ g.bodyW }};max-width:100%">
                   <div style="display:flex;align-items:baseline;gap:11.2px;margin-bottom:6.4px">
-                    <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.28em;color:#d3b078">{{ g.num }}</span>
-                    <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c">{{ g.count }} skills</span>
+                    <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.28em;color:#d3b078">{{ g.num }}</span>
+                    <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">{{ g.count }} skills</span>
                   </div>
                   <div style="font:500 clamp(19.2px,2.8vw,32px)/1.1 'Cormorant Garamond',serif;color:#ece7db">{{ g.cat }}</div>
                 </div>
-                <div style="width:{{ g.bodyW }};max-width:100%;display:flex;flex-wrap:wrap;gap:7.2px 8px;align-content:flex-end">
+                <div style="width:{{ g.bodyW }};max-width:100%;display:flex;flex-wrap:wrap;gap:6.4px 8px;align-content:flex-end">
                   <sc-for list="{{ g.items }}" as="sk" hint-placeholder-count="5">
-                    <span style="display:inline-flex;align-items:center;gap:6.4px;padding:6.4px 11.2px;border:1px solid rgba(236,231,219,.16);border-radius:999px;font:400 10px Outfit,sans-serif;letter-spacing:.02em;color:#b3ad9f;transition:border-color .3s,color .3s,box-shadow .3s;cursor:default;white-space:nowrap" style-hover="border-color:rgba(211,176,120,.55);color:#ece7db;box-shadow:0 0 18px rgba(211,176,120,.1)">
+                    <span style="display:inline-flex;align-items:center;gap:6.4px;padding:5.6px 11.2px;border:1px solid rgba(236,231,219,.16);border-radius:999px;font:400 11.5px Outfit,sans-serif;letter-spacing:.02em;color:#ffffff;transition:border-color .3s,color .3s,box-shadow .3s;cursor:default;white-space:normal" style-hover="border-color:rgba(211,176,120,.55);color:#ece7db;box-shadow:0 0 18px rgba(211,176,120,.1)">
                       <span style="color:{{ sk.starColor }};font-size:{{ sk.starSize }}px;line-height:1">✦</span>{{ sk.name }}
                     </span>
                   </sc-for>
@@ -755,12 +793,12 @@
 
   <!-- EXPERIENCE — pinned constellation scene -->
   <section id="ax-exp-pin" data-screen-label="Experience" style="position:relative;height:340vh">
-    <div style="position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;padding:clamp(51.2px,10vh,76.8px) clamp(16px,5vw,51.2px)">
+    <div style="position:sticky;top:0;height:100svh;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding:clamp(72px,8.5vh,76.8px) clamp(16px,5vw,51.2px) clamp(28.8px,8.5vh,76.8px)">
       <div style="max-width:944px;margin:0 auto;width:100%;display:flex;flex-direction:column;flex:1;min-height:0">
-        <div data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:14.4px">
-          <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(88px,16vw,176px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">IV</div>
+        <div data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+          <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(88px,16vw,176px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">IV</div>
           <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-          <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">IV&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">WORK EXPERIENCE</span></span>
+          <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">WORK EXPERIENCE</span></span>
           <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
         </div>
 
@@ -776,42 +814,42 @@
           <div id="ax-exp-layers" style="position:relative;flex:1;min-height:0">
             <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:1;will-change:transform,opacity">
               <div aria-hidden="true" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">01</div>
-              <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">01 / OCT 2024 — PRESENT</div>
-              <div style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Modus Operandi</div>
-              <div style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer Intern</div>
-              <div style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics) — and led LOGEN's Angular 19→21 platform upgrade.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Built an interactive Go.js knowledge-graph giving real-time transparency into LLM decisions — prompt tracing, query tracking, data-origin verification.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Implemented Keycloak RBAC and Intelligence-Community CAPCO classification marking across mission dashboards — 80% test coverage, zero vulnerabilities.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Flown to Joint Base Langley-Eustis to work face-to-face with the Air Force's 363rd ISR Wing — the analysts who use what I build.</div>
+              <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">01 / OCT 2024 — PRESENT</div>
+              <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Modus Operandi</div>
+              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer Intern</div>
+              <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics) — and led LOGEN's Angular 19→21 platform upgrade.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built an interactive Go.js knowledge-graph giving real-time transparency into LLM decisions — prompt tracing, query tracking, data-origin verification.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Implemented Keycloak RBAC and Intelligence-Community CAPCO classification marking across mission dashboards — 80% test coverage, zero vulnerabilities.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Flown to Joint Base Langley-Eustis to work face-to-face with the Air Force's 363rd ISR Wing — the analysts who use what I build.</div>
               </div>
-              <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c;margin-top:20.8px">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</div>
+              <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</div>
             </div>
 
             <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;will-change:transform,opacity">
               <div aria-hidden="true" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">02</div>
-              <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">02 / MAY 2024 — OCT 2024</div>
-              <div style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Hyperformant</div>
-              <div style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer Intern</div>
-              <div style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Shipped a production SaaS platform in React + TypeScript — REST APIs, authentication, and the full data flow from UI to database.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Redesigned and rebuilt the company's marketing site with interactive 3D — Figma and Spline to Svelte and Webflow — lifting user acquisition and engagement.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Owned features end-to-end on a small remote team — from Figma mock to deployed code.</div>
+              <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">02 / MAY 2024 — OCT 2024</div>
+              <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Hyperformant</div>
+              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer Intern</div>
+              <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Shipped a production SaaS platform in React + TypeScript — REST APIs, authentication, and the full data flow from UI to database.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Redesigned and rebuilt the company's marketing site with interactive 3D — Figma and Spline to Svelte and Webflow — lifting user acquisition and engagement.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Owned features end-to-end on a small remote team — from Figma mock to deployed code.</div>
               </div>
-              <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c;margin-top:20.8px">React · TypeScript · Svelte · Supabase · Webflow · Spline</div>
+              <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">React · TypeScript · Svelte · Supabase · Webflow · Spline</div>
             </div>
 
             <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;will-change:transform,opacity">
               <div aria-hidden="true" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">03</div>
-              <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">03 / DEC 2022 — JUN 2023</div>
-              <div style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">RARE T Holdings</div>
-              <div style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer</div>
-              <div style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Built Azure ML models that read and document invoices automatically — doubling the accounting pipeline's throughput.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Created autonomous content workflows with the ChatGPT API and Power Automate — +30% generation efficiency, +25% user retention.</div>
-                <div style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#a8a294"><span style="color:#d3b078;flex-shrink:0">✦</span>Designed SharePoint approval workflows that cut approval time by 40%.</div>
+              <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">03 / DEC 2022 — JUN 2023</div>
+              <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">RARE T Holdings</div>
+              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer</div>
+              <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built Azure ML models that read and document invoices automatically — doubling the accounting pipeline's throughput.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Created autonomous content workflows with the ChatGPT API and Power Automate — +30% generation efficiency, +25% user retention.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Designed SharePoint approval workflows that cut approval time by 40%.</div>
               </div>
-              <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c;margin-top:20.8px">Azure ML · Java · TypeScript · ChatGPT API · Power Automate</div>
+              <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">Azure ML · Java · TypeScript · ChatGPT API · Power Automate</div>
             </div>
           </div>
         </div>
@@ -822,10 +860,10 @@
   <!-- PROJECTS -->
   <section id="ax-work" data-screen-label="Projects" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
     <div style="position:relative;max-width:944px;margin:0 auto">
-      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(16px,3vh,25.6px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">V</div>
+      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">V</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">V&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">PROJECTS</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">PROJECTS</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <h2 data-mask style="margin:0 0 clamp(32px,6vh,51.2px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
@@ -835,7 +873,7 @@
       <!-- W01 — LLM Network Analyzer -->
       <div class="ax-proj" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
         <div data-rv="0" class="ax-proj-title">
-          <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·01 — PERSONAL, 2025</div>
+          <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·01 — PERSONAL, 2025</div>
           <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">LLM Network Analyzer</h3>
         </div>
         <div data-rv="60" class="ax-proj-media">
@@ -846,15 +884,15 @@
           <span style="position:absolute;bottom:-7.2px;left:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7)"></span>
         </div>
         <div data-rv="120" class="ax-proj-body">
-          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Upload a packet capture, get a plain-English security briefing — Gemma 2 12B runs fully on-device via Ollama, so no packet ever leaves the machine. The hard part was getting a general-purpose local model to return consistent, six-category structured findings instead of free-form text; solved with constrained prompting and a streaming WebSocket pipeline, so results appear as they're generated, then export as a shareable report.</p>
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">Python · FastAPI · Scapy · Angular · Ollama · Gemma 2</div>
+          <p style="margin:0 0 17.6px;font:300 clamp(13.5px,1.6vw,15.5px)/1.75 Outfit,sans-serif;color:#ffffff;max-width:384px">Upload a packet capture, get a plain-English security briefing — Gemma 2 12B runs fully on-device via Ollama, so no packet ever leaves the machine. The hard part was getting a general-purpose local model to return consistent, six-category structured findings instead of free-form text; solved with constrained prompting and a streaming WebSocket pipeline, so results appear as they're generated, then export as a shareable report.</p>
+          <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff">Python · FastAPI · Scapy · Angular · Ollama · Gemma 2</div>
         </div>
       </div>
 
       <!-- W02 — BrainBench -->
       <div class="ax-proj ax-proj-rev" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
         <div data-rv="0" class="ax-proj-title">
-          <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·02 — SENIOR DESIGN, 2025–26</div>
+          <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·02 — SENIOR DESIGN, 2025–26</div>
           <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">BrainBench</h3>
         </div>
         <div data-rv="60" class="ax-proj-media">
@@ -865,15 +903,15 @@
           <span style="position:absolute;bottom:-7.2px;right:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7)"></span>
         </div>
         <div data-rv="120" class="ax-proj-body">
-          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Comparing small local LLMs on math reasoning is easy to get wrong — naive benchmarks let mismatched problem difficulty or inconsistent prompting skew the results. Built a matched-subset statistical methodology to control for that, then ran Qwen3, Gemma 3, and Phi-3 head-to-head. Presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase and revised into IEEE conference format.</p>
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">LLM Evaluation · Statistical Analysis · Ollama · IEEE Format</div>
+          <p style="margin:0 0 17.6px;font:300 clamp(13.5px,1.6vw,15.5px)/1.75 Outfit,sans-serif;color:#ffffff;max-width:384px">Comparing small local LLMs on math reasoning is easy to get wrong — naive benchmarks let mismatched problem difficulty or inconsistent prompting skew the results. Built a matched-subset statistical methodology to control for that, then ran Qwen3, Gemma 3, and Phi-3 head-to-head. Presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase and revised into IEEE conference format.</p>
+          <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff">LLM Evaluation · Statistical Analysis · Ollama · IEEE Format</div>
         </div>
       </div>
 
       <!-- W06 — NFC Business Cards -->
       <div class="ax-proj" style="margin-bottom:clamp(44.8px,9vh,89.6px)">
         <div data-rv="0" class="ax-proj-title">
-          <div style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·06 — PERSONAL, 2023</div>
+          <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:12.8px">W·06 — PERSONAL, 2023</div>
           <h3 style="margin:0;font:500 clamp(22.4px,3.4vw,40px)/1.1 'Cormorant Garamond',serif;color:#ece7db">NFC Business Cards</h3>
         </div>
         <div data-rv="60" class="ax-proj-media">
@@ -884,15 +922,15 @@
           <span style="position:absolute;bottom:-7.2px;left:-7.2px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7)"></span>
         </div>
         <div data-rv="120" class="ax-proj-body">
-          <p style="margin:0 0 17.6px;font:300 clamp(11.2px,1.5vw,12.8px)/1.8 Outfit,sans-serif;color:#a09a8c;max-width:384px">Laser-engraved cards with embedded NFC chips that open my site on tap — designed, programmed and finished by hand.</p>
-          <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">NFC · Laser Cutting · Hardware</div>
-          <a href="https://www.linkedin.com/posts/orion-powers_introducing-my-custom-engineered-nfc-business-activity-7239603602313400321-lHvd" target="_blank" rel="noopener" style="display:inline-block;margin-top:12.8px;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+          <p style="margin:0 0 17.6px;font:300 clamp(13.5px,1.6vw,15.5px)/1.75 Outfit,sans-serif;color:#ffffff;max-width:384px">Laser-engraved cards with embedded NFC chips that open my site on tap — designed, programmed and finished by hand.</p>
+          <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff">NFC · Laser Cutting · Hardware</div>
+          <a href="https://www.linkedin.com/posts/orion-powers_introducing-my-custom-engineered-nfc-business-activity-7239603602313400321-lHvd" target="_blank" rel="noopener" style="display:inline-block;margin-top:12.8px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
         </div>
       </div>
 
       <!-- ARCHIVE TOGGLE -->
       <div style="display:flex;justify-content:center;margin:clamp(14.4px,4vh,32px) 0 0">
-        <button onClick="{{ toggleArchive }}" style="display:inline-flex;align-items:center;gap:12.8px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 22.4px;font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:nowrap" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">{{ archiveLabel }}<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transition:transform .35s cubic-bezier(.16,1,.3,1);transform:{{ chevronRotate }}"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
+        <button onClick="{{ toggleArchive }}" style="display:inline-flex;align-items:center;gap:12.8px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 18px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:normal;text-align:left" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">{{ archiveLabel }}<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transition:transform .35s cubic-bezier(.16,1,.3,1);transform:{{ chevronRotate }}"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
       </div>
 
       <sc-if value="{{ archiveOpen }}" hint-placeholder-val="{{ false }}">
@@ -902,12 +940,12 @@
               <div style="overflow:hidden;border-radius:2px;aspect-ratio:16/10;background:#0c0c11;margin-bottom:14.4px">
                 <img src="{{ p.img }}" alt="{{ p.title }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};filter:saturate(.9)">
               </div>
-              <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;margin-bottom:9.6px">{{ p.tag }}</div>
+              <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;margin-bottom:9.6px">{{ p.tag }}</div>
               <h3 style="margin:0 0 9.6px;font:500 clamp(17.6px,2.4vw,24px)/1.1 'Cormorant Garamond',serif;color:#ece7db">{{ p.title }}</h3>
-              <p style="margin:0 0 14.4px;font:300 10.8px/1.7 Outfit,sans-serif;color:#a09a8c">{{ p.desc }}</p>
-              <div style="margin-top:auto;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f897c">{{ p.tags }}</div>
+              <p style="margin:0 0 14.4px;font:300 13px/1.65 Outfit,sans-serif;color:#ffffff">{{ p.desc }}</p>
+              <div style="margin-top:auto;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#ffffff">{{ p.tags }}</div>
               <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
-                <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top:12.8px;align-self:flex-start;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+                <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top:12.8px;align-self:flex-start;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View on LinkedIn <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
               </sc-if>
             </div>
           </sc-for>
@@ -920,10 +958,10 @@
   <!-- TESTIMONY -->
   <section id="ax-reference" data-screen-label="Reference" style="position:relative;padding:clamp(89.6px,16vh,140.8px) clamp(16px,5vw,51.2px)">
     <div style="position:relative;max-width:784px;margin:0 auto">
-      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(16px,3vh,25.6px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">VI</div>
+      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">VI</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">VI&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">PROFESSOR RECOMMENDATION</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">PROFESSOR RECOMMENDATION</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <h2 data-mask style="margin:0 0 clamp(32px,6vh,51.2px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
@@ -950,20 +988,20 @@
             </span>
           </div>
           <div style="font:500 clamp(20.8px,3vw,32px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:8px">Dr. David <span style="font-style:italic;color:#d3b078">Luginbuhl</span></div>
-          <div style="font:300 clamp(10.8px,1.4vw,12px)/1.6 Outfit,sans-serif;color:#a09a8c;max-width:272px">Associate Professor, Computer Science &amp; Electrical Engineering</div>
-          <div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c;margin-top:8px">Florida Institute of Technology</div>
+          <div style="font:300 clamp(13px,1.5vw,14.5px)/1.55 Outfit,sans-serif;color:#ffffff;max-width:272px">Associate Professor, Computer Science &amp; Electrical Engineering</div>
+          <div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff;margin-top:8px">Florida Institute of Technology</div>
         </div>
         <div style="background:#0a0a0d;padding:clamp(25.6px,4.5vw,44.8px);display:flex;flex-direction:column;justify-content:center">
           <div style="font:500 14px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:14.4px">Professor Recommendation</div>
-          <p style="margin:0 0 22.4px;font:300 clamp(11.6px,1.5vw,13.6px)/1.8 Outfit,sans-serif;color:#a8a294">Dr. Luginbuhl has taught me twice, years apart — first the fundamentals of software development, later the theory behind programming languages — and watched me grow from a first-year student into an engineer ready to ship real systems. He's offered to vouch for that trajectory personally. Reach out directly.</p>
+          <p style="margin:0 0 22.4px;font:300 clamp(14px,1.7vw,16px)/1.75 Outfit,sans-serif;color:#ffffff">Dr. Luginbuhl has taught me twice, years apart — first the fundamentals of software development, later the theory behind programming languages — and watched me grow from a first-year student into an engineer ready to ship real systems. He's offered to vouch for that trajectory personally. Reach out directly.</p>
           <div style="display:flex;flex-direction:column;border-top:1px solid rgba(236,231,219,.14)">
             <a data-cursor="EMAIL ✦" href="mailto:dluginbuhl@fit.edu" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12.8px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
-              <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Email</span>
-              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">dluginbuhl@fit.edu <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+              <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Email</span>
+              <span style="font:400 14px Outfit,sans-serif;color:#ece7db">dluginbuhl@fit.edu <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
             </a>
             <a data-cursor="CALL ✦" href="tel:+13216747156" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12.8px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
-              <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Phone</span>
-              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (321) 674-7156 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+              <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Phone</span>
+              <span style="font:400 14px Outfit,sans-serif;color:#ece7db">+1 (321) 674-7156 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
             </a>
           </div>
         </div>
@@ -1015,10 +1053,10 @@
     </svg>
 
     <div style="position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:flex-start;max-width:944px;margin:0 auto;width:100%">
-      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(8px,1.6vh,13.6px)">
-        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">VII</div>
+      <div data-rv="0" data-div style="position:relative;display:flex;align-items:center;gap:16px;margin-bottom:clamp(104px,15vh,136px)">
+        <div aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:600 clamp(120px,20vw,224px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.22);pointer-events:none;user-select:none">VII</div>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
-        <span style="font:500 8.8px 'JetBrains Mono',monospace;letter-spacing:.32em;color:#d3b078;white-space:nowrap">VII&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#ece7db">REACH OUT</span></span>
+        <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">REACH OUT</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
       <h2 data-mask style="margin:0 0 clamp(19.2px,4vh,30.4px);font:500 clamp(30.4px,6.4vw,73.6px)/1.22 'Cormorant Garamond',serif;color:#ece7db;text-align:center;letter-spacing:.01em">
@@ -1029,7 +1067,7 @@
           <span style="position:absolute;inset:0;border-radius:999px;background:#d3b078;animation:ax-pulse 2.4s ease-out infinite"></span>
           <span style="position:relative;width:6.4px;height:6.4px;border-radius:999px;background:#d3b078"></span>
         </span>
-        <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#c9b48c">Graduating Dec 2026 · Open to full-time and freelance work</span>
+        <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#c9b48c">Graduating Dec 2026 · Open to full-time and freelance work</span>
       </div>
       <div id="ax-contact-cards" data-rv="100" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),1fr));gap:clamp(14.4px,2.5vw,22.4px);align-items:stretch">
 
@@ -1037,24 +1075,24 @@
         <div style="position:relative;border-radius:6px;padding:1px;overflow:hidden;isolation:isolate">
           <div aria-hidden="true" style="position:absolute;left:50%;top:50%;width:200%;aspect-ratio:1;background:conic-gradient(from 0deg,transparent 0%,transparent 70%,rgba(211,176,120,.55) 84%,#f0dcb4 89%,rgba(211,176,120,.55) 93%,transparent 100%);animation:ax-beam 7s linear infinite;will-change:transform"></div>
           <div style="position:relative;height:100%;box-sizing:border-box;border-radius:5px;background:#0a0a0d;border:1px solid rgba(236,231,219,.09);padding:clamp(20.8px,3.2vw,33.6px);display:flex;flex-direction:column">
-            <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:9.6px">01 — Direct lines</div>
+            <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:9.6px">01 — Direct lines</div>
             <div style="font:500 clamp(19.2px,2.6vw,27.2px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:17.6px">Contact Information</div>
             <div style="display:flex;flex-direction:column;flex:1;border-top:1px solid rgba(236,231,219,.14)">
               <a data-cursor="SEND ✦" href="mailto:orionthanhpowers@gmail.com" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
-                <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Email</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">orionthanhpowers@gmail.com <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Email</span>
+                <span style="font:400 14px Outfit,sans-serif;color:#ece7db">orionthanhpowers@gmail.com <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <a data-cursor="CALL ✦" href="tel:+15022328043" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
-                <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Phone</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Phone</span>
+                <span style="font:400 14px Outfit,sans-serif;color:#ece7db">+1 (502) 232-8043 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <a data-cursor="OPEN ✦" href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14);text-decoration:none;transition:background .3s,padding-left .3s" style-hover="background:rgba(211,176,120,.06);padding-left:11.2px">
-                <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">LinkedIn</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">/in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">LinkedIn</span>
+                <span style="font:400 14px Outfit,sans-serif;color:#ece7db">/in/orion-powers <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
               </a>
               <div style="display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding:12px 2px;border-bottom:1px solid rgba(236,231,219,.14)">
-                <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Location</span>
-                <span style="font:400 12px Outfit,sans-serif;color:#ece7db">Melbourne, Florida</span>
+                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Location</span>
+                <span style="font:400 14px Outfit,sans-serif;color:#ece7db">Melbourne, Florida</span>
               </div>
             </div>
           </div>
@@ -1064,29 +1102,29 @@
         <div style="position:relative;border-radius:6px;padding:1px;overflow:hidden;isolation:isolate">
           <div aria-hidden="true" style="position:absolute;left:50%;top:50%;width:200%;aspect-ratio:1;background:conic-gradient(from 0deg,transparent 0%,transparent 70%,rgba(211,176,120,.55) 84%,#f0dcb4 89%,rgba(211,176,120,.55) 93%,transparent 100%);animation:ax-beam 7s linear infinite;animation-delay:-3.5s;will-change:transform"></div>
           <div style="position:relative;height:100%;box-sizing:border-box;border-radius:5px;background:#0a0a0d;border:1px solid rgba(236,231,219,.09);padding:clamp(20.8px,3.2vw,33.6px);display:flex;flex-direction:column">
-            <div style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:9.6px">02 — The one-pager</div>
+            <div style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:9.6px">02 — The one-pager</div>
             <div style="font:500 clamp(19.2px,2.6vw,27.2px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:12.8px">Download My Résumé</div>
-            <p style="margin:0 0 20.8px;font:300 12px/1.75 Outfit,sans-serif;color:#a8a294">Experience, skills, and projects — condensed to a single professional page.</p>
+            <p style="margin:0 0 20.8px;font:300 14px/1.7 Outfit,sans-serif;color:#ffffff">Experience, skills, and projects — condensed to a single professional page.</p>
             <div style="display:flex;flex-wrap:wrap;gap:9.6px;margin-bottom:20.8px">
-              <a data-cursor="SAVE ✦" href="documents/Orion-Powers-Resume.pdf" download style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:#d3b078;color:#070709;text-decoration:none;border-radius:3px;font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:background .3s,transform .3s" style-hover="background:#f0dcb4;transform:translateY(-2px)">Download PDF <span style="font-size:10.4px">↓</span></a>
-              <a data-cursor="OPEN ✦" href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:transparent;color:#ece7db;text-decoration:none;border-radius:3px;border:1px solid rgba(236,231,219,.24);font:500 8px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s" style-hover="border-color:rgba(211,176,120,.7);color:#d3b078">View Online <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+              <a data-cursor="SAVE ✦" href="documents/Orion-Powers-Resume.pdf" download style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:#d3b078;color:#070709;text-decoration:none;border-radius:3px;font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:background .3s,transform .3s" style-hover="background:#f0dcb4;transform:translateY(-2px)">Download PDF <span style="font-size:10.4px">↓</span></a>
+              <a data-cursor="OPEN ✦" href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:transparent;color:#ece7db;text-decoration:none;border-radius:3px;border:1px solid rgba(236,231,219,.24);font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s" style-hover="border-color:rgba(211,176,120,.7);color:#d3b078">View Online <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
             </div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:baseline;gap:11.2px;flex-wrap:wrap;padding-top:12px;border-top:1px solid rgba(236,231,219,.14)">
-              <span style="font:500 8px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#8f897c">Format</span>
-              <span style="font:400 12px Outfit,sans-serif;color:#ece7db">PDF · One page</span>
+              <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">Format</span>
+              <span style="font:400 14px Outfit,sans-serif;color:#ece7db">PDF · One page</span>
             </div>
           </div>
         </div>
       </div>
-      <div data-rv="200" style="display:flex;justify-content:space-between;align-items:center;gap:11.2px 24px;flex-wrap:wrap;margin-top:clamp(19.2px,4vh,32px);font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#6d675c">
+      <div data-rv="200" style="display:flex;justify-content:space-between;align-items:center;gap:11.2px 24px;flex-wrap:wrap;margin-top:clamp(19.2px,4vh,32px);font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">
         <span>Response window &lt; 24 hours</span>
-        <span>Local time — <span id="ax-clock" style="color:#b3ad9f">--:--:--</span> EST</span>
+        <span>Local time — <span id="ax-clock" style="color:#ffffff">--:--:--</span> EST</span>
       </div>
     </div>
 
     <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12.8px;flex-wrap:wrap;padding:20.8px 0;border-top:1px solid rgba(236,231,219,.1);max-width:944px;margin:clamp(38.4px,7vh,67.2px) auto 0;width:100%">
-      <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c">© MMXXVI Orion Powers</span>
-      <span style="font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#6d675c">Melbourne, Florida · 28.08°N 80.60°W</span>
+      <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff">© MMXXVI Orion Powers</span>
+      <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff">Melbourne, Florida · 28.08°N 80.60°W</span>
     </div>
   </section>
 </div>
@@ -1094,7 +1132,7 @@
 <!-- ===== CUSTOM CURSOR ===== -->
 <div id="ax-cur-ring" style="position:fixed;left:0;top:0;width:27.2px;height:27.2px;border-radius:999px;border:1px solid rgba(211,176,120,.6);z-index:70;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none"></div>
 <div id="ax-cur-dot" style="position:fixed;left:0;top:0;width:4px;height:4px;border-radius:999px;background:#d3b078;z-index:70;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none;transition:opacity .25s"></div>
-<div id="ax-cur-label" style="position:fixed;left:0;top:0;z-index:71;pointer-events:none;font:500 7.2px 'JetBrains Mono',monospace;letter-spacing:.22em;color:#070709;background:#d3b078;padding:5.6px 9.6px 5.6px 10.4px;border-radius:999px;transform:translate(-200px,-200px);opacity:0;transition:opacity .25s;will-change:transform;display:none;white-space:nowrap"></div>
+<div id="ax-cur-label" style="position:fixed;left:0;top:0;z-index:71;pointer-events:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.22em;color:#070709;background:#d3b078;padding:5.6px 9.6px 5.6px 10.4px;border-radius:999px;transform:translate(-200px,-200px);opacity:0;transition:opacity .25s;will-change:transform;display:none;white-space:nowrap"></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;showIntro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Opening&quot;},&quot;starDensity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0.2,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Atmosphere&quot;},&quot;meteors&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Atmosphere&quot;},&quot;launchFinale&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Atmosphere&quot;}}">
 class Component extends DCLogic {
@@ -1181,6 +1219,15 @@ class Component extends DCLogic {
     this._plume = [];
     this._buildOrbit();
 
+    // Last value written to each pinned-Experience layer / star. The scroll block used to
+    // re-assign all of these on every frame the page moved; two of the properties involved
+    // (pointer-events, text-shadow) are INHERITED, so re-writing them invalidated the
+    // computed style of every descendant of the card. Now they are only touched on change.
+    this._expState = this._expLayers.map(() => ({ op: '', tf: '', pe: '' }));
+    this._expStarOn = this._expStars.map(() => null);
+    this._expFillH = '';
+    this._progTf = '';
+
     this._measure();
     this._buildStars();
     this._initReveals();
@@ -1189,20 +1236,45 @@ class Component extends DCLogic {
     this._initRocket();
     this._initGlints();
     this._initLaunch();
+    this._initAnimPause();
+    this._initGeomWatch();
 
+    this._clockEl = document.getElementById('ax-clock');
     this._clockIv = setInterval(() => {
-      const el = document.getElementById('ax-clock');
-      if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+      if (this._clockEl) this._clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
     }, 1000);
 
     this._onNarrow = () => {
-      const n = innerWidth < 760;
+      // Skills-panel layout only. Raised from 760 to 900: between those widths the nine
+      // vertical tab columns are ~60px wide, too thin to set a label like "PERFORMANCE"
+      // at a readable size without breaking it mid-word. The stacked accordion gives the
+      // label the full row instead.
+      const n = innerWidth < 900;
       if (n !== this.state.narrow) this.setState({ narrow: n });
     };
     addEventListener('resize', this._onNarrow);
     this._onNarrow();
 
-    this._onResize = () => { this._measure(); this._buildStars(); };
+    // A resize pass is expensive — it reallocates every canvas backing store and
+    // re-flattens the Education rocket's flight path (257 getPointAtLength calls) — so it
+    // must not run more often than it has to. Two guards:
+    //  * identical dimensions do nothing at all (browsers fire spurious resize events);
+    //  * a height-only change on a touch device is almost always the URL bar sliding as
+    //    the visitor scrolls, and doing all that work in the middle of a flick is exactly
+    //    what a phone can't absorb. Those are debounced so the pass happens once, after
+    //    the gesture settles. Width changes (rotation, a real window drag) still apply
+    //    immediately, because layout genuinely differs at that instant.
+    this._resizePass = () => { this._measure(); this._buildStars(); if (this._rkResize) this._rkResize(); };
+    this._onResize = () => {
+      const w = innerWidth, h = innerHeight;
+      if (w === this._vw && h === this._vh) return;
+      clearTimeout(this._resizeT);
+      if (w === this._vw && matchMedia('(pointer:coarse)').matches) {
+        this._resizeT = setTimeout(this._resizePass, 350);
+      } else {
+        this._resizePass();
+      }
+    };
     this._onVis = () => { this._hidden = document.hidden; };
     addEventListener('resize', this._onResize);
     document.addEventListener('visibilitychange', this._onVis);
@@ -1221,7 +1293,10 @@ class Component extends DCLogic {
     this._raf = requestAnimationFrame(tick);
   }
 
-  componentDidUpdate() { this._buildStars(); }
+  // A re-render can change the page's height and its section offsets (the archive panel,
+  // the Skills accordion), so the geometry the frame loop reads has to be resampled — but
+  // not here, mid-commit. Flagging it defers the read into the next frame's read phase.
+  componentDidUpdate() { this._buildStars(); this._geomDirty = true; }
 
   componentWillUnmount() {
     cancelAnimationFrame(this._raf);
@@ -1230,6 +1305,10 @@ class Component extends DCLogic {
     if (this._rkIO) this._rkIO.disconnect();
     if (this._glIO) this._glIO.disconnect();
     if (this._lnIO) this._lnIO.disconnect();
+    if (this._pzIO) this._pzIO.disconnect();
+    if (this._pageRO) this._pageRO.disconnect();
+    if (this._geomIv) clearInterval(this._geomIv);
+    clearTimeout(this._resizeT);
     clearInterval(this._clockIv);
     if (this._onNarrow) removeEventListener('resize', this._onNarrow);
     removeEventListener('resize', this._onResize);
@@ -1268,19 +1347,71 @@ class Component extends DCLogic {
       this._lnH = this._contactSec.offsetHeight;
       sizeCv(this._launchCv, this._launchCtx, this._lnW, this._lnH);
     }
-    this._pinTop = this._expPin.offsetTop;
-    this._pinRange = Math.max(1, this._expPin.offsetHeight - this._vh);
-    // ambient meteors stay quiet through Hero/About/Education/Skills/Experience so
-    // the single welcome-star streak on load never overlaps another shooting star
-    const gateSec = document.getElementById('ax-work');
-    this._ambientGateY = gateSec ? gateSec.offsetTop : 0;
     this._plx = Array.from(document.querySelectorAll('[data-plx]')).map((el) => {
       el.style.transform = 'translate(-50%,-50%)';
       const r = el.getBoundingClientRect();
       return { el, top: r.top + scrollY };
     });
+    this._cacheGeom();
     this._lastY = -1;
   }
+
+  // Every layout value the frame loop needs, sampled in one place. NONE of these may be
+  // read from inside _frame: the loop writes styles on every frame, so a read taken after
+  // one of those writes is a forced synchronous style-recalc + layout, and the loop used
+  // to take three or four of them per frame (scrollHeight for the progress bar, an
+  // offsetTop per nav link, the Skills section's rect for the orbit canvas). Resampled on
+  // mount, on resize, on re-render, and whenever the page's own box changes — see
+  // _initGeomWatch. Positions are kept in DOCUMENT space, so the per-frame conversion back
+  // to viewport space is a subtraction of scrollY and nothing has to be measured again.
+  _cacheGeom() {
+    this._docScrollH = document.documentElement.scrollHeight;
+    this._pinTop = this._expPin.offsetTop;
+    this._pinRange = Math.max(1, this._expPin.offsetHeight - this._vh);
+    for (const n of this._navLinks) n.top = n.sec ? n.sec.offsetTop : Infinity;
+    // only needed by the Skills orbit canvas, which is not currently present in the markup
+    if (this._skillsSec && this._orbitCv) {
+      const r = this._skillsSec.getBoundingClientRect();
+      this._orbitBox = { x: r.left + scrollX, y: r.top + scrollY, w: this._skillsSec.offsetWidth, h: this._skillsSec.offsetHeight };
+    }
+  }
+
+  // Anything that changes the page's height invalidates that cache: lazy images decoding,
+  // the webfonts swapping in and re-flowing headings, the archive panel opening. Watching
+  // the content wrapper's box catches all of them, and only sets a flag — the actual
+  // re-read happens in the next frame's read phase, never mid-write. (body itself can't be
+  // watched: the runtime's FULL_PAGE_CSS pins it to height:100%, so its box never grows
+  // with the content.)
+  _initGeomWatch() {
+    const page = document.getElementById('ax-page');
+    if (page && typeof ResizeObserver !== 'undefined') {
+      this._pageRO = new ResizeObserver(() => { this._geomDirty = true; });
+      this._pageRO.observe(page);
+    } else {
+      this._geomIv = setInterval(() => { this._geomDirty = true; }, 1500);
+    }
+  }
+
+  // Composited CSS animations keep running — and keep re-rasterising their blurred and
+  // conic-gradient layers — while they sit far outside the viewport. Freezing them the
+  // moment they leave is invisible (animation-play-state stops in place and resumes from
+  // exactly where it stopped) and hands that GPU time back to whatever the visitor is
+  // actually looking at, which is what makes scrolling elsewhere on the page smoother.
+  // Only infinite loops are touched, so one-shot entrance animations still play normally
+  // when their element scrolls into view. The two fixed-position background nebulae always
+  // intersect the viewport, so they are never paused.
+  _initAnimPause() {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const els = Array.from(document.querySelectorAll('[style*="animation"]')).filter(
+      (el) => getComputedStyle(el).animationIterationCount === 'infinite'
+    );
+    if (!els.length) return;
+    this._pzIO = new IntersectionObserver((es) => {
+      for (const e of es) e.target.style.animationPlayState = e.isIntersecting ? '' : 'paused';
+    }, { rootMargin: '200px 0px 200px 0px' });
+    for (const el of els) this._pzIO.observe(el);
+  }
+
 
   // Height of the mobile launch stage itself — a dedicated band for the rocket's flight,
   // separate from the header text above it (see _layoutLaunchStage/_lnYOff) — so the
@@ -1288,7 +1419,7 @@ class Component extends DCLogic {
   _lnStageH() { return Math.max(190, Math.min(250, (this._vh || innerHeight) * 0.30)); }
 
   // Pins the mobile launch stage into the empty space ABOVE the badge — behind the
-  // "VII · REACH OUT" divider and the h2 headline — instead of reserving its own band
+  // "REACH OUT" divider and the h2 headline — instead of reserving its own band
   // below the badge. That space has no opaque boxes over it (unlike the info cards,
   // which are solid-fill and would hide the flight entirely), so the mission reads as
   // a true background layer for the section without ever pushing the cards out of their
@@ -1329,6 +1460,7 @@ class Component extends DCLogic {
       });
     }
     this._starsArr = arr;
+    this._starsPainted = false;   // reduced-motion path repaints its one static frame
   }
 
   _initCursor() {
@@ -1383,28 +1515,59 @@ class Component extends DCLogic {
   _frame(now) {
     const y = scrollY;
     const t = now / 1000;
+    const scrolled = y !== this._lastY;
+
+    // ================= READ PHASE =================
+    // Every layout read this frame needs is taken HERE, before the first style write.
+    // The loop used to interleave them — write the cursor transforms, read a magnetic
+    // button's rect, write more, read the Skills section's rect, write more, read
+    // scrollHeight and an offsetTop per nav link — and each of those reads landed on a
+    // tree the loop had just dirtied, forcing a full synchronous style-recalc + layout.
+    // Three or four of those a frame was this page's single biggest source of dropped
+    // frames. Batched up front the tree is still clean from the browser's own layout
+    // pass, so they cost next to nothing, and every value is identical to what the
+    // interleaved version measured.
+    if (this._geomDirty) { this._geomDirty = false; this._cacheGeom(); }
+    const magsOn = this._curOn && this._curMoved;
+    // Magnet rects only move when the pointer moves, the page scrolls, or a magnet is
+    // still easing back to rest; otherwise last frame's rects are still exact.
+    const pMoved = this._mx !== this._pMx || this._my !== this._pMy;
+    const readMags = magsOn && (pMoved || scrolled || !this._magsRest);
+    if (readMags) { for (const m of this._mags) m.r = m.el.getBoundingClientRect(); }
+    this._pMx = this._mx; this._pMy = this._my;
+    // Skills-orbit box, derived from the cached document-space geometry rather than a
+    // per-frame getBoundingClientRect(). Skipped entirely when the orbit canvas isn't on
+    // the page (it currently isn't — see _cacheGeom).
+    const ob = this._orbitCv ? this._orbitBox : null;
+    const orbitRect = ob ? { left: ob.x - scrollX, top: ob.y - y, width: ob.w, height: ob.h } : null;
+    // ================= WRITE PHASE =================
 
     // ---- cursor + hero parallax (every frame, lerped) ----
-    if (this._curOn && this._curMoved) {
+    if (magsOn) {
       this._rx += (this._mx - this._rx) * 0.16;
       this._ry += (this._my - this._ry) * 0.16;
       this._ringS += (this._ringT - this._ringS) * 0.18;
       this._curDot.style.transform = 'translate(' + (this._mx - 2.5) + 'px,' + (this._my - 2.5) + 'px)';
       this._curRing.style.transform = 'translate(' + (this._rx - 17) + 'px,' + (this._ry - 17) + 'px) scale(' + this._ringS.toFixed(3) + ')';
       this._curLabel.style.transform = 'translate(' + (this._mx + 18) + 'px,' + (this._my + 20) + 'px)';
-      for (const m of this._mags) {
-        const r = m.el.getBoundingClientRect();
-        const bx = r.left + r.width / 2 - m.x;
-        const by = r.top + r.height / 2 - m.y;
-        const dx = this._mx - bx, dyy = this._my - by;
-        const within = Math.abs(dx) < r.width / 2 + 42 && Math.abs(dyy) < r.height / 2 + 42;
-        const tx = within ? dx * 0.22 : 0;
-        const ty = within ? dyy * 0.22 : 0;
-        m.x += (tx - m.x) * 0.13;
-        m.y += (ty - m.y) * 0.13;
-        if (within || Math.abs(m.x) > 0.05 || Math.abs(m.y) > 0.05) {
-          m.el.style.transform = 'translate(' + m.x.toFixed(2) + 'px,' + m.y.toFixed(2) + 'px)';
+      if (readMags) {
+        let rest = true;
+        for (const m of this._mags) {
+          const r = m.r;
+          const bx = r.left + r.width / 2 - m.x;
+          const by = r.top + r.height / 2 - m.y;
+          const dx = this._mx - bx, dyy = this._my - by;
+          const within = Math.abs(dx) < r.width / 2 + 42 && Math.abs(dyy) < r.height / 2 + 42;
+          const tx = within ? dx * 0.22 : 0;
+          const ty = within ? dyy * 0.22 : 0;
+          m.x += (tx - m.x) * 0.13;
+          m.y += (ty - m.y) * 0.13;
+          if (within || Math.abs(m.x) > 0.05 || Math.abs(m.y) > 0.05) {
+            m.el.style.transform = 'translate(' + m.x.toFixed(2) + 'px,' + m.y.toFixed(2) + 'px)';
+            rest = false;   // still settling (or still hovered) — keep re-reading its rect
+          }
         }
+        this._magsRest = rest;
       }
       if (y < this._vh * 1.1 && !this._introBusy) {
         this._pnx += (this._nx - this._pnx) * 0.05;
@@ -1416,14 +1579,23 @@ class Component extends DCLogic {
 
     // ---- starfield ----
     const ctx = this._ctx, w = this._vw, h = this._vh;
-    ctx.clearRect(0, 0, w, h);
     if (this._reduced) {
-      for (const s of this._starsArr) {
-        ctx.globalAlpha = s.a * 0.8;
-        ctx.fillStyle = s.gold ? '#d3b078' : '#dfe4ef';
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+      // Under prefers-reduced-motion the starfield has no twinkle, no parallax and no
+      // meteors — the image is identical every frame. Painting a full-viewport canvas 60
+      // times a second to reproduce it exactly was pure battery burn, so it is painted
+      // once and left alone until _buildStars replaces it (mount, resize, density change).
+      if (!this._starsPainted) {
+        this._starsPainted = true;
+        ctx.clearRect(0, 0, w, h);
+        for (const s of this._starsArr) {
+          ctx.globalAlpha = s.a * 0.8;
+          ctx.fillStyle = s.gold ? '#d3b078' : '#dfe4ef';
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
       }
     } else {
+      ctx.clearRect(0, 0, w, h);
       const snapOn = this._curOn && this._curMoved;
       for (const s of this._starsArr) {
         let a = s.a * (0.55 + 0.45 * Math.sin(t * s.tw + s.ph));
@@ -1446,39 +1618,68 @@ class Component extends DCLogic {
         ctx.fillStyle = s.gold ? '#d3b078' : '#dfe4ef';
         ctx.beginPath(); ctx.arc(px, py, pr, 0, 6.283); ctx.fill();
       }
-      const pastEarlySections = y >= (this._ambientGateY || 0);
       const ambientFxOn = (this.props.meteors ?? true) && !this._low;
-      if (ambientFxOn && pastEarlySections && now > this._nextMeteor && this._meteors.length < (this._mid ? 2 : 3)) {
-        this._nextMeteor = now + 4200 + Math.random() * 5200;
-        const roll = Math.random();
-        let sx, sy;
-        if (roll < 0.4) { sx = w * (0.35 + Math.random() * 0.6); sy = h * Math.random() * 0.3; }
-        else if (roll < 0.75) { sx = w * (0.72 + Math.random() * 0.32); sy = h * (0.18 + Math.random() * 0.45); }
-        else { sx = w * (0.5 + Math.random() * 0.55); sy = h * (0.42 + Math.random() * 0.3); }
-        const sp = 0.75 + Math.random() * 0.55;
+      if (ambientFxOn && now > this._nextMeteor && this._meteors.length < (this._mid ? 1 : 2)) {
+        this._nextMeteor = now + 7000 + Math.random() * 9000;
+        // Spawn just off the right edge and fly right-to-left across the whole viewport at
+        // ~10deg below flat. Lifetime is derived from the crossing distance so the streak
+        // survives the full trip instead of fading out mid-screen.
+        const ang = (8 + Math.random() * 5) * Math.PI / 180;
+        // depth: 0 = far/faint/thin, 1 = nearer. Biased toward the far end so these read as
+        // distant background objects; nothing gets close enough to feel like foreground.
+        const dz = Math.pow(Math.random(), 1.8);
+        const sp = (7 + Math.random() * 3) * (0.72 + 0.4 * dz);
+        const sx = w * (1.02 + Math.random() * 0.1);
+        const frames = (sx + w * 0.3) / (Math.cos(ang) * sp);
         this._meteors.push({
-          x: sx, y: sy,
-          vx: -(5 + Math.random() * 3) * sp, vy: (2.2 + Math.random() * 1.6) * sp,
-          life: 1, len: 11 + Math.random() * 9, gold: Math.random() < 0.16
+          x: sx, y: h * (0.02 + Math.random() * 0.72),
+          ux: -Math.cos(ang), uy: Math.sin(ang), dz: dz,
+          vx: -Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+          life: 1, decay: 1 / frames,
+          tail: (120 + Math.random() * 90) * (0.7 + 0.55 * dz), gold: Math.random() < 0.16
         });
       }
       for (let i = this._meteors.length - 1; i >= 0; i--) {
         const m = this._meteors[i];
-        m.x += m.vx; m.y += m.vy; m.life -= 0.016;
-        if (m.life <= 0) { this._meteors.splice(i, 1); continue; }
+        m.x += m.vx; m.y += m.vy; m.life -= (m.decay || 0.016);
+        if (m.life <= 0 || m.x < -w * 0.3 || m.y > h + 60) { this._meteors.splice(i, 1); continue; }
         const mc = m.gold ? '211,176,120' : '236,231,219';
-        const g = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len, m.y - m.vy * m.len);
-        g.addColorStop(0, 'rgba(' + mc + ',' + (0.85 * m.life) + ')');
-        g.addColorStop(1, 'rgba(' + mc + ',0)');
+        // hold near-full brightness across the crossing, easing in at spawn and out at the
+        // end, instead of a linear fade that leaves most of the flight dim
+        const dz = m.dz || 0;
+        // farther streaks are dimmer as well as smaller — the two cues together are what
+        // sell distance; brightness is capped below full white so none read as foreground
+        const a = Math.min(1, Math.sin(Math.PI * (1 - m.life)) * 2.6) * (0.34 + 0.42 * dz);
+        const tl = m.tail * Math.min(1, (1 - m.life) * 6);
+        const tx = m.x - m.ux * tl, ty = m.y - m.uy * tl;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = g; ctx.lineWidth = 1.1;
-        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * m.len, m.y - m.vy * m.len); ctx.stroke();
+        ctx.lineCap = 'round';
+        const halo = ctx.createLinearGradient(m.x, m.y, tx, ty);
+        halo.addColorStop(0, 'rgba(' + mc + ',' + (0.22 * a) + ')');
+        halo.addColorStop(1, 'rgba(' + mc + ',0)');
+        ctx.strokeStyle = halo; ctx.lineWidth = 2.4 + 2.6 * dz;
+        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
+        const g = ctx.createLinearGradient(m.x, m.y, tx, ty);
+        g.addColorStop(0, 'rgba(' + mc + ',' + a + ')');
+        g.addColorStop(0.2, 'rgba(' + mc + ',' + (0.7 * a) + ')');
+        g.addColorStop(0.6, 'rgba(' + mc + ',' + (0.24 * a) + ')');
+        g.addColorStop(1, 'rgba(' + mc + ',0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 0.8 + 0.9 * dz;
+        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
+        ctx.globalAlpha = 0.3 * a;
+        ctx.fillStyle = 'rgb(' + mc + ')';
+        ctx.beginPath(); ctx.arc(m.x, m.y, 1.6 + 1.7 * dz, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = 'rgb(' + mc + ')';
+        ctx.beginPath(); ctx.arc(m.x, m.y, 0.6 + 0.7 * dz, 0, 6.283); ctx.fill();
+        ctx.lineCap = 'butt';
       }
-      if (ambientFxOn && pastEarlySections && now > this._nextComet && this._comets.length < 1) {
+      if (ambientFxOn && now > this._nextComet && this._comets.length < 1) {
         this._nextComet = now + 30000 + Math.random() * 25000;
         this._comets.push({
-          x: w * (0.55 + Math.random() * 0.5), y: -30,
-          vx: -(0.9 + Math.random() * 0.5), vy: 0.45 + Math.random() * 0.3, life: 1
+          x: w * (0.55 + Math.random() * 0.5), y: h * (0.05 + Math.random() * 0.25),
+          vx: -Math.cos(0.262) * (1.1 + Math.random() * 0.5),
+          vy: Math.sin(0.262) * (1.1 + Math.random() * 0.5), life: 1
         });
       }
       for (let i = this._comets.length - 1; i >= 0; i--) {
@@ -1488,17 +1689,17 @@ class Component extends DCLogic {
         const a = Math.min(1, Math.sin((1 - m.life) * Math.PI) * 1.8);
         const tx = m.x - m.vx * 78, ty = m.y - m.vy * 78;
         const g = ctx.createLinearGradient(m.x, m.y, tx, ty);
-        g.addColorStop(0, 'rgba(226,224,214,' + (0.7 * a) + ')');
-        g.addColorStop(0.4, 'rgba(211,190,150,' + (0.22 * a) + ')');
+        g.addColorStop(0, 'rgba(226,224,214,' + (0.45 * a) + ')');
+        g.addColorStop(0.4, 'rgba(211,190,150,' + (0.15 * a) + ')');
         g.addColorStop(1, 'rgba(211,190,150,0)');
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = g; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+        ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
-        ctx.globalAlpha = a;
+        ctx.globalAlpha = 0.75 * a;
         ctx.fillStyle = '#f0ead8';
-        ctx.beginPath(); ctx.arc(m.x, m.y, 1.7, 0, 6.283); ctx.fill();
-        ctx.globalAlpha = 0.28 * a;
-        ctx.beginPath(); ctx.arc(m.x, m.y, 3.6, 0, 6.283); ctx.fill();
+        ctx.beginPath(); ctx.arc(m.x, m.y, 1.1, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = 0.2 * a;
+        ctx.beginPath(); ctx.arc(m.x, m.y, 2.5, 0, 6.283); ctx.fill();
       }
       if (this._welcomeStar) {
         const m = this._welcomeStar;
@@ -1560,20 +1761,33 @@ class Component extends DCLogic {
     // ---- comet-cursor dust trail ----
     if (this._fxCtx && (this._dust.length || this._dustDrawn)) {
       const fx = this._fxCtx;
-      fx.clearRect(0, 0, w, h);
+      // Clear only what was painted LAST frame, not the whole viewport. The dust is a
+      // small cloud that trails the cursor, but #ax-fx spans the window — wiping every
+      // pixel of it 60 times a second cost several times more than drawing the particles.
+      const pb = this._dustBox;
+      if (pb) fx.clearRect(pb[0], pb[1], pb[2] - pb[0], pb[3] - pb[1]);
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (let i = this._dust.length - 1; i >= 0; i--) {
         const p = this._dust[i];
         p.x += p.vx; p.y += p.vy; p.life -= p.decay;
         if (p.life <= 0) { this._dust.splice(i, 1); continue; }
+        const rr = p.r * p.life + 0.2;
+        if (p.x - rr < x0) x0 = p.x - rr;
+        if (p.y - rr < y0) y0 = p.y - rr;
+        if (p.x + rr > x1) x1 = p.x + rr;
+        if (p.y + rr > y1) y1 = p.y + rr;
         fx.globalAlpha = p.life * (p.hot ? 0.9 : 0.55);
         fx.fillStyle = p.hot ? '#f2b97c' : '#d3b078';
-        fx.beginPath(); fx.arc(p.x, p.y, p.r * p.life + 0.2, 0, 6.283); fx.fill();
+        fx.beginPath(); fx.arc(p.x, p.y, rr, 0, 6.283); fx.fill();
       }
       fx.globalAlpha = 1;
+      this._dustBox = this._dust.length
+        ? [Math.max(0, x0 - 2), Math.max(0, y0 - 2), Math.min(w, x1 + 2), Math.min(h, y1 + 2)]
+        : null;
       this._dustDrawn = this._dust.length > 0;
     }
 
-    this._drawOrbit(t);
+    this._drawOrbit(t, orbitRect);
     if (this._launch) this._stepLaunch(now);
 
     // ---- scroll-driven work ----
@@ -1581,8 +1795,9 @@ class Component extends DCLogic {
     this._lastY = y;
     const vh = this._vh;
 
-    const dh = document.documentElement.scrollHeight - vh;
-    this._progress.style.transform = 'scaleX(' + Math.min(1, y / Math.max(1, dh)).toFixed(4) + ')';
+    const dh = (this._docScrollH || document.documentElement.scrollHeight) - vh;
+    const progTf = 'scaleX(' + Math.min(1, y / Math.max(1, dh)).toFixed(4) + ')';
+    if (progTf !== this._progTf) { this._progTf = progTf; this._progress.style.transform = progTf; }
 
     if (!this._reduced) {
       if (y < vh * 1.2) {
@@ -1611,11 +1826,11 @@ class Component extends DCLogic {
       let cur = null;
       const mid = y + vh * 0.32;
       for (const n of this._navLinks) {
-        if (n.sec && n.sec.offsetTop <= mid) cur = n;
+        if (n.top <= mid) cur = n;      // n.top is cached in _cacheGeom, not read here
       }
       if (cur !== this._navActive) {
         if (this._navActive) {
-          this._navActive.el.style.color = '#8f897c';
+          this._navActive.el.style.color = '#ffffff';
           this._navActive.el.style.textShadow = 'none';
         }
         this._navActive = cur;
@@ -1636,16 +1851,27 @@ class Component extends DCLogic {
       const o = Math.min(fadeIn, fadeOut);
       const el = this._expLayers[i];
       const entering = seg < i + 0.5;
-      el.style.opacity = o.toFixed(3);
-      el.style.transform = 'translate3d(0,' + ((1 - o) * (entering ? 36 : -36)).toFixed(1) + 'px,0)';
-      el.style.pointerEvents = o > 0.5 ? 'auto' : 'none';
+      const op = o.toFixed(3);
+      const tf = 'translate3d(0,' + ((1 - o) * (entering ? 36 : -36)).toFixed(1) + 'px,0)';
+      // pointer-events is an INHERITED property: re-writing it invalidates the computed
+      // style of every descendant of the card, so it is only touched when it flips.
+      const pe = o > 0.5 ? 'auto' : 'none';
+      const st = this._expState[i];
+      if (st.op !== op) { st.op = op; el.style.opacity = op; }
+      if (st.tf !== tf) { st.tf = tf; el.style.transform = tf; }
+      if (st.pe !== pe) { st.pe = pe; el.style.pointerEvents = pe; }
     }
-    this._expFill.style.height = (p * 100).toFixed(1) + '%';
-    this._expStars.forEach((s, i) => {
+    const fillH = (p * 100).toFixed(1) + '%';
+    if (fillH !== this._expFillH) { this._expFillH = fillH; this._expFill.style.height = fillH; }
+    for (let i = 0; i < this._expStars.length; i++) {
       const active = seg > i + 0.35;
+      if (this._expStarOn[i] === active) continue;
+      this._expStarOn[i] = active;
+      const s = this._expStars[i];
       s.style.opacity = active ? '1' : '.3';
+      // text-shadow is inherited too — same reason as pointer-events above
       s.style.textShadow = active ? '0 0 12px rgba(211,176,120,.9)' : 'none';
-    });
+    }
     const hopIdx = seg > 2.35 ? 2 : seg > 1.35 ? 1 : seg > 0.35 ? 0 : -1;
     if (hopIdx !== this._expIdx) {
       const tops = [16, 50, 84];
@@ -1674,11 +1900,17 @@ class Component extends DCLogic {
           this._lnSteam = []; this._lnTrail = []; this._lnTrailT = 0;
           this._lnQ = this._low ? 0.55 : this._mid ? 0.8 : 1; this._lnDt = 0; this._lnPrev = 0;
           if (this._launchCv) this._launchCv.style.opacity = '1';
+          // The finale rumbles the whole section by rewriting its transform every frame.
+          // Without a promotion hint that repaints the section's contents each time;
+          // with one it is a compositor-only move. Dropped again the moment the mission
+          // ends so the layer isn't held for the rest of the session.
+          this._contactSec.style.willChange = 'transform';
           this._launch = { t0: performance.now() };
         } else if (!e.isIntersecting) {
           this._launched = false;
           this._launch = null;
           this._contactSec.style.transform = '';
+          this._contactSec.style.willChange = '';
           if (this._launchCtx) this._launchCtx.clearRect(0, 0, this._lnW || 4000, this._lnH || 4000);
         }
       });
@@ -2084,6 +2316,7 @@ class Component extends DCLogic {
       ctx.clearRect(0, 0, w, hFull);
       if (this._launchCv) this._launchCv.style.opacity = '';
       sec.style.transform = '';
+      sec.style.willChange = '';
       this._launch = null;
     }
   }
@@ -2371,7 +2604,7 @@ class Component extends DCLogic {
     };
     drawFin(-1, 0); drawFin(1, 2.1);
     // catch hardpoints just below the fins
-    ctx.fillStyle = '#8f897c';
+    ctx.fillStyle = '#c9c3b6';
     ctx.fillRect(-r - 2, bodyH * 0.17 - 2, 3, 4); ctx.fillRect(r - 1, bodyH * 0.17 - 2, 3, 4);
     // engine skirt + Raptor cluster hint (33 engines: centre + outer rings)
     ctx.fillStyle = '#2c2822';
@@ -2409,19 +2642,28 @@ class Component extends DCLogic {
     this._orbitLinks = links;
   }
 
-  _drawOrbit(t) {
+  // `rect` is the Skills section's viewport box, computed by _frame's read phase from
+  // cached document-space geometry. It used to be measured here with
+  // getBoundingClientRect() — a forced layout, every frame, after the loop had already
+  // written styles.
+  _drawOrbit(t, rect) {
     const cv = this._orbitCv, ctx = this._orbitCtx, sec = this._skillsSec;
-    if (!cv || !ctx || !sec || !this._orbitNodes) return;
-    const rect = sec.getBoundingClientRect();
+    if (!cv || !ctx || !sec || !this._orbitNodes || !rect) return;
     const w = rect.width, h = rect.height;
-    if (rect.bottom < -40 || rect.top > this._vh + 40) {
-      if (this._orbitDrawn) { ctx.clearRect(0, 0, w, h); this._orbitDrawn = false; }
-      return;
-    }
-    ctx.clearRect(0, 0, w, h);
-    this._orbitDrawn = true;
     const cx = w / 2, cy = h * 0.5;
     const R = Math.min(w * 0.44, h * 0.52);
+    // This canvas is as tall as the whole Skills section, but the orbit only ever paints
+    // inside a band around its centre: the perspective divide bottoms out at 1/(1-0.4), so
+    // a node sits at most 1.44R from cy, plus its dot radius and shadow. Clearing the band
+    // instead of the full canvas skips a large area of empty pixels every frame.
+    const bandY = Math.max(0, cy - R * 1.5 - 30);
+    const bandH = Math.min(h, cy + R * 1.5 + 30) - bandY;
+    if (rect.top + h < -40 || rect.top > this._vh + 40) {
+      if (this._orbitDrawn) { ctx.clearRect(0, bandY, w, bandH); this._orbitDrawn = false; }
+      return;
+    }
+    ctx.clearRect(0, bandY, w, bandH);
+    this._orbitDrawn = true;
     const rot = this._reduced ? 0.8 : t * 0.1;
     const tilt = 0.42, ctl = Math.cos(tilt), stl = Math.sin(tilt);
     const cr = Math.cos(rot), sr = Math.sin(rot);
@@ -2474,7 +2716,7 @@ class Component extends DCLogic {
       ctx.shadowBlur = 0;
       if (hot || n.zz < -0.15) {
         ctx.globalAlpha = hot ? 0.95 : 0.26 + depth * 0.2;
-        ctx.fillStyle = hot ? '#ece7db' : '#a09a8c';
+        ctx.fillStyle = hot ? '#ece7db' : '#ffffff';
         ctx.fillText(n.name.toUpperCase(), n.sx + 9, n.sy + 3);
       }
     }
@@ -2494,43 +2736,143 @@ class Component extends DCLogic {
     // SCREEN pixels while the rocket (getPointAtLength) lives in USER units — so any scale
     // error between the two put the streak behind the rocket. Here we rebuild the streak's own
     // `d` each frame by sampling the flight path from `start`→`lead` in user units, and place
-    // the rocket at that same `lead`. Streak tip and rocket come from the identical
-    // getPointAtLength call: they are the same point, so the streak can never lag.
-    const FULL_D = core.getAttribute('d');
+    // the rocket at that same `lead`. Streak tip and rocket come from the identical sampler
+    // (`at`, below): they are the same point, so the streak can never lag.
+    const svg = core.ownerSVGElement, wrap = svg.parentNode;
+    const grad = document.getElementById('ax-rk-grad');
+
+    // THE FLIGHT PATH IS BUILT AT RUNTIME, NOT AUTHORED. The SVG is
+    // preserveAspectRatio="xMidYMid slice", so the viewBox is scaled to COVER the wrap and
+    // how much of 0..1200 x 0..700 actually survives the crop changes with the viewport. A
+    // hand-authored `d` therefore cannot promise "enters at the left edge, exits at the right
+    // edge" - it only held at the one window size it was eyeballed in, and drifted (starting
+    // ~20% off-screen) everywhere else. Instead we map the wrap's own rect back into user
+    // space and lay the arc across exactly that, at every size.
+    const box = () => {
+      const m = svg.getScreenCTM(), r = wrap.getBoundingClientRect();
+      if (!m || !r.width) return { x: 0, y: 0, w: 1200, h: 700 };
+      const inv = m.inverse(), p = svg.createSVGPoint();
+      p.x = r.left;  p.y = r.top;    const a = p.matrixTransform(inv);
+      p.x = r.right; p.y = r.bottom; const b = p.matrixTransform(inv);
+      return { x: a.x, y: a.y, w: b.x - a.x, h: b.y - a.y };
+    };
+    // These five numbers ARE the original arc from the first commit
+    // (d="M-60,820 C170,420 520,190 1560,-30"), read back off it: it launches at -60.1deg,
+    // exits at -11.9deg, and its handles take 0.47 of the rise / 0.64 of the run. Only the
+    // placement is new — the authored version hung those figures on fixed viewBox coordinates,
+    // which the "slice" crop then pushed ~20% in from the left edge at most window sizes.
+    const Y_START = 1, Y_END = 0.02;     // entry / exit height as a fraction of the visible band
+    const PAD_L = 0.05, PAD_R = 0.035;   // launch from just OFF the left edge; clear the right one
+    const A0 = -60.1 * Math.PI / 180;    // launch heading
+    const A1 = -11.9 * Math.PI / 180;    // exit heading: still climbing away, as the original did
+    const K0 = 0.47, K1 = 0.64;          // handle lengths, as a share of the rise / the run
+    // AN ARC THAT STARTS STEEP AND ENDS FLAT CANNOT HAVE EVEN CURVATURE. A circular arc
+    // (equal handles, symmetric about the chord) turns at a constant rate, but its exit
+    // heading is chord + turn/2 — so buying a steep launch that way forces the rocket to
+    // crest mid-flight and come DOWN into the exit. Instead both tangents are stated outright
+    // and the handles are sized independently: short off the steep launch, long into the flat
+    // exit. Curvature is then front-loaded — a gravity turn, steepest at the pad, easing off
+    // all the way out — which is both what a launch looks like and monotonic by construction.
+    const buildD = () => {
+      const b = box();
+      const ax = b.x - b.w * PAD_L, ay = b.y + b.h * Y_START;
+      const bx = b.x + b.w * (1 + PAD_R), by = b.y + b.h * Y_END;
+      const run = bx - ax, rise = ay - by;
+      let h0 = K0 * rise / Math.abs(Math.sin(A0)), h1 = K1 * run / Math.abs(Math.cos(A1));
+      // Keep the control polygon monotone at ANY viewport aspect: if the two handles between
+      // them would consume more than the whole rise (or the whole run), scale both back. That
+      // makes every leg of the polygon rise-and-rightward, which in turn makes dy/dt <= 0 and
+      // dx/dt >= 0 over the entire curve — the rocket can never dip or double back.
+      const sy = h0 * Math.abs(Math.sin(A0)) + h1 * Math.abs(Math.sin(A1));
+      if (sy > rise) { const k = rise / sy; h0 *= k; h1 *= k; }
+      const sx = h0 * Math.abs(Math.cos(A0)) + h1 * Math.abs(Math.cos(A1));
+      if (sx > run) { const k = run / sx; h0 *= k; h1 *= k; }
+      const f = (n) => n.toFixed(1);
+      return 'M' + f(ax) + ',' + f(ay) +
+             ' C' + f(ax + h0 * Math.cos(A0)) + ',' + f(ay + h0 * Math.sin(A0)) +
+             ' ' + f(bx - h1 * Math.cos(A1)) + ',' + f(by - h1 * Math.sin(A1)) +
+             ' ' + f(bx) + ',' + f(by);
+    };
+
     const ref = document.createElementNS('http://www.w3.org/2000/svg', 'path'); // detached, for sampling
-    ref.setAttribute('d', FULL_D);
-    const L = ref.getTotalLength();
-    const TAIL = 0.85;                 // streak length as a fraction of the path
-    const SAMPLES = 40;
-    // Build the streak polyline from `start` (tail) up to `lead` (the rocket), in user units.
-    const streakD = (p) => {
-      const lead = Math.max(0, Math.min(L, p * L));
-      if (lead <= 1) return '';
-      const start = Math.max(0, lead - L * TAIL);
-      let d = '';
-      for (let i = 0; i <= SAMPLES; i++) {
-        const pt = ref.getPointAtLength(start + (lead - start) * (i / SAMPLES));
-        d += (i ? 'L' : 'M') + pt.x.toFixed(1) + ',' + pt.y.toFixed(1);
+    const TAIL = 1;                    // streak length as a fraction of the path (1 = full trail)
+    const SAMPLES = 80;
+    // SAMPLE THE PATH ONCE PER LAYOUT, NOT EVERY FRAME. getPointAtLength is a geometry query -
+    // the browser walks/flattens the path to answer it - and the old loop fired 40+ of them
+    // per frame (streak) plus 2 more (ship). That was this animation's dominant cost. Here the
+    // path is flattened up front into an equally-arc-spaced lookup table, so every frame is
+    // plain array math and one string build.
+    const LUT_N = 256;
+    const lutX = new Float32Array(LUT_N + 1), lutY = new Float32Array(LUT_N + 1);
+    let L = 0, FULL_D = '';
+    const rebuild = () => {
+      FULL_D = buildD();
+      ref.setAttribute('d', FULL_D);
+      L = ref.getTotalLength();
+      for (let i = 0; i <= LUT_N; i++) {
+        const pt = ref.getPointAtLength(L * i / LUT_N);
+        lutX[i] = pt.x; lutY[i] = pt.y;
       }
-      return d;
+      // Anchor the gradient to the flight itself, launch -> exit, in USER space. The original
+      // could leave it on the default objectBoundingBox because its path element was always
+      // the full arc (it revealed it with stroke-dashoffset). Ours rewrites `d` to just the
+      // flown part, so a bounding-box gradient would rescale under the streak every frame and
+      // the colour would slide along the trail. Pinned in user space it behaves like the
+      // original: bright at the pad, thinning out toward the tip.
+      if (grad) {
+        grad.setAttribute('x1', lutX[0]); grad.setAttribute('y1', lutY[0]);
+        grad.setAttribute('x2', lutX[LUT_N]); grad.setAttribute('y2', lutY[LUT_N]);
+      }
+    };
+    rebuild();
+    // `u` is progress along the path in [0,1]; writes the interpolated point into `out`.
+    const at = (u, out) => {
+      const f = (u < 0 ? 0 : u > 1 ? 1 : u) * LUT_N;
+      const i = f >= LUT_N ? LUT_N - 1 : f | 0, r = f - i;
+      out.x = lutX[i] + (lutX[i + 1] - lutX[i]) * r;
+      out.y = lutY[i] + (lutY[i + 1] - lutY[i]) * r;
+      return out;
+    };
+    // Build the streak polyline from `start` (tail) up to `p` (the rocket), in user units.
+    const seg = new Array(SAMPLES + 1), sp = { x: 0, y: 0 };
+    const streakD = (p) => {
+      if (p * L <= 1) return '';
+      const start = p > TAIL ? p - TAIL : 0;
+      for (let i = 0; i <= SAMPLES; i++) {
+        at(start + (p - start) * (i / SAMPLES), sp);
+        // NOTE: one decimal, not Math.round. Rounding to whole user units looks harmless but
+        // the polyline is resampled at new positions every frame, so each vertex snaps to its
+        // own nearest unit independently and the whole streak crawls/wobbles as it draws.
+        seg[i] = (i ? 'L' : 'M') + sp.x.toFixed(1) + ',' + sp.y.toFixed(1);
+      }
+      return seg.join('');
     };
     const drawStreak = (p) => { const d = streakD(p) || 'M0,0'; core.setAttribute('d', d); glow.setAttribute('d', d); };
+    const pa = { x: 0, y: 0 }, pb = { x: 0, y: 0 };
     const placeShip = (p) => {
-      const len = Math.max(0.01, Math.min(L, p * L));
-      const a = ref.getPointAtLength(len);
-      const b = ref.getPointAtLength(Math.min(L, len + 1));
-      const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-      ship.setAttribute('transform', 'translate(' + a.x + ' ' + a.y + ') rotate(' + ang + ')');
+      const t0 = p > 0.996 ? 0.996 : p;          // keep a forward-facing pair even at the end
+      at(t0, pa); at(t0 + 0.004, pb);
+      const ang = Math.atan2(pb.y - pa.y, pb.x - pa.x) * 180 / Math.PI;
+      at(p, pa);
+      ship.setAttribute('transform', 'translate(' + pa.x.toFixed(1) + ' ' + pa.y.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')');
     };
-    const hide = () => { core.setAttribute('d', 'M0,0'); glow.setAttribute('d', 'M0,0'); ship.style.opacity = '0'; };
+    const hide = () => {
+      core.setAttribute('d', 'M0,0'); glow.setAttribute('d', 'M0,0');
+      ship.style.opacity = '0';
+      this._rkP = -1; this._rkOp = 0;
+    };
     if (this._reduced) { core.setAttribute('d', FULL_D); glow.setAttribute('d', FULL_D); return; }
     hide();
 
     // Duration scales with the path length; the divisor is speed (units/ms) — higher = faster.
-    const dur = Math.round(L / 0.55);
-    // JS cubic-bezier(.5,.05,.3,1) — maps linear time t to eased progress p.
+    const dur = Math.round(L / 0.62);   // units/ms — higher = faster (.4 -> .33 -> .5 -> .62)
+    // JS cubic-bezier(.22,.08,.5,.55) — maps linear time t to eased progress p. Two things
+    // are tuned here. It eases IN only (slope ~0.9 at t=1, vs 0 for the old .3,1 tail) so the
+    // rocket holds speed to the finish instead of crawling the last stretch. And the ease-in
+    // is kept mild on purpose: the launch point sits off the left edge, so ~13% of the flight
+    // is off-screen, and a harder ease-in spent a THIRD of the runtime there, invisible.
     const ease = (() => {
-      const x1 = 0.5, y1 = 0.05, x2 = 0.3, y2 = 1;
+      const x1 = 0.22, y1 = 0.08, x2 = 0.5, y2 = 0.55;
       const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
       const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
       const fx = (t) => ((ax * t + bx) * t + cx) * t;
@@ -2545,9 +2887,17 @@ class Component extends DCLogic {
     const frame = (now) => {
       const t = Math.min(1, (now - this._rkT0) / dur);
       const p = ease(t);
-      drawStreak(p);
-      placeShip(p);
-      ship.style.opacity = (p < 0.05 ? p / 0.05 : 1).toFixed(3);  // fade in off the pad; then stay
+      // The eased curve crawls at both ends; below ~1px of travel a redraw is invisible but
+      // still costs a full re-parse + repaint of two paths (one of them blurred). Skip it.
+      if (t >= 1 || p - this._rkP >= 0.0015) {
+        this._rkP = p;
+        drawStreak(p);
+        placeShip(p);
+      }
+      // fade in off the pad, hold, then fade out as it leaves frame (the original's
+      // 0% -> 5% -> 92% -> 100% opacity keyframes)
+      const op = p < 0.05 ? p / 0.05 : p > 0.92 ? Math.max(0, (1 - p) / 0.08) : 1;
+      if (op !== this._rkOp) { this._rkOp = op; ship.style.opacity = op.toFixed(2); }
       this._rkRAF = t < 1 ? requestAnimationFrame(frame) : 0;      // on finish: streak stays drawn, no fade
     };
     const launch = () => {
@@ -2573,6 +2923,13 @@ class Component extends DCLogic {
       });
     }, { rootMargin: '0px 0px -30% 0px', threshold: 0 });
     this._rkIO.observe(sec);
+
+    // The crop (and therefore the arc's endpoints) is viewport-dependent, so re-lay the path
+    // on resize and redraw at whatever progress the flight is currently at.
+    this._rkResize = () => {
+      rebuild();
+      if (this._rkP > 0) { drawStreak(this._rkP); placeShip(this._rkP); }
+    };
   }
 
   _initGlints() {
@@ -2652,13 +3009,16 @@ class Component extends DCLogic {
   _fireWelcomeStar() {
     if (this._reduced || !this._ctx || this._welcomeStar) return;
     const w = this._vw, h = this._vh;
-    const ang = (36 + Math.random() * 10) * Math.PI / 180;
-    const dist = w * (0.34 + Math.random() * 0.08);
-    const frames = 75;
+    // same near-flat right-to-left angle as the ambient meteors, and the same full-width
+    // crossing — the first streak on load must not look different from the rest
+    const ang = (8 + Math.random() * 5) * Math.PI / 180;
+    const sx = w * 1.04;
+    const dist = sx + w * 0.3;
+    const frames = Math.round(dist / (13 * Math.cos(ang)));
     this._welcomeStar = {
-      x: w * (0.58 + Math.random() * 0.26), y: h * (0.04 + Math.random() * 0.04),
+      x: sx, y: h * (0.06 + Math.random() * 0.16),
       vx: -Math.cos(ang) * dist / frames, vy: Math.sin(ang) * dist / frames,
-      life: 1, decay: 1 / frames, len: Math.min(150, w * 0.12)
+      life: 1, decay: 1 / frames, len: Math.min(230, w * 0.17)
     };
   }
 
@@ -2798,15 +3158,19 @@ class Component extends DCLogic {
       const on = i === act;
       return Object.assign({}, g, {
         activate: () => { if (this.state.skillActive !== i) this.setState({ skillActive: i }); },
-        flex: narrow ? '0 0 auto' : (on ? '2.6 1 0%' : '1 1 0%'),
-        h: narrow ? (on ? '344px' : '46.4px') : 'auto',
+        flex: narrow ? '0 0 auto' : (on ? '3 1 0%' : '1 1 0%'),
+        // Open-panel height in accordion mode. A single constant has to be sized for the
+        // worst case (a ~360px phone, where the chips of the biggest group need ~11 rows),
+        // which leaves a dead gap on a tablet where the same chips fit in two. Shrink it as
+        // the viewport widens; the floor still clears the tallest group at every width.
+        h: narrow ? (on ? 'clamp(268px,calc(392px - (100vw - 360px) * 0.22),392px)' : '52px') : 'auto',
         bg: on ? '#0d0d12' : '#0a0a0d',
         tabOp: on ? '0' : '1',
         bodyOp: on ? '1' : '0',
         pe: on ? 'auto' : 'none',
         tabDir: narrow ? 'row' : 'column',
         tabPad: narrow ? '0 17.6px' : '16px 1.2px',
-        catSize: narrow ? '8.8px' : 'clamp(8.8px,1.2vw,12.4px)',
+        catSize: narrow ? '10.5px' : 'clamp(10.5px,1.1vw,12px)',
         catLs: narrow ? '.3em' : '0em',
         catWs: narrow ? 'nowrap' : 'normal',
         bodyW: narrow ? '100%' : 'min(352px,100%)'
@@ -2824,7 +3188,7 @@ class Component extends DCLogic {
       skillGroups,
       skillCount: this._skillCount,
       skDir: narrow ? 'column' : 'row',
-      skHeight: narrow ? 'auto' : 'clamp(384px,58vh,464px)',
+      skHeight: narrow ? 'auto' : 'clamp(424px,62vh,504px)',
       archiveItems,
       archiveOpen: this.state.archiveOpen,
       archiveLabel: this.state.archiveOpen ? 'Hide the archive' : 'Open the archive — six more works',

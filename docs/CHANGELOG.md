@@ -12,6 +12,360 @@ Format:
 
 ---
 
+## 2026-08-19 — Render-loop performance pass (no visual or behavioural change)
+
+Smoothness work only: every star, meteor, particle, section and animation is still exactly
+as it was — verified by comparing the full layout box tree (767 elements) of the before and
+after builds at five viewports: identical element count, identical document height, zero box
+differences, zero page errors.
+
+**The main fix — `_frame()` now has a read phase and a write phase.** The loop used to
+interleave DOM reads with style writes: write the cursor transforms, read a magnetic
+button's `getBoundingClientRect()`, write more, read the Skills section's rect, write more,
+read `document.documentElement.scrollHeight` and an `offsetTop` per nav link. Every one of
+those reads landed on a tree the loop had just dirtied, so each forced a synchronous
+style-recalc + layout — three or four per frame. All reads now happen at the top of
+`_frame()`, before the first write, where the tree is still clean from the browser's own
+layout pass. Measured over a scripted full-page scroll, `offsetTop` reads inside `_frame`
+went 3042 -> 0 and `scrollHeight` reads 507 -> 0.
+
+Supporting changes, all in `index.html`:
+- **`_cacheGeom()` + `_initGeomWatch()`** (new, next to `_measure()`) — the geometry the loop
+  needs (`scrollHeight`, per-nav-link `offsetTop`, the Experience pin range) is sampled once
+  and re-sampled on mount/resize/re-render and whenever the page's own box changes, watched
+  with a `ResizeObserver` on the new `#ax-page` wrapper. That catches lazy images decoding,
+  the webfonts swapping, and the archive panel opening. `body` can't be watched — the
+  runtime's `FULL_PAGE_CSS` pins it to `height:100%`.
+- **Guarded style writes** in the pinned-Experience block. `pointer-events` and `text-shadow`
+  are *inherited* properties, so re-writing them every scroll frame invalidated the computed
+  style of every descendant of the card. They (and the layer opacity/transform, the progress
+  bar, the timeline fill) are now only touched when the value actually changes.
+- **`_initAnimPause()`** (new) — infinite CSS animations are `animation-play-state: paused`
+  while their element is more than 200px outside the viewport. `animation-play-state` freezes
+  in place and resumes exactly where it stopped, so this is invisible; it just stops the
+  blurred hero nebulae and the conic-gradient contact beams from re-rasterising off-screen.
+  One-shot entrance animations are left alone. The two fixed-position background nebulae
+  always intersect, so they never pause.
+- **Dirty-rect clearing** for the cursor dust (`#ax-fx`): clear only the box the particles
+  painted last frame instead of the whole viewport. Same pixels drawn, far fewer wiped.
+- **Reduced-motion starfield paints once.** With `prefers-reduced-motion` there is no twinkle,
+  no parallax and no meteors — the image is identical every frame, so it is painted on
+  build and left alone instead of being redrawn 60x a second.
+- **Resize is debounced on touch devices** for height-only changes. A resize pass reallocates
+  every canvas backing store and re-flattens the rocket's flight path (257 `getPointAtLength`
+  calls); on a phone a height-only resize is almost always the URL bar sliding mid-scroll,
+  which is the worst possible moment. Width changes (rotation, a real window drag) still
+  apply immediately. Identical dimensions now do nothing at all.
+- **Contact section gets `will-change: transform` only while the finale is shaking it**, and
+  drops it again when the mission ends.
+- **Fonts moved from the x-dc `<helmet>` into the real `<head>`.** A `<link rel="stylesheet">`
+  inside `<body>` blocks rendering of everything after it; in `<head>` it is where browsers
+  expect it, and the `preconnect`s open both font connections during initial parse.
+- Added an empty `.image-slots.state.json` so `image-slot.js`'s sidecar probe stops 404ing.
+
+Measured in Chromium, median of 5 runs each, driving a scripted full-page scroll with
+pointer movement. External deps (unpkg React, Google Fonts) are replayed from an in-process
+cache so network variance can't move the numbers. Both builds carry identical page content —
+the "before" file is the current one with exactly these edits reverse-applied.
+
+Absolute frame times depend on how loaded the machine is, so both a quiet run and a
+contended one are recorded. The contended numbers matter more: that is the condition under
+which a visitor actually notices jank.
+
+Quiet machine:
+
+| | desktop 1440x900, 4x CPU throttle | phone 390x844 @2dpr, 6x CPU throttle |
+|---|---|---|
+| mean frame time | 16.6ms -> **14.4ms** | 21.6ms -> **18.5ms** |
+| p99 frame time | 39.0ms -> **27.9ms** | 39.0ms -> 39.0ms |
+| frames over 33ms | 1.95% -> **0.91%** | 6.99% -> **3.56%** |
+| style recalc | 1.46s -> **1.18s** | 1.30s -> **1.10s** |
+| scripting | 1.42s -> **1.32s** | 0.90s -> **0.83s** |
+
+Contended machine (background work competing for CPU — the case that actually stutters):
+
+| | desktop 1440x900, 4x CPU throttle | phone 390x844 @2dpr, 6x CPU throttle |
+|---|---|---|
+| mean frame time | 40.2ms -> **31.2ms** | 24.1ms -> **19.9ms** |
+| p90 frame time | 61.1ms -> **44.5ms** | 33.3ms -> **27.8ms** |
+| p99 frame time | 133.4ms -> **99.9ms** | 66.8ms -> **39.0ms** |
+| frames over 33ms | 47.4% -> **37.5%** | 13.9% -> **5.6%** |
+| style recalc | 2.20s -> **1.51s** | 1.45s -> **1.11s** |
+| total task time | 12.33s -> **10.88s** | 9.56s -> **8.82s** |
+| LCP | 988ms -> **836ms** | 864ms -> **680ms** |
+
+First contentful paint, measured separately on real network with interleaved runs (median of
+9, phone profile, 4x CPU): 624ms -> **448ms**.
+
+The consistent finding across every run is the tail: long frames — the ones a visitor feels
+as a stutter — drop by roughly half, and style-recalculation time by 20-30%.
+
+**Tried and rejected:** batching the starfield/dust/exhaust into one canvas path per
+(colour, alpha bucket). It was ~0.16ms/frame faster on a 560-star field, but it is not
+pixel-exact — merging circles into one path fills their union instead of compositing them
+where two dots overlap, and bucketing alpha shifts every particle slightly. Too small a win
+to spend any visual fidelity on, so the per-particle draws were restored.
+
+**Noticed, not changed:** `_buildOrbit()`/`_drawOrbit()` reference a `#ax-orbit` canvas that
+does not exist in the markup (and did not at HEAD either), so the Skills orbit has never
+rendered — `_drawOrbit` returns on its first line. The code is left wired up; adding the
+canvas back would bring it straight back. `docs/SITE-GUIDE.md` still documents it, plus an
+`_ambientGateY` meteor gate in `_measure()` that is likewise not in the current script.
+
+## 2026-08-19 — Recolored all grey body text to pure white
+
+- Replaced every grey text color in `github-export/index.html` with `#ffffff` (82 CSS
+  declarations + 2 JS-set colors):
+  - `#c9c3b6` (34) — eyebrow/kicker labels, meta captions, nav inactive state,
+    `.tag` in the `<noscript>` fallback.
+  - `#d2ccc0` (29) — body paragraphs, About/Reference copy, contact rows, chip labels,
+    `.meta` in the `<noscript>` fallback.
+  - `#c4beb0` (18) — small-caps mono section/field labels.
+  - `#e2ddd2` (1) — the About section's lead paragraph.
+  - JS: `_navActive.el.style.color` (nav de-highlight, ~line 1862) and the star-map node
+    label `ctx.fillText` fill (~line 2747).
+- **Deliberately left alone:** gold `#d3b078` / `#f6dfa8` / `#e7d9bf` / `#c9b48c`, cream
+  `#ece7db` / `#f3ead7` (reads as off-white, not grey — it is the primary heading color),
+  near-black `#070709` (text on gold buttons), and `ctx.fillStyle = '#c9c3b6'` at
+  ~line 2635, which paints the *rocket fin hardpoints* on the Education canvas — a
+  graphic, not text.
+- Why: user asked for all grey text to be white, leaving all other text as-is.
+
+## 2026-08-19 — Unified the gap under every section divider
+
+- Set the `margin-bottom` on all seven `[data-div]` divider rows to Education's value,
+  `clamp(104px,15vh,136px)` (135px at a 900px-tall viewport). Previously: About / Skills /
+  Projects / Reference `clamp(16px,3vh,25.6px)`, Experience `14.4px`, Contact
+  `clamp(8px,1.6vh,13.6px)`, Education `clamp(104px,15vh,136px)`.
+- Why: user wanted the generous breathing room under the EDUCATION divider to be the
+  standard for every section.
+- **Two viewport-constrained scenes were verified, not assumed:**
+  - `#ax-exp-pin` is a sticky `100svh` flex column. The card stack is `flex:1;min-height:0`,
+    so it absorbed the extra 120px (712.6px → 592px tall at 1440×900) rather than
+    overflowing — bottom headroom inside the frame stayed at 40.5px, unchanged. Verified at
+    800 / 900 / 1080px viewport heights and at 390×844.
+  - Contact's mobile launch stage is anchored by `_layoutLaunchStage()` as
+    `_lnYOff = badgeTop - stageH`, i.e. its bottom pins to the badge — so it followed the
+    badge down (offset 164px → 277px) automatically. The extra room actually *improves*
+    the mobile finale: previously the headline collided with the divider rule and the
+    rocket crossed the badge; now the flight plays in open canvas.
+- Verified with Playwright screenshots of all seven sections at 1440×900 and 390×844
+  (mobile), plus the pinned Experience scene at three scroll positions. No horizontal
+  overflow at either width.
+
+## 2026-08-19 — Section dividers: drop roman numerals, bigger labels, brighter watermark
+
+- **All 7 section dividers** (`index.html`, the `data-rv="0" data-div` flex rows in ABOUT,
+  EDUCATION, SKILLS, WORK EXPERIENCE, PROJECTS, PROFESSOR RECOMMENDATION, REACH OUT):
+  removed the gold roman-numeral prefix and `·` separator from the label, so it now reads
+  just `EDUCATION` instead of `II  ·  EDUCATION`.
+- Bumped the label from a fixed `11px` to `clamp(11.5px,1.5vw,15px)` and eased tracking from
+  `.32em` to `.26em` — noticeably larger on desktop while the longest label
+  ("PROFESSOR RECOMMENDATION") still fits on one line at 320px, since these spans are
+  `white-space:nowrap`.
+- Brightened the large background watermark numeral behind each divider:
+  `-webkit-text-stroke` alpha `rgba(211,176,120,.1)` → `.22`. Stroke only — the glyphs stay
+  `color:transparent`, so only the outlines got brighter.
+- The `01`/`02`/`03` watermarks behind the Work Experience cards were left at `.1` — they are
+  card numbers, not section dividers.
+- Why: user asked to strip the numerals from the visible titles, keep (and brighten) the
+  background numeral, and enlarge the section title text.
+
+## 2026-08-19 — Work Experience pin: fit the card inside the frame
+
+- **Root cause:** the sticky frame (`#ax-exp-pin > div`) had `height:100svh` **plus**
+  `padding:clamp(51.2px,10vh,76.8px)` vertical and **no `box-sizing:border-box`** — this page
+  has no global border-box reset. Its real box was therefore `100svh + 153.6px`: on a 900px
+  viewport, 1054px tall. The bottom ~154px lived below the fold, and because the cards are
+  `justify-content:center` inside that oversized box, every card rendered ~77px lower than
+  centered, with the timeline rail and the tech-stack line running off the bottom edge.
+- **Fix (`index.html`, `#ax-exp-pin` sticky wrapper):** added `box-sizing:border-box`, so the
+  frame is now exactly one viewport tall and the scene is centered in what you can see.
+  Split the vertical padding into `clamp(72px,8.5vh,76.8px)` top / `clamp(28.8px,8.5vh,76.8px)`
+  bottom — the 72px top floor keeps the "IV · WORK EXPERIENCE" header clear of the 66px fixed
+  `#ax-topbar` on short windows, while the bottom is free to give room back.
+- **Short-window scaling:** with the frame now truly viewport-height, card 01 (four bullets,
+  608px tall at 1440px wide) no longer fits below ~760px of viewport. Added two height-keyed
+  blocks in the `<helmet>` `<style>` (`max-height:800px` and `max-height:600px`, both
+  `min-width:761px`) that step the type and vertical rhythm down with `vh`. The `vh`
+  coefficients are chosen to equal the base clamp values exactly at 800px tall, so the card
+  scales continuously instead of snapping at the breakpoint.
+- **New anchors:** the three cards' children now carry stable classes for that CSS —
+  `.ax-exp-meta` (date eyebrow), `.ax-exp-co` (company), `.ax-exp-role`, `.ax-exp-bullets`
+  (the list wrapper), `.ax-exp-bullet` (each line), `.ax-exp-tags` (tech-stack footer).
+  Inline styles are unchanged; the classes are additive.
+- **Verified** by headless-Chrome measurement of card height vs. available frame height at
+  1920x1080, 1440x900/820/801/799/780/760/600/560, 1366x768/700, 1280x660, 900x780 and
+  390x844 — zero overflow at every size, and the desktop look at >=800px tall is unchanged.
+- Why: the pinned scroll was stopping with the content sitting too low and clipped.
+
+## 2026-08-19 — Bigger Orion constellation on the loading screen
+- **`index.html`, `id="ax-intro-const"`** (inside `<!-- ===== INTRO OVERLAY ===== -->`):
+  SVG width `min(168px,44.8vw)` -> `min(268px,62vw,34vh)`. ~60% larger on desktop.
+- The `viewBox` (`0 0 200 260`) and all line/star coordinates are untouched, so the
+  draw-on animation in `_runIntro()` is unaffected — it measures each `.cline` with
+  `getTotalLength()` in viewBox user units, which don't change when the CSS box scales.
+  Stroke widths and star radii scale proportionally, keeping the original look.
+- The added `34vh` term is a height cap: the SVG is ~1.3x taller than wide, so on short
+  viewports it clamps the drawing before it can push the name/subtitle off-screen.
+- Verified with headless-Chrome captures at 1440x900, 390x844, and 1280x620 — constellation
+  draws in staggered, intro dismisses on schedule, hero reveal runs after.
+- Why: user asked for a larger constellation during the load, without breaking the animation.
+
+## 2026-08-19 — Hero nebula haze: more transparent, less spread
+- **`index.html`, `id="ax-hero-neb"` + the center bloom inside `#ax-hero-inner`.** The five
+  gold glow layers in the hero were roughly halved in opacity and had their gradient stops
+  pulled inward so each pool falls off sooner and covers less of the frame:
+  - big left blob `.18/.06@46%/transparent 70%` -> `.095/.03@42%/transparent 62%`
+  - right blob `.135/.048@48%/transparent 72%` -> `.07/.024@44%/transparent 64%`
+  - bottom blob `.115/transparent 66%` -> `.058/transparent 58%`
+  - small blob behind the name `.095/transparent 62%` -> `.048/transparent 54%`
+  - center bloom behind the hero text `.085/transparent 62%` -> `.045/transparent 54%`
+- **Why.** The haze read as a single warm wash filling most of the viewport. Lower alpha
+  makes it see-through; the tighter stops keep it as separate pools of light instead of one
+  dense field. Blur radii, sizes, positions and the `ax-neb-a`/`ax-neb-b` animations are
+  unchanged, so the motion and the low-tier fallbacks (`.ax-tier-low #ax-hero-neb`) still
+  behave exactly as before.
+- **Not touched:** the global starfield (`#ax-stars` / the `starDensity` prop, still `2`) —
+  it is site-wide, not hero-only.
+- **Verified:** headless Chrome at 1440x900, before/after screenshots of the hero.
+
+---
+
+## 2026-08-18 — Legibility pass: raised the type floor and the text-tone floor
+- **Type.** Every font size at or below the hero tagline's `clamp(12px,1.6vw,15.2px)` was
+  lifted across `index.html`. Mono eyebrow/label sizes `7.2 / 8 / 8.8 / 11.2px` ->
+  `10 / 10.5 / 11 / 12.5px`; clamped label sizes rebased (nav `clamp(9.6px,1.1vw,11.2px)` ->
+  `clamp(11px,1.2vw,12.5px)`, etc.); body copy in Outfit moved from a `10.4–15.2px` band to a
+  `13–17.5px` band, line-heights eased slightly to compensate. Display serif headings, the
+  Experience bullets (already the largest body text) and the huge roman-numeral watermarks
+  were left alone, so the hierarchy is unchanged.
+- **Color.** All text greys lightened and given a floor: nothing renders at or below
+  `#b0aa9c` luminance any more. `#4f4a42`/`#6d675c` -> `#c4beb0`, `#8f897c` -> `#c9c3b6`,
+  `#a09a8c`/`#a8a294`/`#b3ad9f` -> `#d2ccc0`, About lead `#c4beb0` -> `#e2ddd2`. Gold
+  `#d3b078` and ivory `#ece7db` are unchanged (both already clear the floor).
+- **Fit fixes the larger type forced** (all verified with headless Chrome at 320–1920px):
+  - Skills panel (`id="ax-skills"`): open-column `flex` `2.6` -> `3`, panel height
+    `clamp(384px,58vh,464px)` -> `clamp(424px,62vh,504px)`, chip padding/gap trimmed, and
+    chips lost `white-space:nowrap` so an over-wide pill wraps instead of spilling.
+  - Skills accordion breakpoint `innerWidth < 760` -> `< 900`: between those widths the nine
+    vertical tab columns are ~60px wide, too thin for a label like `PERFORMANCE` at a
+    readable size without breaking it mid-word. The stacked accordion gives it the full row.
+  - Accordion open height `392px` -> `clamp(268px,calc(392px - (100vw - 360px) * 0.22),392px)`,
+    so a tablet doesn't get the dead gap a phone-sized constant leaves behind.
+  - Tracking tightened where the bigger text no longer fit one line: `Fig. 01` caption
+    (`.26em` -> `.12em`), the six Experience/Projects tech strips (`.2em` -> `.14em`), and the
+    archive toggle button (`.24em` -> `.14em`, left padding `22.4px` -> `18px`, now wraps).
+- **Verified:** no clipped overflow in the Skills panel for any of the 9 groups at 8 viewport
+  sizes; no text under 10px and no text below the tone floor anywhere; page horizontal
+  overflow on phones went *down* vs. the previous build (139px -> 81px at 360px — the
+  remainder is the intentional swipeable nav strip plus decorative orbit rings, both clipped
+  by `body{overflow-x:clip}`).
+- Why: user reported the site's small text was hard to read, then asked that no text be as
+  dark as the project-card body copy or darker.
+- **Note for future sessions:** this makes text the documented exception to the site's 0.8×
+  authoring scale — see §1 and §5 of `SITE-GUIDE.md`. Layout px are still 0.8×.
+
+## 2026-08-18 — Evened out the About Me astrolabe orbit spacing
+- `index.html`, ABOUT section (`id="ax-about"`, `<!-- astrolabe orbital rings -->` block just
+  above the `images/profile.webp` figure): the two outer rings were pulled in so all three
+  orbits sit on an equal radial gap out from the photo.
+  - Ring 2 (dashed): `min(448px,124vw)` -> `calc(min(288px, 86vw) + 25.6px + 2 * clamp(18px, 5.5vw, 32px))`
+  - Ring 3 (outer):  `min(520px,138vw)` -> `calc(min(288px, 86vw) + 25.6px + 4 * clamp(18px, 5.5vw, 32px))`
+  - Ring 1 is unchanged at `calc(min(288px, 86vw) + 25.6px)`; the shared `clamp(18px,5.5vw,32px)`
+    gap keeps the spacing equal at every viewport width (desktop diameters are now
+    313.6 / 377.6 / 441.6px).
+- Retimed the orbiting orbs so their tangential speed is unchanged after the radius shrink:
+  ring 2 `ax-rot-r 110s` -> `93s`, ring 3 `ax-rot 160s` -> `136s`. Ring 1 stays at `70s`.
+- Why: user said the smallest orbit looked right but the outer two were too large and too far
+  out, and asked for equal gaps with the orbit animation adjusted to match.
+
+## 2026-08-18 — Hero constellation brought in front of the gold glare
+- `index.html`, hero section (`id="ax-hero-inner"`): the centered gold radial glow div now
+  carries `z-index:0` (and its alpha eased .095 → .085); the Orion constellation wrapper
+  `id="ax-hero-const"` carries `z-index:1`, so it paints above the glare instead of being
+  washed out by it.
+- Same block: SVG `opacity` .13 → .44, plus a two-stop `drop-shadow` filter (dark halo for
+  contrast against the gold, warm halo for glow). The 17 hero constellation `<line>`s went
+  from `#d3b078` / `.8` to `#e8c78d` / `1.15` stroke-width. The Experience-section
+  constellation was deliberately left untouched.
+- Why: user wanted the hero constellation clearly noticeable and in front of the gold glare.
+
+## 2026-08-18 — Education rocket: LUT-driven redraw, rounder arc, slower, lowered
+- **Perf (the main fix).** `_initRocket` in `index.html` rebuilt the streak by calling
+  `getPointAtLength` 41x per frame (plus 2 for the ship). Each of those is a geometry query
+  that makes the browser walk/flatten the path — measured on the real page at **~1.16 ms per
+  frame** just for the sampling, before any paint. The path is now flattened **once** into an
+  equally-arc-spaced lookup table (`LUT_N = 256`, two `Float32Array`s) and every frame
+  interpolates from it (`at(u, out)`): same benchmark, **~0.005 ms per frame (~250x)**.
+- Supporting cuts: streak `SAMPLES` 40 -> 36; coordinates rounded to integers instead of
+  `toFixed(1)` (shorter `d` string to re-parse); the frame skips `drawStreak`/`placeShip`
+  entirely when eased progress moved < 0.0015 (the eased curve crawls at both ends, where a
+  redraw is invisible but still repaints two paths, one of them blurred); `ship.style.opacity`
+  is now written only during the 0->0.05 fade-in, not on every frame.
+- `#ax-rk-blur` filter region tightened from `-30%/160%` to `-6%/112%`. `stdDeviation` is 7
+  user units against a ~1800x1250 streak bbox, so the old padding rasterized a much larger
+  surface than the blur could ever reach — same look, smaller repaint. (Mobile still drops
+  the filter entirely via the existing `@media (max-width:760px)` rule.)
+- **Slower.** Speed divisor `L / 0.4` -> `L / 0.33`: flight goes ~5.65 s -> ~7.0 s.
+- **Continuous bend.** Flight path `d` (3 copies: `#ax-rk-glow`, `#ax-rk-path`, and the
+  `#ax-rk-ship` `offset-path`) changed from `M-260,1220 C150,200 1150,150 1560,140` to
+  `M-260,1330 C-25,553 765,84 1560,250`. The old control points put nearly all the turn in
+  the first fifth of the path (a visible "corner" then a long straight); the new ones are a
+  symmetric ~85deg circular-arc approximation — equal handle lengths, tangents rotated
+  +/-42.5deg off the chord — so curvature is spread evenly end to end, and total turn is
+  larger (start ~-73deg, exit ~+10deg vs ~-1deg).
+- **Lowered.** `#ax-rk-wrap` `top: 0` -> `top: clamp(48px,8vh,120px)`, and the path itself
+  shifted +110 user units in y, so the arc sits clearly below its old position in frame.
+- Verified in headless Chromium against the served page: ship transform tracks the arc
+  (`rotate(-71)` at launch -> `rotate(10.3)` at the end), streak `d` rebuilds, no console
+  errors, computed `#ax-rk-wrap` top = 59.84px.
+
+## 2026-08-18 — Shooting stars: removed the scroll gate, true right-to-left crossings
+- **`index.html`**: deleted the `_ambientGateY` / `pastEarlySections` gate that suppressed
+  all ambient meteors and comets until the viewport reached `#ax-work`. This was the real
+  reason they seemed rare — they never spawned across Hero/About/Education/Skills/Experience,
+  i.e. most of the page.
+- Rewrote the meteor spawn to cross the full screen: they now start just off the right edge
+  (`x = w * (1.02 + rand*0.12)`) at any height (`y = h * (0.02 + rand*0.72)`) and fly
+  right-to-left at `8-13deg` below flat. Per-meteor `decay` is derived from the crossing
+  distance (`frames = (sx + w*0.35) / (cos(ang)*sp)`) so the streak lasts the whole trip
+  instead of fading mid-screen; cull condition added for `x < -w*0.3`.
+- Speed dialled back from `9-13` to `6-8.5` px/frame (previous pass overshot into "too
+  fast"); trail `len` `16-26` -> `26-40` so each one reads as a long horizontal streak.
+- Frequency roughly doubled again: respawn gap `2100 + rand*2600` -> `900 + rand*1100` ms,
+  concurrent cap `4/6` -> `4/7`.
+- Welcome star angle brought to the same `8-13deg`.
+- Verified there is no canvas distortion that could skew the drawn angle: `#ax-stars` is
+  sized with a uniform `setTransform(dpr,0,0,dpr,0,0)` and no rotation is active during the
+  meteor draw, so the math angle is the on-screen angle.
+
+## 2026-08-18 — Shooting stars: flat ~15deg angle everywhere, doubled meteor frequency
+- **`index.html`**, ambient meteor spawn: replaced the hand-tuned `vx`/`vy` pair with an
+  explicit polar angle — `ang = (12 + rand*6)deg`, `sp = 9 + rand*4`, then
+  `vx = -cos(ang)*sp`, `vy = sin(ang)*sp`. Streaks now run nearly flat right-to-left with
+  only a slight downward drift.
+- Doubled how often they appear: respawn gap `4200 + rand*5200` -> `2100 + rand*2600` ms,
+  and the concurrent cap `2/3` (mid/desktop) -> `4/6`.
+- Applied the same ~15deg angle to the other two streak effects, which were the steep ones
+  still visible: the slow **comet** (`this._comets` push) went from ~28deg to 15deg (its
+  spawn `y` moved from `-30` to on-screen, since a flat comet entering from above would
+  never cross the viewport), and the on-load **welcome star** (`_fireWelcomeStar`) went
+  from `36 + rand*10`deg to `13 + rand*5`deg.
+- Why: user said the streaks still read as too steep and wanted roughly 15deg off flat,
+  plus twice as many of them.
+
+## 2026-08-18 — Ambient shooting stars: flatter angle, bigger and brighter
+- **`index.html`** (ambient meteor spawn + draw in the `data-dc-script` block, near the
+  `this._meteors` push / render loop): changed the trajectory from ~26° below horizontal to
+  ~10° — `vx` `-(5+rand*3)` → `-(6.5+rand*3.5)`, `vy` `(2.2+rand*1.6)` → `(1.05+rand*0.75)`
+  — so they streak leftward across the screen while still drifting slightly down.
+- Made them more noticeable: trail `len` 11-20 → 16-26, stroke width `1.1` → `2.2` with a
+  round cap, head opacity `0.85*life` → `life` plus an extra gradient midstop, and added a
+  soft glow disc + bright white/gold core dot at the meteor head.
+- Why: user wanted the background shooting stars bigger, brighter, and angled more across
+  than down. The scripted on-load welcome-star streak (`_fireWelcomeStar`) was left as-is.
+
 ## 2026-08-15 — Intro tweaks: nudge name up, warm subtitle to gold
 - **`index.html`** (`#ax-intro` block ~line 384-385): nudged the "ORION POWERS" block up
   a touch (`margin-top:-14px` on the name wrapper) and recolored the subtitle
@@ -29,6 +383,27 @@ Format:
   name appears. Reveal wired in `_runIntro` (~line 2701) at 1050ms.
 - Why: user request to enlarge the loading text/animation and add a gold accent around
   "Orion Powers". No anchors renamed; new `#ax-intro-rule` id added.
+
+## 2026-08-15 — Education rocket: slower + more bend + lower start
+- **`index.html`**: path `M-260,1220 C150,200 1150,150 1560,140` on all three defs — lower
+  start (1070→1220) and a stronger bow (controls pulled further off the chord). Flight slowed
+  again (`_initRocket` divisor 0.55 → 0.4). No anchors/structure changed.
+
+## 2026-08-15 — Hero glow: warm brown → gold (dialed to the midpoint)
+- **`index.html`** (`#ax-hero-neb` layers ~line 427-430 + central hero glow ~line 435):
+  warmed the nebula/glow from tan/bronze toward gold, then settled halfway between the
+  original and the first (brighter) gold pass: `rgb(222,186,106)`, `rgb(242,196,116)`,
+  `rgb(211,174,94)`. Reads gold without going too yellow. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: lower the whole arc
+- **`index.html`** (paths ~line 575-577): shifted every y down ~170 units (bend shape
+  unchanged) so the flight sits lower in the section: `M-260,1070 C120,250 1100,145 1560,140`
+  on all three path defs. No anchors/structure changed.
+
+## 2026-08-15 — Education rocket: lower start + stronger bend
+- **`index.html`** (paths ~line 575-577): start point lower (`800 → 900`) and crest pulled
+  up for a stronger bow: `M-260,900 C120,80 1100,-25 1560,-30` on all three path defs. Still
+  a single smooth cubic, x/y monotonic. No anchors/structure changed.
 
 ## 2026-08-15 — Education rocket: faster flight
 - **`index.html`** (`_initRocket`, ~line 2530): sped up the flight — duration divisor

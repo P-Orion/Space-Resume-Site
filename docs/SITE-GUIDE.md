@@ -43,11 +43,26 @@ skills are regenerated from source there — this hand-written guide never state
 | Background | `#070709` | page base (near-black) |
 | Gold | `#d3b078` | primary accent, headings, links |
 | Warm gold | `#f2b97c` / `#f6e7c4` | highlights, glows |
-| Ivory | `#ece7db` | primary text |
-| Muted | `#8f897c` / `#a8a294` | secondary/label text |
+| Ivory | `#ece7db` | primary text — headings, names, emphasis |
+| White | `#ffffff` | **all secondary text** — body copy, mono eyebrow/kicker labels, meta captions, contact rows, chips, nav inactive state |
+
+> **2026-08-19:** the four grey tokens that used to fill the secondary-text roles —
+> `#c9c3b6` (labels/meta), `#d2ccc0` (body), `#c4beb0` (dim labels), `#e2ddd2` (About lead)
+> — were all collapsed into `#ffffff` at the user's request. They no longer appear
+> anywhere in `index.html`. The one surviving `#c9c3b6` is `ctx.fillStyle` on the Education
+> rocket canvas (fin hardpoints) — a **graphic**, not text, so leave it.
+
+**Text-tone floor:** nothing that renders as text may sit at or below `#b0aa9c` in relative
+luminance (~0.404). White and ivory clear it trivially, and the gold `#d3b078` clears it too.
+If you add text, use `#ffffff` (secondary), `#ece7db` (primary) or `#d3b078` (accent) rather
+than inventing a new grey.
 
 ### Fonts
 `Cormorant Garamond` (serif display), `Outfit` (body sans), `JetBrains Mono` (labels/eyebrows).
+
+**Type floor: no text below 10px.** Mono eyebrow labels are `10px` / `10.5px` / `11px`;
+body copy runs `13px`–`17.5px`. See the 0.8×-scale note in §5 — **text is the documented
+exception to it.**
 
 ---
 
@@ -73,8 +88,23 @@ All ids use the `ax-` prefix. Each section has a `data-screen-label` and a prece
 | IV | Experience | `ax-exp-pin` | `<!-- EXPERIENCE — pinned constellation scene -->` | Experience |
 | V | Projects | `ax-work` | `<!-- PROJECTS -->` | Projects |
 | VI | Reference | `ax-reference` | _(no comment — find by_ `id="ax-reference"`_)_ | — |
-| — | Contact | `ax-contact` | `<!-- CONTACT -->` | Contact |
+| VII | Contact | `ax-contact` | `<!-- CONTACT -->` | Contact |
 | — | Custom cursor | — | `<!-- ===== CUSTOM CURSOR ===== -->` | — |
+
+> **The `#` column is the background watermark numeral, not visible label text.** Each of the
+> seven sections opens with a divider row (`data-rv="0" data-div`, a flex row of
+> `hairline — LABEL — hairline`) and, absolutely positioned behind it, a large outlined
+> roman numeral (`color:transparent` + `-webkit-text-stroke:2px rgba(211,176,120,.22)`).
+> All seven dividers share one gap to the content below them —
+> `margin-bottom:clamp(104px,15vh,136px)`, unified 2026-08-19 from Education's value.
+> Keep new sections on that value. Note the two constrained scenes it has to survive:
+> `#ax-exp-pin`'s sticky `100svh` frame (the card stack is `flex:1`, so it shrinks to
+> absorb the gap) and Contact's launch stage (anchored to the badge by
+> `_layoutLaunchStage()`, so it follows automatically).
+> The label itself is just the section name — `EDUCATION`, not `II · EDUCATION`; the numeral
+> prefix was removed 2026-08-19. Label type: `clamp(11.5px,1.5vw,15px)` JetBrains Mono,
+> `.26em` tracking, `white-space:nowrap` (so any new label must stay short enough to fit a
+> 320px viewport on one line).
 
 > The nav lists six links, in page order: About, Education, Skills, Experience, Projects,
 > Contact. The Reference section is not in the nav. Keep the nav-link order in sync with
@@ -95,6 +125,8 @@ the whole file. Keep it in sync when content changes.
   email on file is `powerso12345@gmail.com` (not shown on the site).
 
 ### Experience (§IV, three layers `ax-exp-layer`)
+> Pinned scene — each card must fit one viewport height. See the vertical-budget note in
+> [Common edits](#6-common-edits-cookbook) before adding bullets.
 1. **Modus Operandi** — Software Engineer Intern — Oct 2024–Present. DoD programs (PAiGE,
    POMML, LOGEN); Angular 19→21 upgrade; Go.js LLM knowledge-graph; Keycloak RBAC + CAPCO;
    visited JB Langley-Eustis (363rd ISR Wing). *Angular · TypeScript · FastAPI · Go.js · Keycloak.*
@@ -128,7 +160,7 @@ Next.js, Svelte, TensorFlow, GraphQL, Git, NLP, Tailwind, Keycloak, Supabase`
 - **Dr. David Luginbuhl** — Associate Professor, CS & EE, Florida Tech. Email `dluginbuhl@fit.edu`.
   Photo: `images/prof-luginbuhl.webp`.
 
-### Contact (unnumbered — no roman-numeral header, it's the finale/launch scene) — résumé
+### Contact (§VII, the finale/launch scene) — résumé
 download links to `documents/Orion-Powers-Resume.pdf`.
 
 The Starship launch/catch finale (canvas `ax-launch-cv`, driven by `_initLaunch()` /
@@ -209,6 +241,24 @@ scene auto-handles N layers, but the section height (`height:340vh` on `#ax-exp-
 the layer-swap math in `// ---- scroll-driven work ----` assume **3** — if you change the
 count, re-check both.
 
+Keep the per-card classes when you duplicate — `.ax-exp-meta` (date eyebrow), `.ax-exp-co`
+(company), `.ax-exp-role`, `.ax-exp-bullets` (list wrapper), `.ax-exp-bullet` (each `✦` row),
+`.ax-exp-tags` (mono tech footer). They are the only hooks the short-window fitting CSS has.
+
+**Watch the vertical budget.** This section is a *pinned* scene: the sticky frame is exactly
+`100svh` (`box-sizing:border-box` — this page has **no** global border-box reset, so any
+`height:100svh` box with padding needs it explicitly or it renders taller than the viewport
+and its bottom falls below the fold) and it is `overflow:hidden`, so a card taller than the
+frame is silently clipped, not scrolled. The tallest card sets the budget: today that is card
+01 at four bullets / ~608px on a 1440px-wide viewport. Two height-keyed blocks in the
+`<helmet>` `<style>` — `@media (max-height:800px)` and `(max-height:600px)`, both
+`and (min-width:761px)` — scale the type and rhythm down on short windows; their `vh`
+coefficients equal the base clamp values exactly at 800px tall so the card shrinks
+continuously rather than snapping at the breakpoint. **If you add a fifth bullet or a long
+job title, re-check the fit** (measure card height vs. `#ax-exp-layers` height at ~1366x768
+and ~1280x660) and retune those two blocks rather than letting the tail clip. The frame's
+`padding-top` floor of `72px` is deliberate: it clears the 66px fixed `#ax-topbar`.
+
 **Add / edit a project:** the three project cards live in the Projects section (`ax-work`,
 §V), each a `.ax-proj` grid with three sibling children — `.ax-proj-title` (eyebrow + `<h3>`),
 `.ax-proj-media` (image + corner accents), `.ax-proj-body` (paragraph + tech line + optional
@@ -227,6 +277,13 @@ résumé (keep the filename or update the links).
 
 **Change the email everywhere:** it appears in the intro overlay, hero, and contact —
 search for `orionthanhpowers@gmail.com`.
+
+**Resize the loading-screen constellation:** change only the `width` on `id="ax-intro-const"`
+(currently `min(268px,62vw,34vh)`). Leave the `viewBox` and the line/star coordinates alone —
+`_runIntro()` measures each `.cline` with `getTotalLength()` in viewBox user units, so the
+draw-on stays correct at any rendered size, and strokes/star radii scale with it. Keep a `vh`
+term in the `min()`: the drawing is ~1.3x taller than wide, and without a height cap a large
+width pushes the name and subtitle off short viewports.
 
 **Recolor:** the palette in §1 is hard-coded inline throughout. Search-and-replace a token
 (e.g. `#d3b078`) — but review each hit; some are in `rgba()` with varied alpha.
@@ -272,7 +329,57 @@ This is additive and independent of `prefers-reduced-motion` (`this._reduced`) �
 device with motion allowed still gets a lighter, but present, animation; `_reduced` is the
 separate "no motion at all" path and both can be true at once.
 
-## 8. Gotchas
+## 8. Render-loop rules (read this before touching `_frame`)
+
+`_frame()` runs on every animation frame, on a page with ~770 laid-out elements and four
+canvases. Two rules keep it cheap; both are easy to break by accident.
+
+**1. Never read layout from inside the write phase.** `_frame` is split into a READ PHASE at
+the top and a WRITE PHASE below it. `getBoundingClientRect()`, `offsetTop/Left/Width/Height`,
+`scrollHeight/scrollTop`, `getComputedStyle()` — any of these, called *after* the loop has
+written a style, forces a synchronous style-recalc + layout of the whole document. Doing that
+three or four times a frame was the page's single largest source of dropped frames. If you
+need a new measurement, take it in the read phase, or cache it in `_cacheGeom()`.
+
+**2. Cached geometry lives in `_cacheGeom()`.** Document height, each nav link's `offsetTop`,
+the Experience pin's top and range, the Skills section box. It is re-sampled on mount, on
+resize, on every React re-render (`componentDidUpdate` sets `_geomDirty`), and whenever the
+page's own box changes — a `ResizeObserver` on `#ax-page` sets `_geomDirty`, and the next
+frame's read phase acts on it. That covers lazy images decoding, webfonts swapping in and
+re-flowing headings, and the archive panel opening. Note `body` cannot be observed: the
+runtime's `FULL_PAGE_CSS` pins it to `height:100%`, so its box never grows with the content.
+
+**3. Only write a style when it changes** — especially the inherited ones. `pointer-events`,
+`text-shadow`, `color` and `font` are inherited, so assigning one on a container invalidates
+the computed style of every descendant. The pinned-Experience block keeps its last written
+values in `_expState` / `_expStarOn` / `_expFillH` / `_progTf` and skips no-op writes.
+
+**4. Off-screen animations are paused, not stopped.** `_initAnimPause()` observes every
+element whose computed `animation-iteration-count` is `infinite` and sets
+`animation-play-state: paused` when it leaves the viewport by more than 200px.
+`animation-play-state` freezes in place and resumes from the same point, so nothing jumps.
+One-shot entrance animations are deliberately excluded so they still play on scroll-in.
+
+**5. Resize is expensive — treat it as such.** `_onResize` skips identical dimensions
+entirely, and on coarse-pointer (touch) devices debounces height-only changes by 350ms,
+because those are almost always the mobile URL bar sliding during a scroll. A resize pass
+reallocates every canvas backing store and re-flattens the Education rocket's flight path
+(257 `getPointAtLength` calls) — not something to run mid-flick. Width changes (rotation, a
+window drag) still apply immediately.
+
+**6. Canvas clears are scoped to what was painted.** The cursor-dust canvas (`#ax-fx`) spans
+the viewport but only ever paints a small cloud near the pointer, so it clears the bounding
+box it drew last frame (`_dustBox`), not the whole canvas. Under `prefers-reduced-motion` the
+starfield is fully static, so it is painted once (`_starsPainted`) rather than every frame.
+
+**Do not** batch the particle draws into a single canvas path per colour/alpha bucket. It was
+tried and reverted: it is measurably faster (~0.16ms/frame) but not pixel-exact — one path
+fills the union of overlapping circles instead of compositing them, and bucketing alpha
+shifts every particle. See the 2026-08-19 changelog entry.
+
+---
+
+## 9. Gotchas
 
 - **Must serve over HTTP.** `file://` breaks the sibling-file fetches. See CLAUDE.md.
 - **First load needs internet** (unpkg React/Babel + Google Fonts). Offline = blank page.
@@ -287,8 +394,14 @@ separate "no motion at all" path and both can be true at once.
   size-bearing property (`font`/`font-size`, `width`/`height` family, `padding`, `margin`,
   `gap`, `top`/`right`/`bottom`/`left`, `inset`, `grid-template-columns`) is already
   multiplied by 0.8 — hence the odd values you'll see (`max-width:944px`, `clamp(44.8px,
-  13vw,137.6px)`, `font:500 7.2px …`). **New markup must use 0.8×-scaled px too**, or it will
+  13vw,137.6px)`). **New markup must use 0.8×-scaled px too**, or it will
   render visibly larger than everything around it.
+  - **EXCEPTION — font sizes are no longer 0.8×-scaled (2026-08-18).** At 0.8× the type came
+    out at 7.2–15.2px, which is too small to read, so every font size at or below the old
+    15.2px was lifted to a real-world scale (10px floor for mono labels, 13px+ for body) and
+    the dim greys were lightened with it. **Do not "fix" new text back down to 0.8×** — match
+    the sizes and tokens listed in §1 instead. Everything else (`width`/`padding`/`margin`/
+    `gap`/`inset`/positions) is still authored at 0.8× and must stay that way.
   - **Viewport units are NOT scaled** (`vw`/`vh`/`vmax`/`svh`/`%`) and must stay that way:
     they're already zoom-invariant in physical pixels. This is why `100svh` sections still
     fill the screen and the `340vh` Experience pin still scrolls correctly.
