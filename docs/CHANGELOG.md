@@ -12,6 +12,50 @@ Format:
 
 ---
 
+## 2026-08-31 â€” Further emphasized Florida Tech branding
+
+- Enlarged the Education seal and its frame again, with a modest additional increase to the Florida Institute of Technology heading.
+
+## 2026-08-31 â€” Enlarged Florida Tech education branding
+
+- Increased the Education section's Florida Institute of Technology heading and seal, including its circular frame, for stronger visual emphasis.
+
+## 2026-08-31: Simplified Education flyby rocket
+
+- Replaced the multi-part Education ship with one sleek gold arrow path and removed the
+  trail's per-frame Gaussian-blur pass. Reduced the dynamic trail polyline from 80 to 48
+  segments while preserving its arcing route and smooth visual weight.
+- Narrowed the arrow silhouette further, keeping the flyby light and unobtrusive behind the
+  Education content.
+- This substantially lowers SVG paint and path-parsing work during the Education launch,
+  particularly on lower-powered devices.
+
+## 2026-08-19 — Repositioned Modus Operandi résumé story
+
+- Rewrote the live Experience card, semantic no-script résumé, Program Dossiers impact copy,
+  and `llms.txt` around the strongest recruiter signals: multi-program UI leadership, traceable
+  AI, secure mission interfaces, measured quality, platform modernization, and direct operator
+  collaboration.
+- Replaced passive or vague phrasing with specific action-and-outcome language while preserving
+  the existing verified facts and deliberately conservative POMML scope.
+- Refocused the opening card bullet on the three mission domains and moved the Angular upgrade
+  out of the headline story; it remains supporting evidence inside the LOGEN dossier.
+- Elevated the Joint Base Langley-Eustis engagement to the second bullet and reframed it as a
+  selective, company-funded trip to work directly with the 363rd ISR Wing's analysts.
+
+## 2026-08-19 — Program Dossiers overlay for Work Experience
+
+- Added a polished, full-viewport `#ax-dossier` dialog to Modus Operandi card 01 with a
+  staggered three-program tab rail, cross-fading internal-scroll detail panels, stat strips,
+  framed gold corners, responsive full-bleed mobile layout, and public PAiGE / LOGEN links.
+- Added non-disruptive `<html>` scroll locking with scrollbar compensation, focus trapping,
+  Escape / backdrop close, trigger-focus restoration, reduced-motion behavior, and a low-tier
+  no-blur treatment. Retuned the short-window Experience trigger spacing.
+- Changed the current Modus Operandi role to Lead UI Engineer and corrected POMML everywhere
+  from mission-outcome prediction to an Air Force learning-management system. Synced JSON-LD,
+  the no-script résumé, `llms.txt`, and this guide; POMML copy remains deliberately limited to
+  confirmed facts pending its expansion, audience, and specific impact details.
+
 ## 2026-08-19 — Render-loop performance pass (no visual or behavioural change)
 
 Smoothness work only: every star, meteor, particle, section and animation is still exactly

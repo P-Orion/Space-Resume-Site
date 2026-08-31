@@ -13,8 +13,8 @@ skills are regenerated from source there — this hand-written guide never state
 - **`index.html`** — the entire page. Three zones, top to bottom:
   1. `<head>` + `<helmet>` block: fonts, global CSS, keyframes, responsive media queries
      (lines ~1–53).
-  2. Content markup: intro overlay, fixed background, top bar, and the seven sections
-     (lines ~55–792).
+  2. Content markup: intro overlay, fixed background, top bar, the seven sections, and the
+     fixed Program Dossiers dialog mounted after `#ax-page` (lines ~55–1136).
   3. `<script type="text/x-dc" data-dc-script>`: all runtime JavaScript — starfield,
      cursor, parallax, scroll-driven experience scene, skills marquee, finale
      (lines ~798–1676).
@@ -24,6 +24,10 @@ skills are regenerated from source there — this hand-written guide never state
 - **`image-slot.js`** — drag-and-drop image placeholder component used by the DC runtime.
 - Rendering model: this is a **DC (design-canvas) artifact export**. The `data-props`
   attribute on the script tag exposes editor toggles (see §5).
+- Content normally stays in markup, with two deliberate data-array exceptions in
+  `renderVals()`: the project archive (repeated cards) and Program Dossiers (repeated tabs,
+  panels, impact rows, and stat tiles). Their canonical editable sources are `archiveItems`
+  and `programs`; the semantic résumé mirrors remain in markup / `llms.txt` for crawlers.
 - **SEO / share / AI-discoverability layer** (in `<head>`, before `support.js`): `<title>`,
   meta description, canonical, `theme-color`, favicon/apple-touch-icon links, Open Graph +
   Twitter card tags (image = `images/og-image.png`), and a JSON-LD `@graph`
@@ -127,9 +131,13 @@ the whole file. Keep it in sync when content changes.
 ### Experience (§IV, three layers `ax-exp-layer`)
 > Pinned scene — each card must fit one viewport height. See the vertical-budget note in
 > [Common edits](#6-common-edits-cookbook) before adding bullets.
-1. **Modus Operandi** — Software Engineer Intern — Oct 2024–Present. DoD programs (PAiGE,
-   POMML, LOGEN); Angular 19→21 upgrade; Go.js LLM knowledge-graph; Keycloak RBAC + CAPCO;
-   visited JB Langley-Eustis (363rd ISR Wing). *Angular · TypeScript · FastAPI · Go.js · Keycloak.*
+1. **Modus Operandi** — Lead UI Engineer — Oct 2024–Present. DoD programs: PAiGE (Air Force
+   targeting analysis), LOGEN (Navy logistics), and POMML (Air Force learning-management
+   system); Angular 19→21 upgrade; Go.js LLM knowledge graph; Keycloak RBAC + CAPCO; visited
+   JB Langley-Eustis (363rd ISR Wing). *Angular · TypeScript · FastAPI · Go.js · Keycloak.*
+   Card 01 opens the fixed `#ax-dossier` dialog for the public program deep dives. PAiGE and
+   LOGEN include their Modus Operandi product links; POMML stays deliberately conservative
+   until its expansion, audience, and specific impact details are confirmed.
 2. **Hyperformant** — Software Engineer Intern — May 2024–Oct 2024. Production SaaS in
    React/TS; 3D marketing site (Figma/Spline → Svelte/Webflow). *React · TypeScript · Svelte · Supabase.*
 3. **RARE T Holdings** — Software Engineer — Dec 2022–Jun 2023. Azure ML invoice reading;
@@ -217,6 +225,9 @@ Labeled comment sections inside the script:
 - `// ---- scroll-driven work ----` (~1146) — drives the pinned Experience scene
   (`ax-exp-pin`, 340vh tall), swapping the three `ax-exp-layer`s, plus scroll progress
   (`#ax-progress`) and nav highlighting.
+- Program Dossiers state / focus / scroll-lock handlers live beside `renderVals()`. The dialog
+  locks `<html>` overflow with scrollbar-width compensation (never the fixed-body technique),
+  traps Tab focus, closes on Escape/backdrop, and returns focus to its Experience trigger.
 - Skills marquee names array (~1304) and archive/finale items (~1609, ~1655).
 
 ---
@@ -270,6 +281,15 @@ Cards). Duplicate a whole `.ax-proj` row, update the `W·0N — …` eyebrow, ti
 tech line — keep all three children present or the `grid-template-areas` mapping breaks.
 
 **Update skills:** edit the `names` array at ~line 1304.
+
+**Edit a program dossier:** search `renderVals()` for `const programs = [` and update the
+matching PAiGE / LOGEN / POMML object. Each entry owns its branch lines, public program prose,
+`impacts`, three `stats`, mono `tags`, and optional `href`; the `.map()` derives active-tab,
+cross-fade, stagger, and link-presence values. Keep the visible Modus Operandi card,
+`#ax-noscript-fallback`, JSON-LD role, `llms.txt`, and this §3 inventory in sync. POMML is
+intentionally limited to confirmed facts — do not infer its expansion, training audience,
+impact bullets, or metrics. The dialog is outside `#ax-page`, so dossier edits must never alter
+`#ax-exp-pin`'s `340vh` scroll math.
 
 **Change contact info / résumé:** update the `mailto:`, `tel:`, and LinkedIn `href`s in the
 Contact section (`ax-contact`). Replace `documents/Orion-Powers-Resume.pdf` to swap the

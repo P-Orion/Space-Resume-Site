@@ -62,7 +62,7 @@
       "name": "Orion Powers",
       "url": "https://orionpowers.com/",
       "image": "https://orionpowers.com/images/profile.webp",
-      "jobTitle": "Software Engineer",
+      "jobTitle": "Lead UI Engineer",
       "description": "Software engineer building AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi.",
       "email": "mailto:orionthanhpowers@gmail.com",
       "telephone": "+1-502-232-8043",
@@ -115,6 +115,7 @@
   #ax-noscript-fallback h1{font-size:2.4em;margin:0 0 4px;color:#ece7db}
   #ax-noscript-fallback h2{color:#d3b078;border-top:1px solid #33302a;margin-top:2em;padding-top:.6em;font-size:1.5em}
   #ax-noscript-fallback h3{color:#ece7db;margin-bottom:.2em}
+  #ax-noscript-fallback h4{color:#d3b078;margin:1.4em 0 .2em;font-size:1.05em}
   #ax-noscript-fallback a{color:#d3b078}
   #ax-noscript-fallback .tag{color:#ffffff;font-family:monospace;font-size:.85em;text-transform:uppercase;letter-spacing:.08em}
   #ax-noscript-fallback ul{padding-left:1.2em}
@@ -151,15 +152,30 @@
 <section>
 <h2>Work Experience</h2>
 <article>
-<h3>Modus Operandi — Software Engineer Intern</h3>
+<h3>Modus Operandi — Lead UI Engineer</h3>
 <p class="tag">Oct 2024 — Present</p>
 <ul>
-<li>Engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics) — and led LOGEN's Angular 19→21 platform upgrade.</li>
-<li>Built an interactive Go.js knowledge-graph giving real-time transparency into LLM decisions — prompt tracing, query tracking, data-origin verification.</li>
-<li>Implemented Keycloak RBAC and Intelligence-Community CAPCO classification marking across mission dashboards — 80% test coverage, zero vulnerabilities.</li>
-<li>Flown to Joint Base Langley-Eustis to work face-to-face with the Air Force's 363rd ISR Wing — the analysts who use what I build.</li>
+<li>Lead UI engineering across three DoD platforms for the Air Force and Navy — spanning targeting analysis, learning management, and naval logistics.</li>
+<li>Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts — the people using the system.</li>
+<li>Built a Go.js knowledge graph that makes LLM decisions traceable in real time — from prompts and queries to source data.</li>
+<li>Secured mission dashboards with Keycloak RBAC and IC CAPCO markings; achieved 80% test coverage and zero detected vulnerabilities.</li>
 </ul>
-<p class="tag">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One</p>
+<p class="tag">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</p>
+<h4>PAiGE — U.S. Air Force</h4>
+<p>PAiGE connects entities, relationships, and events across many sources into one coherent picture with full provenance, so analysts can trace every judgment to its source. Built on Movia®, it supports Target System Analysis for deliberate targeting.</p>
+<ul>
+<li>Designed and built a Go.js knowledge graph that makes LLM decisions traceable in real time across prompt lineage, query flow, and source provenance.</li>
+<li>Hardened mission dashboards with Keycloak role-based access control and Intelligence-Community CAPCO classification markings, delivering 80% test coverage with zero detected vulnerabilities.</li>
+<li>Partnered on-site with the Air Force's 363rd ISR Wing at Joint Base Langley-Eustis.</li>
+</ul>
+<p><a href="https://www.modusoperandi.com/products/paige" target="_blank" rel="noopener">View the PAiGE product page</a>.</p>
+<h4>LOGEN — U.S. Navy · Naval Air Warfare Center</h4>
+<p>LOGEN — Logistics Enhancement with Living Intelligence — maintains a live picture of supply, routes, inventory, and their dependencies even when the network is unavailable. It reconciles locally, flags single points of failure, and preserves tamper-evident chain-of-custody records.</p>
+<ul><li>Led the Angular 19→21 platform modernization, strengthening the application's technical foundation.</li></ul>
+<p><a href="https://www.modusoperandi.com/products/logen" target="_blank" rel="noopener">View the LOGEN product page</a>.</p>
+<h4>POMML — U.S. Air Force</h4>
+<p>POMML is an Air Force learning-management system. Public expansion and operational details are not available.</p>
+<ul><li>Lead UI engineering for the program's product interface.</li></ul>
 </article>
 <article>
 <h3>Hyperformant — Software Engineer Intern</h3>
@@ -287,7 +303,9 @@
   @keyframes ax-neb-b{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8vmax,5vmax) scale(1.24)}}
   @keyframes ax-rot{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
   @keyframes ax-rot-r{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(-360deg)}}
-  @media (prefers-reduced-motion: reduce){.ax-anim{animation:none !important}}
+  @keyframes ax-deans-sheen{0%,62%{background-position:0 0,145% 0}82%,100%{background-position:0 0,-45% 0}}
+  .ax-deans-card{background-image:linear-gradient(120deg,rgba(211,176,120,.12),rgba(211,176,120,.035) 55%,rgba(10,10,13,.4)),linear-gradient(115deg,transparent 44%,rgba(255,243,214,.08) 50%,transparent 56%);background-repeat:no-repeat;background-size:100% 100%,240% 100%;animation:ax-deans-sheen 9s ease-in-out infinite}
+  @media (prefers-reduced-motion: reduce){.ax-anim{animation:none !important}#ax-dossier *{animation:none !important}}
   /* ---- low-tier devices: strip the costliest GPU work (large-radius blur + backdrop-
      filter compositing) instead of tuning every inline style by hand. Attribute selectors
      match the existing inline styles directly, so the DC-authored markup stays untouched. ---- */
@@ -300,6 +318,12 @@
   .ax-tier-low #ax-hero-neb{filter:blur(18px)}
   .ax-tier-low [style*="blur("]{filter:none !important}
   .ax-tier-low [style*="backdrop-filter"]{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:rgba(7,7,9,.92) !important}
+  .ax-tier-low #ax-dossier{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:rgba(7,7,9,.96) !important}
+  .ax-dossier-scroll{scrollbar-width:thin;scrollbar-color:rgba(211,176,120,.52) transparent}
+  .ax-dossier-scroll::-webkit-scrollbar{width:4px;height:4px}
+  .ax-dossier-scroll::-webkit-scrollbar-track{background:transparent}
+  .ax-dossier-scroll::-webkit-scrollbar-thumb{background:rgba(211,176,120,.52);border-radius:999px}
+  #ax-dossier button:focus-visible,#ax-dossier a:focus-visible,.ax-exp-dossier:focus-visible{outline:1px solid #d3b078;outline-offset:3px}
   /* ---- responsive hero + nav ---- */
   .ax-scroll-cue{transition:opacity .4s ease}
   /* the in-hero meta strip duplicates the fixed top bar (O·P) and always sits behind it — drop it so the top stays clean at every width */
@@ -311,17 +335,13 @@
        happens to land close to the SVG's own ~0.58 (700/1200) aspect ratio. On a tall narrow
        phone that produced a container far taller than wide, so the cover-fit SVG (xMidYMid
        slice) zoomed in hard and cropped out most of the swoop — the ship was only ever in
-       frame for a sliver of its flight — while the oversized blurred overlay (up to 864px,
-       more than one phone screen) cost extra paint/compositing for no visual benefit. Tying
+       frame for a sliver of its flight — while the oversized overlay (up to 864px, more than
+       one phone screen) made each animation update cover unnecessary screen area. Tying
        the height to width instead keeps the aspect ratio (and the crop) close to the desktop
        version regardless of orientation, and shrinks the paint area substantially.  */
     #ax-rk-wrap{height:min(58vw,420px) !important}
-    /* the glow trail's feGaussianBlur filter re-rasterizes its (160%-padded, viewport-tall)
-       region on every frame while strokeDashoffset animates — cheap to composite on a desktop
-       GPU, but the single biggest jank source on phone GPUs/software rasterizers. Drop the
-       filter and fake the glow with a plain wider, dimmer stroke instead — still reads as a
-       soft trail at phone viewing distance, at a fraction of the paint cost. */
-    #ax-rk-glow{filter:none !important;stroke-width:6 !important;opacity:.25 !important}
+    /* Keep the lightweight, unblurred trail proportional on narrow screens. */
+    #ax-rk-glow{stroke-width:6 !important;opacity:.18 !important}
   }
   @media (max-height:720px) and (min-width:761px){
     /* short desktop windows: pull the hero in and shrink the display name so the CTAs stay above the fold */
@@ -349,6 +369,7 @@
     #ax-exp-pin .ax-exp-bullets{gap:8px !important}
     #ax-exp-pin .ax-exp-bullet{font-size:clamp(15.2px,2.3vh,18.4px) !important;line-height:1.62 !important}
     #ax-exp-pin .ax-exp-tags{margin-top:16px !important}
+    #ax-exp-pin .ax-exp-dossier{margin-top:10.4px !important;padding:7.2px 9.6px 7.2px 14.4px !important}
   }
   @media (max-height:600px) and (min-width:761px){
     /* laptop-in-split-screen territory: buy the last of the room back from the frame padding */
@@ -358,6 +379,8 @@
     #ax-exp-pin .ax-exp-bullets{gap:6.4px !important}
     #ax-exp-pin .ax-exp-bullet{font-size:clamp(13.6px,2.2vh,15.2px) !important;line-height:1.5 !important}
     #ax-exp-pin .ax-exp-tags{margin-top:11.2px !important}
+    #ax-exp-pin .ax-exp-dossier{margin-top:6.4px !important;padding:5.6px 8px 5.6px 12px !important;font-size:10px !important}
+    #ax-exp-pin .ax-exp-dossier>span{width:20.8px !important;height:20.8px !important}
   }
   /* x-import's inline style="width:100%;height:100%" only sizes its wrapper div, never
      reaches the <image-slot> custom element inside — it stays at its shadow-DOM default
@@ -608,17 +631,10 @@
             <stop offset=".5" stop-color="#e8c894" stop-opacity=".5"></stop>
             <stop offset="1" stop-color="#ece7db" stop-opacity=".25"></stop>
           </linearGradient>
-          <filter id="ax-rk-blur" x="-6%" y="-6%" width="112%" height="112%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
         </defs>
-        <path id="ax-rk-glow" d="M-9,700 C177,378 423,178 1193,14" fill="none" stroke="url(#ax-rk-grad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"  vector-effect="non-scaling-stroke" filter="url(#ax-rk-blur)" style="opacity:.4"></path>
+        <path id="ax-rk-glow" d="M-9,700 C177,378 423,178 1193,14" fill="none" stroke="url(#ax-rk-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="opacity:.22"></path>
         <path id="ax-rk-path" d="M-9,700 C177,378 423,178 1193,14" fill="none" stroke="url(#ax-rk-grad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"  vector-effect="non-scaling-stroke"></path>
-        <g id="ax-rk-ship" style="opacity:0;offset-path:path('M-9,700 C177,378 423,178 1193,14');offset-rotate:auto">
-          <path d="M11,0 C7,-3.6 -1,-3.4 -7,-2 L-7,2 C-1,3.4 7,3.6 11,0 Z" fill="#ece7db"></path>
-          <path d="M-6.6,-2.2 L-11.5,-5.6 L-8.2,-1 Z" fill="#d3b078"></path>
-          <path d="M-6.6,2.2 L-11.5,5.6 L-8.2,1 Z" fill="#d3b078"></path>
-          <circle cx="2.5" cy="0" r="1.3" fill="#070709"></circle>
-          <path d="M-7.4,-1.3 L-15,0 L-7.4,1.3 Z" fill="#f2b97c" opacity=".9"></path>
-        </g>
+        <path id="ax-rk-ship" d="M15,0 L-8,-4 L-3.2,0 L-8,4 Z" fill="#d3b078" style="opacity:0;offset-path:path('M-9,700 C177,378 423,178 1193,14');offset-rotate:auto"></path>
       </svg>
     </div>
     <div style="position:relative;max-width:720px;margin:0 auto;text-align:center">
@@ -628,10 +644,10 @@
         <span style="font:500 clamp(11.5px,1.5vw,15px) 'JetBrains Mono',monospace;letter-spacing:.26em;color:#d3b078;white-space:nowrap"><span style="color:#ece7db">EDUCATION</span></span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
-      <div data-rv="0" style="display:inline-flex;align-items:center;justify-content:center;width:89.6px;height:89.6px;border-radius:999px;background:rgba(236,231,219,.05);border:1px solid rgba(236,231,219,.14);margin-bottom:24px">
-        <img src="images/fit-seal.png" alt="Florida Tech seal" loading="lazy" decoding="async" style="width:52.8px;height:52.8px;object-fit:contain;opacity:.95">
+      <div data-rv="0" style="display:inline-flex;align-items:center;justify-content:center;width:144px;height:144px;border-radius:999px;background:rgba(236,231,219,.05);border:1px solid rgba(236,231,219,.14);margin-bottom:24px">
+        <img src="images/fit-seal.png" alt="Florida Tech seal" loading="lazy" decoding="async" style="width:88px;height:88px;object-fit:contain;opacity:.95">
       </div>
-      <h2 data-rv="60" style="margin:0 0 14.4px;font:500 clamp(25.6px,5vw,54.4px)/1.1 'Cormorant Garamond',serif;color:#ece7db;text-wrap:balance">Florida Institute of Technology</h2>
+      <h2 data-rv="60" style="margin:0 0 14.4px;font:500 clamp(34.4px,6.2vw,68.8px)/1.1 'Cormorant Garamond',serif;color:#ece7db;text-wrap:balance">Florida Institute of Technology</h2>
       <div data-rv="120" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:17.6px">B.S. Computer Science — Expected December 2026</div>
       <p data-rv="180" style="margin:0 auto;font:300 clamp(13.5px,1.6vw,15.5px)/1.75 Outfit,sans-serif;color:#ffffff;max-width:464px">Coursework from operating systems and computer networks to graduate-level machine learning — capped by BrainBench, a senior-design study of small local LLMs presented at the Northrop Grumman Engineering &amp; Science Student Design Showcase.</p>
       <div data-rv="240" style="max-width:416px;margin:clamp(32px,6vh,44.8px) auto 0;text-align:left">
@@ -652,7 +668,7 @@
         <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#ece7db">Honors &amp; Certifications</span>
         <span style="flex:1;height:1px;background:rgba(236,231,219,.13)"></span>
       </div>
-      <div data-rv="140" style="position:relative;border:1px solid rgba(211,176,120,.45);background:linear-gradient(120deg,rgba(211,176,120,.12),rgba(211,176,120,.035) 55%,rgba(10,10,13,.4));padding:clamp(22.4px,4.5vw,44.8px);display:flex;align-items:center;justify-content:space-between;gap:22.4px;flex-wrap:wrap;margin-bottom:11.2px">
+      <div data-rv="140" class="ax-anim ax-deans-card" style="position:relative;border:1px solid rgba(211,176,120,.45);padding:clamp(22.4px,4.5vw,44.8px);display:flex;align-items:center;justify-content:space-between;gap:22.4px;flex-wrap:wrap;margin-bottom:11.2px">
         <span style="position:absolute;top:-1px;left:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.9);border-left:1px solid rgba(211,176,120,.9)"></span>
         <span style="position:absolute;top:-1px;right:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.9);border-right:1px solid rgba(211,176,120,.9)"></span>
         <span style="position:absolute;bottom:-1px;left:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.9);border-left:1px solid rgba(211,176,120,.9)"></span>
@@ -678,7 +694,7 @@
         </div>
         <div style="background:#0a0a0d;padding:clamp(17.6px,3vw,27.2px);transition:background .3s" style-hover="background:#0e0e13">
           <div style="color:#d3b078;font-size:9.6px;margin-bottom:14.4px">✦</div>
-          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Grant</div>
+          <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff;margin-bottom:8px">Scholarship</div>
           <div style="font:500 clamp(17.6px,2vw,21.6px)/1.2 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:6.4px">Panther Fund Grant Recipient</div>
           <div style="font:300 13px/1.55 Outfit,sans-serif;color:#ffffff">Florida Institute of Technology</div>
         </div>
@@ -816,14 +832,15 @@
               <div aria-hidden="true" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">01</div>
               <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">01 / OCT 2024 — PRESENT</div>
               <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Modus Operandi</div>
-              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Software Engineer Intern</div>
+              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Lead UI Engineer</div>
               <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics) — and led LOGEN's Angular 19→21 platform upgrade.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built an interactive Go.js knowledge-graph giving real-time transparency into LLM decisions — prompt tracing, query tracking, data-origin verification.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Implemented Keycloak RBAC and Intelligence-Community CAPCO classification marking across mission dashboards — 80% test coverage, zero vulnerabilities.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Flown to Joint Base Langley-Eustis to work face-to-face with the Air Force's 363rd ISR Wing — the analysts who use what I build.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Lead UI engineering across three DoD platforms for the Air Force and Navy — spanning targeting analysis, learning management, and naval logistics.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts — the people using the system.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built a Go.js knowledge graph that makes LLM decisions traceable in real time — from prompts and queries to source data.</div>
+                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Secured mission dashboards with Keycloak RBAC and IC CAPCO markings; achieved 80% test coverage and zero detected vulnerabilities.</div>
               </div>
               <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</div>
+              <button type="button" class="ax-exp-dossier" onClick="{{ openDossier }}" data-cursor="OPEN ✦" aria-haspopup="dialog" aria-expanded="{{ dossierOpen }}" aria-controls="ax-dossier" style="display:inline-flex;align-items:center;align-self:flex-start;gap:12.8px;margin-top:14.4px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 18px;font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:normal;text-align:left" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">Program dossiers — PAiGE · LOGEN · POMML <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transform:rotate(-90deg)"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
             </div>
 
             <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;will-change:transform,opacity">
@@ -1129,14 +1146,87 @@
   </section>
 </div>
 
+<!-- ===== PROGRAM DOSSIERS — Experience deep dive ===== -->
+<sc-if value="{{ dossierOpen }}" hint-placeholder-val="{{ false }}">
+  <div id="ax-dossier" role="dialog" aria-modal="true" aria-labelledby="ax-dossier-title" style="position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:{{ dossierPad }};box-sizing:border-box;background:rgba(7,7,9,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)" onClick="{{ closeDossier }}">
+    <div id="ax-dossier-panel" onClick="{{ stopClose }}" style="position:relative;width:{{ dossierPanelWidth }};height:{{ dossierPanelHeight }};max-width:1040px;max-height:{{ dossierPanelMaxHeight }};display:flex;flex-direction:column;box-sizing:border-box;background:#0a0a0d;border:1px solid rgba(236,231,219,.14);border-radius:{{ dossierRadius }};overflow:hidden;box-shadow:0 28px 90px rgba(0,0,0,.58),0 0 56px rgba(211,176,120,.06);animation:ax-arch .5s cubic-bezier(.16,1,.3,1)">
+      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;top:-1px;left:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;top:-1px;right:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;bottom:-1px;left:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;bottom:-1px;right:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+
+      <div style="position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;padding:{{ dossierHeaderPad }};background:#09090c;border-bottom:1px solid rgba(211,176,120,.28)">
+        <span id="ax-dossier-title" style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#d3b078">// Program dossier — public release</span>
+        <button id="ax-dossier-close" type="button" onClick="{{ closeDossier }}" data-cursor="CLOSE ✦" aria-label="Close program dossiers" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;padding:0;cursor:pointer;border:1px solid rgba(236,231,219,.18);border-radius:50%;background:transparent;color:#ece7db;font:400 15px/1 'JetBrains Mono',monospace;transition:color .3s,border-color .3s,background .3s" style-hover="color:#070709;border-color:#d3b078;background:#d3b078">×</button>
+      </div>
+
+      <div style="display:flex;flex-direction:{{ dossierDirection }};flex:1;min-height:0">
+        <div class="ax-dossier-scroll" role="tablist" aria-label="Defense programs" style="position:relative;z-index:2;display:flex;flex-direction:{{ dossierRailDirection }};width:{{ dossierRailWidth }};height:{{ dossierRailHeight }};flex:none;overflow-x:{{ dossierRailOverflowX }};overflow-y:hidden;overscroll-behavior:contain;background:#08080b;border-right:{{ dossierRailBorderRight }};border-bottom:{{ dossierRailBorderBottom }}">
+          <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
+            <button type="button" role="tab" id="ax-dossier-tab-{{ p.slug }}" aria-controls="ax-dossier-panel-{{ p.slug }}" aria-selected="{{ p.active }}" onClick="{{ p.activate }}" data-cursor="SELECT ✦" style="position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5.6px;min-width:{{ dossierTabMinWidth }};min-height:{{ dossierTabMinHeight }};flex:{{ dossierTabFlex }};padding:{{ dossierTabPad }};cursor:pointer;text-align:left;background:{{ p.tabBg }};border:0;border-bottom:1px solid rgba(236,231,219,.09);color:#ece7db;transition:background .35s,color .35s;animation:ax-arch .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:{{ p.delay }}">
+              <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;color:{{ p.indexColor }}">{{ p.index }}</span>
+              <span style="font:500 clamp(18.4px,2.3vw,25.6px)/1 'Cormorant Garamond',serif;letter-spacing:.02em;color:{{ p.nameColor }}">{{ p.name }}</span>
+              <span style="font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:{{ p.branchColor }}">{{ p.branchShort }}</span>
+              <span aria-hidden="true" style="position:absolute;right:{{ dossierStarRight }};top:{{ dossierStarTop }};bottom:{{ dossierStarBottom }};transform:{{ dossierStarTransform }};color:#d3b078;font-size:10.4px;line-height:1;opacity:{{ p.starOpacity }};text-shadow:0 0 12px rgba(211,176,120,.9);transition:opacity .35s">✦</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="position:relative;flex:1;min-width:0;min-height:0;background:#0a0a0d">
+          <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
+            <section id="ax-dossier-panel-{{ p.slug }}" class="ax-dossier-scroll" role="tabpanel" aria-labelledby="ax-dossier-tab-{{ p.slug }}" aria-hidden="{{ p.hidden }}" style="position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:{{ dossierDetailPad }};box-sizing:border-box;opacity:{{ p.op }};pointer-events:{{ p.pe }};transition:opacity .38s ease">
+              <div aria-hidden="true" style="position:absolute;right:clamp(12px,4vw,40px);top:clamp(10px,3vh,28px);font:600 clamp(88px,15vw,160px)/.8 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:1px rgba(211,176,120,.1);pointer-events:none;user-select:none">{{ p.index }}</div>
+              <div style="position:relative;z-index:1;max-width:656px">
+                <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:8px">Program {{ p.index }}</div>
+                <h2 style="margin:0;font:500 clamp(38.4px,6vw,67.2px)/.92 'Cormorant Garamond',serif;letter-spacing:.01em;color:#ece7db">{{ p.name }}</h2>
+                <div style="margin-top:10.4px;font:500 10px/1.65 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.branchLine }}</div>
+
+                <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
+                  <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#d3b078;white-space:nowrap">The program</span>
+                  <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
+                </div>
+                <p style="margin:0;font:300 clamp(13.6px,1.6vw,15.2px)/1.72 Outfit,sans-serif;color:#ffffff">{{ p.description }}</p>
+
+                <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
+                  <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;white-space:nowrap">My direct impact — Lead UI Engineer</span>
+                  <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ p.impacts }}" as="impact" hint-placeholder-count="3">
+                    <div style="display:flex;gap:10.4px;font:300 clamp(13.2px,1.5vw,14.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span aria-hidden="true" style="color:#d3b078;flex:none">✦</span><span>{{ impact.text }}</span></div>
+                  </sc-for>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:clamp(20.8px,4vh,30.4px);background:rgba(236,231,219,.12);border:1px solid rgba(236,231,219,.12)">
+                  <sc-for list="{{ p.stats }}" as="stat" hint-placeholder-count="3">
+                    <div style="min-width:0;padding:clamp(10.4px,2vw,16px);background:#0a0a0d">
+                      <div style="font:500 clamp(17.6px,2.6vw,25.6px)/1 'Cormorant Garamond',serif;color:#ece7db">{{ stat.value }}</div>
+                      <div style="margin-top:6.4px;font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:{{ dossierStatLetterSpacing }};text-transform:uppercase;color:#ffffff;overflow-wrap:anywhere">{{ stat.label }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="margin-top:16px;font:500 10px/1.7 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.tags }}</div>
+                <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
+                  <a data-cursor="OPEN ✦" href="{{ p.href }}" target="_blank" rel="noopener" style="display:inline-block;margin-top:14.4px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View the product ↗</a>
+                </sc-if>
+              </div>
+            </section>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
 <!-- ===== CUSTOM CURSOR ===== -->
-<div id="ax-cur-ring" style="position:fixed;left:0;top:0;width:27.2px;height:27.2px;border-radius:999px;border:1px solid rgba(211,176,120,.6);z-index:70;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none"></div>
-<div id="ax-cur-dot" style="position:fixed;left:0;top:0;width:4px;height:4px;border-radius:999px;background:#d3b078;z-index:70;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none;transition:opacity .25s"></div>
-<div id="ax-cur-label" style="position:fixed;left:0;top:0;z-index:71;pointer-events:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.22em;color:#070709;background:#d3b078;padding:5.6px 9.6px 5.6px 10.4px;border-radius:999px;transform:translate(-200px,-200px);opacity:0;transition:opacity .25s;will-change:transform;display:none;white-space:nowrap"></div>
+<div id="ax-cur-ring" style="position:fixed;left:0;top:0;width:27.2px;height:27.2px;border-radius:999px;border:1px solid rgba(211,176,120,.6);z-index:160;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none"></div>
+<div id="ax-cur-dot" style="position:fixed;left:0;top:0;width:4px;height:4px;border-radius:999px;background:#d3b078;z-index:160;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none;transition:opacity .25s"></div>
+<div id="ax-cur-label" style="position:fixed;left:0;top:0;z-index:161;pointer-events:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.22em;color:#070709;background:#d3b078;padding:5.6px 9.6px 5.6px 10.4px;border-radius:999px;transform:translate(-200px,-200px);opacity:0;transition:opacity .25s;will-change:transform;display:none;white-space:nowrap"></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;showIntro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Opening&quot;},&quot;starDensity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0.2,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Atmosphere&quot;},&quot;meteors&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Atmosphere&quot;},&quot;launchFinale&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Atmosphere&quot;}}">
 class Component extends DCLogic {
-  state = { skillActive: 6, narrow: false, archiveOpen: false };
+  state = { skillActive: 6, narrow: false, archiveOpen: false, dossierOpen: false, dossierActive: 0 };
 
   componentDidMount() {
     this._t = [];
@@ -1278,6 +1368,8 @@ class Component extends DCLogic {
     this._onVis = () => { this._hidden = document.hidden; };
     addEventListener('resize', this._onResize);
     document.addEventListener('visibilitychange', this._onVis);
+    this._onDossierKey = (e) => this._handleDossierKey(e);
+    document.addEventListener('keydown', this._onDossierKey);
 
     // low-tier devices: cap the paint loop at ~30fps instead of chasing 60 and dropping
     // frames unevenly (uneven drops read as stutter; a steady lower rate reads as smooth)
@@ -1315,6 +1407,9 @@ class Component extends DCLogic {
     document.removeEventListener('visibilitychange', this._onVis);
     if (this._onMove) document.removeEventListener('pointermove', this._onMove);
     if (this._onOver) document.removeEventListener('pointerover', this._onOver);
+    if (this._onDossierKey) document.removeEventListener('keydown', this._onDossierKey);
+    if (this._dossierFocusRaf) cancelAnimationFrame(this._dossierFocusRaf);
+    this._restoreDossierScroll();
     document.documentElement.classList.remove('ax-cursor');
   }
 
@@ -2796,7 +2891,9 @@ class Component extends DCLogic {
 
     const ref = document.createElementNS('http://www.w3.org/2000/svg', 'path'); // detached, for sampling
     const TAIL = 1;                    // streak length as a fraction of the path (1 = full trail)
-    const SAMPLES = 80;
+    // 48 segments remain visually smooth across the full sweep while reducing the two
+    // per-frame SVG path strings (core + trail) by 40%.
+    const SAMPLES = 48;
     // SAMPLE THE PATH ONCE PER LAYOUT, NOT EVERY FRAME. getPointAtLength is a geometry query -
     // the browser walks/flattens the path to answer it - and the old loop fired 40+ of them
     // per frame (streak) plus 2 more (ship). That was this animation's dominant cost. Here the
@@ -3122,6 +3219,73 @@ class Component extends DCLogic {
     this._t.push(setTimeout(() => this._shine(), 1650));
   }
 
+  _openDossier(e) {
+    if (this.state.dossierOpen) return;
+    this._dossierTrigger = e && e.currentTarget ? e.currentTarget : document.querySelector('.ax-exp-dossier');
+    const root = document.documentElement;
+    this._dossierPrevOverflow = root.style.overflow;
+    this._dossierPrevPaddingRight = root.style.paddingRight;
+    const scrollbar = Math.max(0, innerWidth - root.clientWidth);
+    root.style.overflow = 'hidden';
+    root.style.paddingRight = scrollbar ? scrollbar + 'px' : this._dossierPrevPaddingRight;
+    this._dossierLocked = true;
+    this.setState({ dossierOpen: true }, () => {
+      this._dossierFocusRaf = requestAnimationFrame(() => {
+        const close = document.getElementById('ax-dossier-close');
+        if (close) close.focus();
+      });
+    });
+  }
+
+  _restoreDossierScroll() {
+    if (!this._dossierLocked) return;
+    const root = document.documentElement;
+    root.style.overflow = this._dossierPrevOverflow || '';
+    root.style.paddingRight = this._dossierPrevPaddingRight || '';
+    this._dossierLocked = false;
+  }
+
+  _closeDossier() {
+    if (!this.state.dossierOpen) return;
+    const trigger = this._dossierTrigger;
+    this._restoreDossierScroll();
+    this.setState({ dossierOpen: false }, () => {
+      this._dossierFocusRaf = requestAnimationFrame(() => {
+        if (trigger && document.contains(trigger)) trigger.focus();
+      });
+    });
+  }
+
+  _handleDossierKey(e) {
+    if (!this.state.dossierOpen) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this._closeDossier();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const panel = document.getElementById('ax-dossier-panel');
+    if (!panel) return;
+    const focusable = Array.from(panel.querySelectorAll('button:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))
+      .filter((el) => !el.closest('[aria-hidden="true"]'));
+    if (!focusable.length) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!panel.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus();
+    } else if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   renderVals() {
     if (!this._skillBase) {
       const groups = [
@@ -3184,6 +3348,73 @@ class Component extends DCLogic {
       { tag: 'W·07 — RARE T HOLDINGS, 2023', title: 'ML Invoice Processor', desc: 'Machine-learning models on Azure that read, process and document invoices — doubling accounting efficiency.', tags: 'Azure ML · Java · OCR', img: 'images/invoice-network.webp', pos: 'center', href: null },
       { tag: 'W·08 — RARE T HOLDINGS, 2023', title: 'Autonomous Content Workflow', desc: 'Self-running content pipelines on the ChatGPT API and Power Automate — +30% generation efficiency, +25% retention.', tags: 'ChatGPT API · Power Automate', img: 'images/content-creator.webp', pos: 'center', href: null }
     ].map((p, i) => Object.assign({}, p, { delay: (i * 70) + 'ms', hasLink: !!p.href }));
+    const dossierActive = this.state.dossierActive;
+    const programs = [
+      {
+        slug: 'paige', index: '01', name: 'PAiGE', branchShort: 'U.S. Air Force',
+        branchLine: 'U.S. AIR FORCE · INITIAL OPERATIONAL CAPABILITY · BUILT ON MOVIA®',
+        description: 'PAiGE connects entities, relationships, and events across many sources into one coherent picture with full provenance, allowing analysts to trace every judgment to its source. It supports Target System Analysis for deliberate targeting.',
+        impacts: [
+          { text: 'Designed and built a Go.js knowledge graph that makes LLM decisions traceable in real time across prompt lineage, query flow, and source provenance.' },
+          { text: 'Hardened mission dashboards with Keycloak role-based access control and Intelligence-Community CAPCO classification markings.' },
+          { text: 'Delivered 80% test coverage with zero detected vulnerabilities.' },
+          { text: "Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts — the people using the system." }
+        ],
+        stats: [
+          { value: '80%', label: 'Test coverage' },
+          { value: '0', label: 'Vulnerabilities' },
+          { value: '363rd', label: 'ISR Wing · on site' }
+        ],
+        tags: 'GO.JS · ANGULAR · TYPESCRIPT · KEYCLOAK · CAPCO · FASTAPI',
+        href: 'https://www.modusoperandi.com/products/paige'
+      },
+      {
+        slug: 'logen', index: '02', name: 'LOGEN', branchShort: 'U.S. Navy · NAWC',
+        branchLine: 'U.S. NAVY · NAVAL AIR WARFARE CENTER · LOGISTICS ENHANCEMENT WITH LIVING INTELLIGENCE',
+        description: 'LOGEN maintains a live picture of supply, routes, inventory, and their dependencies even when the network is unavailable — reconciling locally, flagging single points of failure, and preserving tamper-evident chain-of-custody records.',
+        impacts: [
+          { text: "Led the Angular 19→21 platform modernization, strengthening the application's technical foundation." }
+        ],
+        stats: [
+          { value: '19→21', label: 'Angular platform' },
+          { value: 'U.S. Navy', label: 'Service branch' },
+          { value: 'NAWC', label: 'Naval Air Warfare' }
+        ],
+        tags: 'ANGULAR · TYPESCRIPT · PLATFORM ENGINEERING',
+        href: 'https://www.modusoperandi.com/products/logen'
+      },
+      {
+        slug: 'pomml', index: '03', name: 'POMML', branchShort: 'U.S. Air Force',
+        branchLine: 'U.S. AIR FORCE · LEARNING-MANAGEMENT SYSTEM · PUBLIC DETAILS LIMITED',
+        description: 'POMML is a learning-management system for the U.S. Air Force. Its full name, training audience, and operational scope are not included here until those details can be confirmed.',
+        impacts: [
+          { text: "Lead UI engineering for the program's product interface." }
+        ],
+        stats: [
+          { value: 'USAF', label: 'Service branch' },
+          { value: 'LMS', label: 'System type' },
+          { value: 'Lead', label: 'UI engineering' }
+        ],
+        tags: 'UI ENGINEERING · AIR FORCE LMS',
+        href: null
+      }
+    ].map((p, i) => {
+      const on = i === dossierActive;
+      return Object.assign({}, p, {
+        op: on ? '1' : '0',
+        pe: on ? 'auto' : 'none',
+        active: on ? 'true' : 'false',
+        hidden: on ? 'false' : 'true',
+        delay: (i * 70) + 'ms',
+        hasLink: !!p.href,
+        tabBg: on ? '#0d0d12' : '#08080b',
+        indexColor: on ? '#d3b078' : '#ffffff',
+        nameColor: on ? '#ece7db' : '#ffffff',
+        branchColor: '#ffffff',
+        starOpacity: on ? '1' : '0',
+        activate: () => { if (this.state.dossierActive !== i) this.setState({ dossierActive: i }); }
+      });
+    });
     return {
       skillGroups,
       skillCount: this._skillCount,
@@ -3193,7 +3424,36 @@ class Component extends DCLogic {
       archiveOpen: this.state.archiveOpen,
       archiveLabel: this.state.archiveOpen ? 'Hide the archive' : 'Open the archive — six more works',
       chevronRotate: this.state.archiveOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-      toggleArchive: () => this.setState((s) => ({ archiveOpen: !s.archiveOpen }))
+      toggleArchive: () => this.setState((s) => ({ archiveOpen: !s.archiveOpen })),
+      programs,
+      dossierOpen: this.state.dossierOpen,
+      openDossier: (e) => this._openDossier(e),
+      closeDossier: () => this._closeDossier(),
+      stopClose: (e) => e.stopPropagation(),
+      dossierPad: narrow ? '0' : 'clamp(16px,4vw,40px)',
+      dossierPanelWidth: narrow ? '100%' : 'min(1040px,100%)',
+      dossierPanelHeight: narrow ? '100%' : 'min(88svh,780px)',
+      dossierPanelMaxHeight: narrow ? 'none' : 'min(88svh,780px)',
+      dossierRadius: narrow ? '0' : '3px',
+      dossierBrackets: narrow ? 'none' : 'block',
+      dossierHeaderPad: narrow ? '11.2px 16px' : '12.8px 19.2px',
+      dossierDirection: narrow ? 'column' : 'row',
+      dossierRailDirection: narrow ? 'row' : 'column',
+      dossierRailWidth: narrow ? '100%' : '232px',
+      dossierRailHeight: narrow ? '104px' : 'auto',
+      dossierRailOverflowX: narrow ? 'auto' : 'hidden',
+      dossierRailBorderRight: narrow ? '0' : '1px solid rgba(236,231,219,.12)',
+      dossierRailBorderBottom: narrow ? '1px solid rgba(236,231,219,.12)' : '0',
+      dossierTabMinWidth: narrow ? '156px' : '0',
+      dossierTabMinHeight: narrow ? 'auto' : '0',
+      dossierTabFlex: narrow ? '0 0 156px' : '1 1 0%',
+      dossierTabPad: narrow ? '12.8px 16px' : '17.6px 20.8px',
+      dossierDetailPad: narrow ? '20.8px 16px 32px' : 'clamp(22.4px,4vw,40px)',
+      dossierStatLetterSpacing: narrow ? '0' : '.14em',
+      dossierStarRight: narrow ? '8px' : '4px',
+      dossierStarTop: narrow ? 'auto' : '50%',
+      dossierStarBottom: narrow ? '6px' : 'auto',
+      dossierStarTransform: narrow ? 'none' : 'translateY(-50%)'
     };
   }
 }

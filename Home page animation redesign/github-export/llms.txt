@@ -6,16 +6,22 @@ Three professional engineering roles across defense (DoD), SaaS, and applied mac
 
 ## Background
 
-- Current role: Software Engineer Intern at Modus Operandi (Oct 2024–present), building DoD decision-support software for the U.S. Air Force and Navy.
+- Current role: Lead UI Engineer at Modus Operandi (Oct 2024–present), building DoD decision-support software for the U.S. Air Force and Navy.
 - Education: B.S. Computer Science, Florida Institute of Technology, expected December 2026 (110/126 credit hours).
 - Location: Melbourne, Florida, USA.
 - Contact: orionthanhpowers@gmail.com · +1 (502) 232-8043 · [LinkedIn](https://linkedin.com/in/orion-powers)
 
 ## Experience
 
-- **Modus Operandi** — Software Engineer Intern (Oct 2024–Present): engineering across three DoD programs — PAiGE (Air Force targeting analysis), POMML (mission-outcome prediction), LOGEN (Navy logistics); led LOGEN's Angular 19→21 upgrade; built a Go.js knowledge-graph for LLM decision transparency; implemented Keycloak RBAC and CAPCO classification marking. Worked on-site with the Air Force's 363rd ISR Wing at Joint Base Langley-Eustis. Stack: Angular, TypeScript, FastAPI, Go.js, Keycloak.
+- **Modus Operandi** — Lead UI Engineer (Oct 2024–Present): leads UI engineering across three U.S. Air Force and Navy platforms — PAiGE, POMML, and LOGEN. Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts. Designed and built a Go.js knowledge graph that makes LLM decisions traceable in real time; hardened mission dashboards with Keycloak RBAC and CAPCO classification markings; delivered 80% test coverage with zero detected vulnerabilities; and led LOGEN's Angular 19→21 modernization. Stack: Angular, TypeScript, FastAPI, Go.js, Keycloak.
 - **Hyperformant** — Software Engineer Intern (May 2024–Oct 2024): shipped a production SaaS platform in React/TypeScript; rebuilt the marketing site with interactive 3D (Figma/Spline → Svelte/Webflow). Stack: React, TypeScript, Svelte, Supabase, Webflow, Spline.
 - **RARE T Holdings** — Software Engineer (Dec 2022–Jun 2023): built Azure ML models that read and document invoices automatically, doubling pipeline throughput; created autonomous content workflows with the ChatGPT API and Power Automate. Stack: Azure ML, Java, TypeScript, ChatGPT API, Power Automate.
+
+## Programs
+
+- **PAiGE** — U.S. Air Force targeting-analysis platform built on Movia®. It connects entities, relationships, and events across sources with full provenance so analysts can trace judgments back to source. Direct impact: selected and flown to partner on-site with the 363rd ISR Wing; designed and built a Go.js knowledge graph for traceable LLM decisions; hardened dashboards with Keycloak RBAC and CAPCO classification markings; and delivered 80% test coverage with zero detected vulnerabilities. [Product page](https://www.modusoperandi.com/products/paige)
+- **LOGEN** — U.S. Navy / Naval Air Warfare Center logistics platform, expanded as “Logistics Enhancement with Living Intelligence.” It maintains a resilient live picture of supply, routes, inventory, and dependencies. Direct impact: led the Angular 19→21 platform modernization. [Product page](https://www.modusoperandi.com/products/logen)
+- **POMML** — U.S. Air Force learning-management system. Leads UI engineering for the product interface; further public program and impact details are intentionally withheld until confirmed.
 
 ## Projects
 
