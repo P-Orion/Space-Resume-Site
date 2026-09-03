@@ -305,7 +305,7 @@
   @keyframes ax-rot-r{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(-360deg)}}
   @keyframes ax-deans-sheen{0%,62%{background-position:0 0,145% 0}82%,100%{background-position:0 0,-45% 0}}
   .ax-deans-card{background-image:linear-gradient(120deg,rgba(211,176,120,.12),rgba(211,176,120,.035) 55%,rgba(10,10,13,.4)),linear-gradient(115deg,transparent 44%,rgba(255,243,214,.08) 50%,transparent 56%);background-repeat:no-repeat;background-size:100% 100%,240% 100%;animation:ax-deans-sheen 9s ease-in-out infinite}
-  @media (prefers-reduced-motion: reduce){.ax-anim{animation:none !important}#ax-dossier *{animation:none !important}}
+  @media (prefers-reduced-motion: reduce){.ax-anim{animation:none !important}#ax-dossier *{animation:none !important}.ax-skill-tab{transition:none !important}.ax-skill-tab:hover{transform:none !important}.ax-skill-popout *{animation:none !important}.ax-modus-cue-badge,.ax-modus-cue-badge svg,.ax-modus-cue-run,.ax-modus-cue-ticks span{animation:none !important}.ax-modus-cue-run{opacity:0 !important}.ax-modus-cue-in{transition:none !important}.ax-modus-track{scroll-behavior:auto !important}}
   /* ---- low-tier devices: strip the costliest GPU work (large-radius blur + backdrop-
      filter compositing) instead of tuning every inline style by hand. Attribute selectors
      match the existing inline styles directly, so the DC-authored markup stays untouched. ---- */
@@ -323,7 +323,110 @@
   .ax-dossier-scroll::-webkit-scrollbar{width:4px;height:4px}
   .ax-dossier-scroll::-webkit-scrollbar-track{background:transparent}
   .ax-dossier-scroll::-webkit-scrollbar-thumb{background:rgba(211,176,120,.52);border-radius:999px}
-  #ax-dossier button:focus-visible,#ax-dossier a:focus-visible,.ax-exp-dossier:focus-visible{outline:1px solid #d3b078;outline-offset:3px}
+  #ax-dossier button:focus-visible,#ax-dossier a:focus-visible,.ax-modus-cue:focus-visible{outline:1px solid #d3b078;outline-offset:3px}
+  /* Modus Operandi is the only Experience card with a second horizontal screen. The
+     document itself never grows sideways: this clipped, snap-scrolling track owns the
+     gesture, while the page's existing vertical scroll continues to change jobs. */
+  @keyframes ax-cue-arrow{0%,100%{transform:translateX(0)}50%{transform:translateX(5.6px)}}
+  /* the hero scroll cue's travelling tick (@keyframes ax-drop), turned 90deg to run DOWN
+     the rail's hairline instead of down a 1px column. Same idiom, so the rail reads as
+     part of the existing vocabulary rather than a new invention. */
+  @keyframes ax-rail-run{0%{transform:translateY(-100%);opacity:0}18%{opacity:1}78%{opacity:1}100%{transform:translateY(560%);opacity:0}}
+  @keyframes ax-cue-tick{0%,100%{opacity:.4}50%{opacity:1}}
+  @keyframes ax-cue-halo{0%,100%{box-shadow:0 0 0 0 rgba(211,176,120,.34),0 0 14px rgba(211,176,120,.4)}50%{box-shadow:0 0 0 8px rgba(211,176,120,0),0 0 22px rgba(211,176,120,.6)}}
+  .ax-modus-track{width:100%;height:100%;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
+  .ax-modus-track::-webkit-scrollbar{display:none}
+  .ax-modus-screen{position:relative;flex:0 0 100%;width:100%;height:100%;min-width:0;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
+  .ax-modus-summary{display:flex;flex-direction:column;justify-content:center;padding-right:clamp(160px,18.5vw,204px)}
+  /* The prompt IS the rail: one full-height flush-right panel, so the whole edge is the hit
+     target. Its 1px hairline mirrors the star rail on the LEFT of this section — vertical
+     progress on the left, horizontal depth on the right — but the copy stays horizontal and
+     right-aligned so it simply reads, and it carries the site's own circular gold chevron
+     badge (the same affordance as the archive toggle) so it is unmistakably a button.
+     Two independent opacity/transform channels, so they never fight:
+       .ax-modus-cue     — written per frame from the track's scrollLeft (the pull-out)
+       .ax-modus-cue-in  — CSS-transitioned by .ax-modus-live (the entrance) */
+  .ax-modus-cue{appearance:none;-webkit-appearance:none;position:absolute;right:0;top:0;bottom:0;z-index:3;width:clamp(148px,17vw,188px);padding:0 12.8px 0 clamp(12.8px,1.6vw,19.2px);box-sizing:border-box;border:0;border-left:1px solid rgba(211,176,120,.45);background:linear-gradient(90deg,rgba(211,176,120,0),rgba(211,176,120,.09));color:#ece7db;cursor:pointer;overflow:hidden;text-align:right;will-change:opacity;transition:border-color .35s ease,background .35s ease,filter .35s ease}
+  .ax-modus-cue-run{position:absolute;left:0;top:0;width:1px;height:56px;background:linear-gradient(180deg,rgba(211,176,120,0),#f6e7c4 55%,rgba(211,176,120,0));animation:ax-rail-run 3.4s ease-in-out infinite;animation-play-state:paused;pointer-events:none}
+  .ax-modus-cue-in{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:9.6px;width:100%;height:100%;opacity:0;transform:translateX(12px);transition:opacity .55s cubic-bezier(.22,1,.36,1) .18s,transform .55s cubic-bezier(.22,1,.36,1) .18s}
+  .ax-modus-live .ax-modus-cue-in{opacity:1;transform:none}
+  .ax-modus-live .ax-modus-cue-run{animation-play-state:running}
+  /* three marks for the three programs — the ✦ rail on the left counts jobs, this counts
+     dossiers. Staggered so they read as a sequence rather than a static bracket. */
+  .ax-modus-cue-ticks{display:flex;align-items:center;gap:4.8px;flex:none}
+  .ax-modus-cue-ticks span{display:block;width:12.8px;height:1px;background:#d3b078;opacity:.45;animation:ax-cue-tick 3.2s ease-in-out infinite;animation-play-state:paused}
+  .ax-modus-live .ax-modus-cue-ticks span{animation-play-state:running}
+  .ax-modus-cue-ticks span:nth-child(2){animation-delay:.26s}
+  .ax-modus-cue-ticks span:nth-child(3){animation-delay:.52s}
+  .ax-modus-cue-label{font:500 10px/1.5 'JetBrains Mono',monospace;letter-spacing:.15em;text-transform:uppercase;color:#f6e7c4;transition:color .3s ease}
+  .ax-modus-cue-hint{font:500 8.5px/1.4 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#d3b078;transition:color .3s ease}
+  .ax-modus-cue-arrow{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:9.6px;width:100%;flex:none;margin-top:3.2px}
+  .ax-modus-cue-line{width:28.8px;height:1px;background:linear-gradient(90deg,rgba(211,176,120,.08),rgba(211,176,120,.92));transition:width .35s cubic-bezier(.22,1,.36,1)}
+  /* the site's canonical button badge: solid gold disc, page-black glyph. Pulsing halo so
+     the panel catches the eye instead of being scrolled past. */
+  .ax-modus-cue-badge{display:inline-flex;align-items:center;justify-content:center;width:27.2px;height:27.2px;border-radius:50%;background:#d3b078;color:#070709;flex:none;animation:ax-cue-halo 2.8s ease-in-out infinite;animation-play-state:paused;transition:transform .35s cubic-bezier(.22,1,.36,1),background .3s ease}
+  .ax-modus-live .ax-modus-cue-badge{animation-play-state:running}
+  .ax-modus-cue-badge svg{animation:ax-cue-arrow 2.4s ease-in-out infinite;animation-play-state:paused}
+  .ax-modus-live .ax-modus-cue-badge svg{animation-play-state:running}
+  @media (hover:hover){
+    .ax-modus-cue:hover{border-left-color:#d3b078;background:linear-gradient(90deg,rgba(211,176,120,0),rgba(211,176,120,.17));filter:drop-shadow(0 0 18px rgba(211,176,120,.18))}
+    .ax-modus-cue:hover .ax-modus-cue-hint{color:#f6e7c4}
+    .ax-modus-cue:hover .ax-modus-cue-ticks span{opacity:1;animation-play-state:paused}
+    .ax-modus-cue:hover .ax-modus-cue-line{width:44.8px}
+    .ax-modus-cue:hover .ax-modus-cue-badge{background:#f6e7c4;transform:scale(1.12);animation-play-state:paused}
+  }
+  .ax-modus-dossier{padding:1px;background:linear-gradient(135deg,rgba(211,176,120,.16),rgba(236,231,219,.035) 28%,rgba(7,7,9,.88) 72%)}
+  .ax-dossier-shell{position:relative;width:100%;height:100%;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden;background:linear-gradient(125deg,#0d0d12,#09090c 70%);border:1px solid rgba(236,231,219,.13);box-shadow:inset 0 0 56px rgba(211,176,120,.025)}
+  /* Parallax target: the shell's contents slide in slightly behind the incoming screen
+     edge. The shell's own overflow:hidden clips it, so no gradient edge is ever exposed. */
+  .ax-dossier-inner{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;will-change:transform}
+  .ax-dossier-head{position:relative;z-index:3;display:grid;grid-template-columns:minmax(156px,1fr) auto minmax(76px,1fr);align-items:center;gap:12.8px;flex:none;padding:10.4px 14.4px;background:rgba(9,9,12,.96);border-bottom:1px solid rgba(211,176,120,.28)}
+  .ax-dossier-back{appearance:none;-webkit-appearance:none;justify-self:start;display:inline-flex;align-items:center;gap:9.6px;padding:4.8px 0;border:0;background:transparent;color:#ece7db;cursor:pointer;font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;transition:color .3s ease}
+  .ax-dossier-back svg{transition:transform .3s cubic-bezier(.22,1,.36,1)}
+  @media (hover:hover){.ax-dossier-back:hover{color:#d3b078}.ax-dossier-back:hover svg{transform:translateX(-4px)}}
+  .ax-dossier-title{font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.25em;text-transform:uppercase;color:#d3b078;text-align:center;white-space:nowrap}
+  .ax-dossier-count{justify-self:end;font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.22em;color:#ffffff}
+  .ax-dossier-body{display:flex;flex-direction:row;flex:1;min-height:0}
+  @media (max-width:760px){
+    /* no room for a side panel on a phone: it lies down into a full-width bottom bar,
+       label and badge on one row. Same elements, same hit target. */
+    .ax-modus-summary{padding-right:0;padding-bottom:56px}
+    .ax-modus-cue{top:auto;left:0;right:0;bottom:0;width:auto;height:auto;border-left:0;border-top:1px solid rgba(211,176,120,.45);background:linear-gradient(0deg,rgba(211,176,120,.1),rgba(211,176,120,0));padding:11.2px 0 4.8px}
+    .ax-modus-cue-run{left:0;top:0;width:56px;height:1px;background:linear-gradient(90deg,rgba(211,176,120,0),#f6e7c4 55%,rgba(211,176,120,0));animation-name:ax-rail-runx}
+    .ax-modus-cue-in{flex-direction:row;align-items:center;justify-content:flex-end;gap:11.2px;height:auto;transform:translateY(8px)}
+    .ax-modus-live .ax-modus-cue-in{transform:none}
+    .ax-modus-cue-ticks{display:none}
+    .ax-modus-cue-hint{display:none}
+    .ax-modus-cue-arrow{width:auto;margin-top:0}
+    .ax-modus-cue-line{width:22.4px}
+    .ax-dossier-head{grid-template-columns:1fr auto;padding:9.6px 12.8px}
+    .ax-dossier-title{display:none}
+    .ax-dossier-body{flex-direction:column}
+  }
+  @keyframes ax-rail-runx{0%{transform:translateX(-100%);opacity:0}18%{opacity:1}78%{opacity:1}100%{transform:translateX(560%);opacity:0}}
+  /* Skills directory: readable tiles with an inline drawer that opens directly beneath
+     the selected tile's row. JS supplies row/column variables for both grid breakpoints. */
+  @keyframes ax-skill-unfold{0%{opacity:0;transform:translateY(-10px) scaleY(.88);clip-path:inset(0 0 100% 0)}100%{opacity:1;transform:none;clip-path:inset(0)}}
+  @keyframes ax-skill-connector-in{0%{opacity:0;transform:translateX(-50%) translateY(7px) rotate(45deg)}100%{opacity:1;transform:translateX(-50%) rotate(45deg)}}
+  .ax-skill-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(236,231,219,.11)}
+  .ax-skill-tab{grid-column:var(--ax-skill-col);grid-row:var(--ax-skill-row);appearance:none;-webkit-appearance:none;border:0;border-radius:0;margin:0;text-align:left;font:inherit;transition:background .35s ease,box-shadow .35s ease,filter .25s ease,transform .25s ease;isolation:isolate}
+  @media (hover:hover){.ax-skill-tab:hover{filter:brightness(1.16);transform:translateY(-2px);z-index:2}}
+  .ax-skill-tab:focus-visible{outline:1px solid #d3b078;outline-offset:-4px;z-index:3}
+  .ax-skill-popout{grid-column:1/-1;grid-row:var(--ax-detail-row);position:relative;z-index:4;background:#0d0d12}
+  .ax-skill-detail{display:grid;grid-template-columns:minmax(220px,.78fr) minmax(0,1.35fr);min-height:248px}
+  .ax-skill-popout>.ax-skill-detail{transform-origin:top;animation:ax-skill-unfold .55s cubic-bezier(.22,1,.36,1) both;box-shadow:inset 0 1px 0 rgba(211,176,120,.52)}
+  .ax-skill-connector{position:absolute;top:-7px;left:var(--ax-connector-left);z-index:6;width:14px;height:14px;background:#0d0d12;border-left:1px solid rgba(211,176,120,.72);border-top:1px solid rgba(211,176,120,.72);transform:translateX(-50%) rotate(45deg);animation:ax-skill-connector-in .35s .08s cubic-bezier(.22,1,.36,1) both;pointer-events:none}
+  .ax-skill-summary{border-right:1px solid rgba(236,231,219,.12)}
+  @media (max-width:760px){
+    .ax-skill-detail{grid-template-columns:1fr;min-height:0}
+    .ax-skill-summary{border-right:0;border-bottom:1px solid rgba(236,231,219,.12)}
+  }
+  @media (max-width:620px){
+    .ax-skill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .ax-skill-tab{grid-column:var(--ax-skill-mobile-col);grid-row:var(--ax-skill-mobile-row)}
+    .ax-skill-popout{grid-row:var(--ax-detail-mobile-row)}
+    .ax-skill-connector{left:var(--ax-connector-mobile-left)}
+  }
   /* ---- responsive hero + nav ---- */
   .ax-scroll-cue{transition:opacity .4s ease}
   /* the in-hero meta strip duplicates the fixed top bar (O·P) and always sits behind it — drop it so the top stays clean at every width */
@@ -369,7 +472,9 @@
     #ax-exp-pin .ax-exp-bullets{gap:8px !important}
     #ax-exp-pin .ax-exp-bullet{font-size:clamp(15.2px,2.3vh,18.4px) !important;line-height:1.62 !important}
     #ax-exp-pin .ax-exp-tags{margin-top:16px !important}
-    #ax-exp-pin .ax-exp-dossier{margin-top:10.4px !important;padding:7.2px 9.6px 7.2px 14.4px !important}
+    /* the vertical spine label runs ~210px and the hint ~140px; shed the hint first so the
+       label and arrow always fit the shortened rail rather than overflowing it */
+    #ax-exp-pin .ax-modus-cue-hint{display:none !important}
   }
   @media (max-height:600px) and (min-width:761px){
     /* laptop-in-split-screen territory: buy the last of the room back from the frame padding */
@@ -379,8 +484,8 @@
     #ax-exp-pin .ax-exp-bullets{gap:6.4px !important}
     #ax-exp-pin .ax-exp-bullet{font-size:clamp(13.6px,2.2vh,15.2px) !important;line-height:1.5 !important}
     #ax-exp-pin .ax-exp-tags{margin-top:11.2px !important}
-    #ax-exp-pin .ax-exp-dossier{margin-top:6.4px !important;padding:5.6px 8px 5.6px 12px !important;font-size:10px !important}
-    #ax-exp-pin .ax-exp-dossier>span{width:20.8px !important;height:20.8px !important}
+    #ax-exp-pin .ax-modus-cue-ticks{display:none !important}
+    #ax-exp-pin .ax-modus-cue-in{gap:8px !important}
   }
   /* x-import's inline style="width:100%;height:100%" only sizes its wrapper div, never
      reaches the <image-slot> custom element inside — it stays at its shadow-DOM default
@@ -774,33 +879,52 @@
         <span style="position:absolute;bottom:-1px;right:-1px;width:14.4px;height:14.4px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);z-index:2"></span>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12.8px;flex-wrap:wrap;padding:clamp(14.4px,2.5vw,22.4px) clamp(16px,3vw,28.8px);border-bottom:1px solid rgba(236,231,219,.12)">
           <span style="font:600 clamp(12.5px,1.7vw,15px) 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078">Skill Set</span>
-          <span style="font:500 clamp(11px,1.4vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#ffffff">{{ skillCount }} skills · 9 groups — select a group</span>
+          <span style="font:500 clamp(11px,1.4vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#ffffff">{{ skillCount }} capabilities · 9 disciplines</span>
         </div>
-        <div style="display:flex;flex-direction:{{ skDir }};height:{{ skHeight }};background:rgba(236,231,219,.1);gap:1px">
+        <div class="ax-skill-grid" role="group" aria-label="Skill disciplines">
           <sc-for list="{{ skillGroups }}" as="g" hint-placeholder-count="8">
-            <div onMouseEnter="{{ g.activate }}" onClick="{{ g.activate }}" style="position:relative;overflow:hidden;min-width:0;flex:{{ g.flex }};height:{{ g.h }};background:{{ g.bg }};transition:flex .85s cubic-bezier(.22,1,.36,1),height .85s cubic-bezier(.22,1,.36,1),background .5s;cursor:pointer">
-              <div style="position:absolute;inset:0;display:flex;flex-direction:{{ g.tabDir }};align-items:center;justify-content:space-between;gap:11.2px;padding:{{ g.tabPad }};opacity:{{ g.tabOp }};transition:opacity .4s">
-                <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.26em;color:#ffffff;flex-shrink:0">{{ g.num }}</span>
-                <span style="font:500 {{ g.catSize }} 'JetBrains Mono',monospace;letter-spacing:{{ g.catLs }};text-transform:uppercase;color:#ffffff;white-space:{{ g.catWs }};overflow:hidden;text-overflow:ellipsis;word-break:break-word;text-align:center;line-height:1.4;width:100%">{{ g.cat }}</span>
-                <span style="color:#d3b078;font-size:8px;line-height:1;flex-shrink:0">✦</span>
-              </div>
-              <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;gap:14.4px;padding:clamp(17.6px,3vw,32px);opacity:{{ g.bodyOp }};transition:opacity .55s .18s;pointer-events:{{ g.pe }}">
-                <div style="width:{{ g.bodyW }};max-width:100%">
-                  <div style="display:flex;align-items:baseline;gap:11.2px;margin-bottom:6.4px">
-                    <span style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.28em;color:#d3b078">{{ g.num }}</span>
-                    <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#ffffff">{{ g.count }} skills</span>
+            <button class="ax-skill-tab" type="button" onClick="{{ g.activate }}" aria-pressed="{{ g.pressed }}" aria-expanded="{{ g.pressed }}" aria-controls="ax-skill-detail" style="--ax-skill-col:{{ g.desktopCol }};--ax-skill-row:{{ g.desktopRow }};--ax-skill-mobile-col:{{ g.mobileCol }};--ax-skill-mobile-row:{{ g.mobileRow }};position:relative;overflow:hidden;min-width:0;min-height:clamp(104px,11vw,124px);display:flex;flex-direction:column;justify-content:space-between;gap:18px;padding:clamp(14.4px,2.2vw,20.8px);color:{{ g.titleColor }};background:{{ g.tileBg }};box-shadow:{{ g.tileShadow }};cursor:pointer">
+              <span aria-hidden="true" style="position:absolute;right:-8px;top:-25px;font:600 96px/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:1px {{ g.ghostColor }};pointer-events:none">{{ g.index }}</span>
+              <span style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:{{ g.metaColor }}">
+                <span>{{ g.num }}</span>
+                <span>{{ g.count }} tools</span>
+              </span>
+              <span style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;width:100%">
+                <span style="max-width:200px;font:600 clamp(20.8px,2.5vw,27.2px)/1.02 'Cormorant Garamond',serif;letter-spacing:.01em;color:{{ g.titleColor }}">{{ g.cat }}</span>
+                <span aria-hidden="true" style="flex:0 0 auto;font:400 16px/1 'JetBrains Mono',monospace;color:{{ g.arrowColor }};transform:{{ g.arrowTransform }};transition:transform .35s ease,color .35s ease">{{ g.arrowGlyph }}</span>
+              </span>
+            </button>
+            <sc-if value="{{ g.on }}" hint-placeholder-val="{{ false }}">
+              <div id="ax-skill-detail" class="ax-skill-popout" role="region" aria-live="polite" aria-label="Selected skill discipline" style="--ax-detail-row:{{ g.detailDesktopRow }};--ax-detail-mobile-row:{{ g.detailMobileRow }};--ax-connector-left:{{ g.connectorLeft }};--ax-connector-mobile-left:{{ g.connectorMobileLeft }}">
+                <span class="ax-skill-connector" aria-hidden="true"></span>
+                <div class="ax-skill-detail" style="position:relative;overflow:hidden;background:linear-gradient(120deg,#0d0d12,#0a0a0d 68%)">
+                  <span aria-hidden="true" style="position:absolute;left:clamp(14px,3vw,30px);bottom:-58px;font:600 clamp(124px,20vw,208px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:1px rgba(211,176,120,.08);pointer-events:none">{{ g.index }}</span>
+                  <div class="ax-skill-summary" style="position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:28px;padding:clamp(24px,4vw,38.4px)">
+                    <div style="display:flex;align-items:center;gap:10px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078">
+                      <span style="width:5px;height:5px;border-radius:50%;background:#d3b078;box-shadow:0 0 12px rgba(211,176,120,.7)"></span>
+                      Selected discipline
+                    </div>
+                    <div>
+                      <div style="margin-bottom:9.6px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.25em;text-transform:uppercase;color:#ffffff">{{ g.num }} · {{ g.count }} capabilities</div>
+                      <div style="max-width:360px;font:600 clamp(34px,5vw,52px)/.96 'Cormorant Garamond',serif;letter-spacing:-.01em;color:#ece7db">{{ g.cat }}</div>
+                    </div>
                   </div>
-                  <div style="font:500 clamp(19.2px,2.8vw,32px)/1.1 'Cormorant Garamond',serif;color:#ece7db">{{ g.cat }}</div>
-                </div>
-                <div style="width:{{ g.bodyW }};max-width:100%;display:flex;flex-wrap:wrap;gap:6.4px 8px;align-content:flex-end">
-                  <sc-for list="{{ g.items }}" as="sk" hint-placeholder-count="5">
-                    <span style="display:inline-flex;align-items:center;gap:6.4px;padding:5.6px 11.2px;border:1px solid rgba(236,231,219,.16);border-radius:999px;font:400 11.5px Outfit,sans-serif;letter-spacing:.02em;color:#ffffff;transition:border-color .3s,color .3s,box-shadow .3s;cursor:default;white-space:normal" style-hover="border-color:rgba(211,176,120,.55);color:#ece7db;box-shadow:0 0 18px rgba(211,176,120,.1)">
-                      <span style="color:{{ sk.starColor }};font-size:{{ sk.starSize }}px;line-height:1">✦</span>{{ sk.name }}
-                    </span>
-                  </sc-for>
+                  <div style="position:relative;display:flex;flex-direction:column;justify-content:center;gap:20.8px;padding:clamp(24px,4vw,38.4px)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#ffffff">
+                      <span>Core toolkit</span>
+                      <span style="color:#d3b078">{{ g.count }} / {{ skillCount }}</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-content:center">
+                      <sc-for list="{{ g.items }}" as="sk" hint-placeholder-count="5">
+                        <span class="ax-skill-chip" style="display:inline-flex;align-items:center;gap:7.2px;padding:7.2px 12.8px;border:1px solid rgba(236,231,219,.17);border-radius:999px;background:rgba(236,231,219,.018);font:400 12px Outfit,sans-serif;letter-spacing:.02em;color:#ffffff;transition:border-color .3s,color .3s,background .3s,box-shadow .3s;cursor:default;white-space:normal" style-hover="border-color:rgba(211,176,120,.58);color:#ece7db;background:rgba(211,176,120,.05);box-shadow:0 0 18px rgba(211,176,120,.1)">
+                          <span style="color:{{ sk.starColor }};font-size:{{ sk.starSize }}px;line-height:1">✦</span>{{ sk.name }}
+                        </span>
+                      </sc-for>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </sc-if>
           </sc-for>
         </div>
       </div>
@@ -828,19 +952,114 @@
           </div>
 
           <div id="ax-exp-layers" style="position:relative;flex:1;min-height:0">
-            <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:1;will-change:transform,opacity">
-              <div aria-hidden="true" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">01</div>
-              <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">01 / OCT 2024 — PRESENT</div>
-              <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Modus Operandi</div>
-              <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Lead UI Engineer</div>
-              <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Lead UI engineering across three DoD platforms for the Air Force and Navy — spanning targeting analysis, learning management, and naval logistics.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts — the people using the system.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built a Go.js knowledge graph that makes LLM decisions traceable in real time — from prompts and queries to source data.</div>
-                <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Secured mission dashboards with Keycloak RBAC and IC CAPCO markings; achieved 80% test coverage and zero detected vulnerabilities.</div>
+            <div class="ax-exp-layer" style="position:absolute;inset:0;overflow:hidden;opacity:1;will-change:transform,opacity">
+              <div id="ax-modus-track" class="ax-modus-track" aria-label="Modus Operandi experience and program dossiers">
+                <section class="ax-modus-screen ax-modus-summary" aria-hidden="{{ summaryHidden }}">
+                  <!-- offset clear of the swipe rail (cards 02/03 keep right:0 — they have
+                       no rail, and the cards cross-fade so two are never seen at once) -->
+                  <div aria-hidden="true" style="position:absolute;right:clamp(64px,8vw,88px);top:50%;transform:translateY(-50%);font:600 clamp(112px,22vw,240px)/1 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:2px rgba(211,176,120,.1);pointer-events:none;user-select:none">01</div>
+                  <div class="ax-exp-meta" style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.3em;color:#d3b078;margin-bottom:11.2px">01 / OCT 2024 — PRESENT</div>
+                  <div class="ax-exp-co" style="font:600 clamp(30.4px,6vw,70.4px)/1 'Cormorant Garamond',serif;color:#ece7db;letter-spacing:.01em">Modus Operandi</div>
+                  <div class="ax-exp-role" style="font:500 italic clamp(15.2px,2.4vw,22.4px) 'Cormorant Garamond',serif;color:#d3b078;margin:8px 0 19.2px">Lead UI Engineer</div>
+                  <div class="ax-exp-bullets" style="max-width:528px;display:flex;flex-direction:column;gap:9.6px">
+                    <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Lead UI engineering across three DoD platforms for the Air Force and Navy — spanning targeting analysis, learning management, and naval logistics.</div>
+                    <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Selected and flown to Joint Base Langley-Eustis to partner on-site with the Air Force's 363rd ISR Wing analysts — the people using the system.</div>
+                    <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Built a Go.js knowledge graph that makes LLM decisions traceable in real time — from prompts and queries to source data.</div>
+                    <div class="ax-exp-bullet" style="display:flex;gap:11.2px;font:300 clamp(15.2px,2vw,18.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span style="color:#d3b078;flex-shrink:0">✦</span>Secured mission dashboards with Keycloak RBAC and IC CAPCO markings; achieved 80% test coverage and zero detected vulnerabilities.</div>
+                  </div>
+                  <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</div>
+
+                  <!-- The swipe affordance. The button IS the rail, so the whole spine is
+                       the hit target. Its copy is aria-hidden so it doesn't double-announce
+                       against the button's own aria-label. -->
+                  <button type="button" class="ax-modus-cue" onClick="{{ openDossier }}" data-cursor="EXPLORE ✦" aria-expanded="{{ dossierOpen }}" aria-controls="ax-dossier" aria-label="Explore three Modus Operandi program dossiers" tabindex="{{ summaryTabIndex }}">
+                    <span class="ax-modus-cue-run" aria-hidden="true"></span>
+                    <span class="ax-modus-cue-in" aria-hidden="true">
+                      <span class="ax-modus-cue-ticks"><span></span><span></span><span></span></span>
+                      <span class="ax-modus-cue-label">Explore 3 programs</span>
+                      <span class="ax-modus-cue-hint">Swipe or click</span>
+                      <span class="ax-modus-cue-arrow">
+                        <span class="ax-modus-cue-line"></span>
+                        <span class="ax-modus-cue-badge"><svg width="15" height="12" viewBox="0 0 15 12" fill="none"><path d="M1 6H13M8.5 1.5L13 6L8.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+                      </span>
+                    </span>
+                  </button>
+                </section>
+
+                <!-- PROGRAM DOSSIERS — horizontal Modus-only deep dive -->
+                <section id="ax-dossier" class="ax-modus-screen ax-modus-dossier" role="region" aria-labelledby="ax-dossier-title" aria-hidden="{{ dossierHidden }}">
+                  <div id="ax-dossier-panel" class="ax-dossier-shell">
+                    <span aria-hidden="true" style="position:absolute;z-index:4;top:-1px;left:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+                    <span aria-hidden="true" style="position:absolute;z-index:4;top:-1px;right:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+                    <span aria-hidden="true" style="position:absolute;z-index:4;bottom:-1px;left:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+                    <span aria-hidden="true" style="position:absolute;z-index:4;bottom:-1px;right:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
+
+                    <div id="ax-dossier-inner" class="ax-dossier-inner">
+                    <div class="ax-dossier-head">
+                      <button id="ax-dossier-back" class="ax-dossier-back" type="button" onClick="{{ closeDossier }}" data-cursor="BACK ✦" aria-label="Back to Modus Operandi experience" tabindex="{{ dossierTabIndex }}"><svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M13 5H1M5 1L1 5L5 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Back to experience</span></button>
+                      <span id="ax-dossier-title" class="ax-dossier-title">// Program dossiers — public release</span>
+                      <span class="ax-dossier-count" aria-hidden="true">{{ dossierCount }}</span>
+                    </div>
+
+                    <div class="ax-dossier-body">
+                      <div id="ax-dossier-rail" class="ax-dossier-scroll" role="tablist" aria-label="Defense programs" aria-orientation="{{ dossierRailOrientation }}" style="position:relative;z-index:2;display:flex;flex-direction:{{ dossierRailDirection }};width:{{ dossierRailWidth }};height:{{ dossierRailHeight }};flex:none;overflow-x:{{ dossierRailOverflowX }};overflow-y:hidden;overscroll-behavior-x:contain;background:#08080b;border-right:{{ dossierRailBorderRight }};border-bottom:{{ dossierRailBorderBottom }}">
+                        <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
+                          <button type="button" role="tab" id="ax-dossier-tab-{{ p.slug }}" aria-controls="ax-dossier-panel-{{ p.slug }}" aria-selected="{{ p.active }}" onClick="{{ p.activate }}" data-cursor="SELECT ✦" tabindex="{{ dossierTabIndex }}" style="position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5.6px;min-width:{{ dossierTabMinWidth }};min-height:{{ dossierTabMinHeight }};flex:{{ dossierTabFlex }};padding:{{ dossierTabPad }};cursor:pointer;text-align:left;background:{{ p.tabBg }};border:0;border-bottom:1px solid rgba(236,231,219,.09);color:#ece7db;transition:background .35s,color .35s;animation:ax-arch .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:{{ p.delay }}">
+                            <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;color:{{ p.indexColor }}">{{ p.index }}</span>
+                            <span style="font:500 clamp(18.4px,2.3vw,25.6px)/1 'Cormorant Garamond',serif;letter-spacing:.02em;color:{{ p.nameColor }}">{{ p.name }}</span>
+                            <span style="font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:{{ p.branchColor }}">{{ p.branchShort }}</span>
+                            <span aria-hidden="true" style="position:absolute;right:{{ dossierStarRight }};top:{{ dossierStarTop }};bottom:{{ dossierStarBottom }};transform:{{ dossierStarTransform }};color:#d3b078;font-size:10.4px;line-height:1;opacity:{{ p.starOpacity }};text-shadow:0 0 12px rgba(211,176,120,.9);transition:opacity .35s">✦</span>
+                          </button>
+                        </sc-for>
+                      </div>
+
+                      <div style="position:relative;flex:1;min-width:0;min-height:0;background:#0a0a0d">
+                        <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
+                          <section id="ax-dossier-panel-{{ p.slug }}" class="ax-dossier-scroll" role="tabpanel" aria-labelledby="ax-dossier-tab-{{ p.slug }}" aria-hidden="{{ p.hidden }}" style="position:absolute;inset:0;overflow-y:auto;overscroll-behavior-y:auto;padding:{{ dossierDetailPad }};box-sizing:border-box;opacity:{{ p.op }};pointer-events:{{ p.pe }};transition:opacity .38s ease">
+                            <div aria-hidden="true" style="position:absolute;right:clamp(12px,4vw,40px);top:clamp(10px,3vh,28px);font:600 clamp(88px,15vw,160px)/.8 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:1px rgba(211,176,120,.1);pointer-events:none;user-select:none">{{ p.index }}</div>
+                            <div style="position:relative;z-index:1;max-width:656px">
+                              <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:8px">Program {{ p.index }}</div>
+                              <h2 style="margin:0;font:500 clamp(38.4px,6vw,67.2px)/.92 'Cormorant Garamond',serif;letter-spacing:.01em;color:#ece7db">{{ p.name }}</h2>
+                              <div style="margin-top:10.4px;font:500 10px/1.65 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.branchLine }}</div>
+
+                              <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
+                                <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#d3b078;white-space:nowrap">The program</span>
+                                <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
+                              </div>
+                              <p style="margin:0;font:300 clamp(13.6px,1.6vw,15.2px)/1.72 Outfit,sans-serif;color:#ffffff">{{ p.description }}</p>
+
+                              <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
+                                <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;white-space:nowrap">My direct impact — Lead UI Engineer</span>
+                                <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
+                              </div>
+                              <div style="display:flex;flex-direction:column;gap:8px">
+                                <sc-for list="{{ p.impacts }}" as="impact" hint-placeholder-count="3">
+                                  <div style="display:flex;gap:10.4px;font:300 clamp(13.2px,1.5vw,14.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span aria-hidden="true" style="color:#d3b078;flex:none">✦</span><span>{{ impact.text }}</span></div>
+                                </sc-for>
+                              </div>
+
+                              <div class="ax-dossier-stats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:clamp(20.8px,4vh,30.4px);background:rgba(236,231,219,.12);border:1px solid rgba(236,231,219,.12)">
+                                <sc-for list="{{ p.stats }}" as="stat" hint-placeholder-count="3">
+                                  <div style="min-width:0;padding:clamp(10.4px,2vw,16px);background:#0a0a0d">
+                                    <div style="font:500 clamp(17.6px,2.6vw,25.6px)/1 'Cormorant Garamond',serif;color:#ece7db">{{ stat.value }}</div>
+                                    <div style="margin-top:6.4px;font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:{{ dossierStatLetterSpacing }};text-transform:uppercase;color:#ffffff;overflow-wrap:anywhere">{{ stat.label }}</div>
+                                  </div>
+                                </sc-for>
+                              </div>
+
+                              <div style="margin-top:16px;font:500 10px/1.7 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.tags }}</div>
+                              <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
+                                <a data-cursor="OPEN ✦" href="{{ p.href }}" target="_blank" rel="noopener" tabindex="{{ p.linkTabIndex }}" style="display:inline-block;margin-top:14.4px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View the product ↗</a>
+                              </sc-if>
+                            </div>
+                          </section>
+                        </sc-for>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+                </section>
               </div>
-              <div class="ax-exp-tags" style="font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ffffff;margin-top:20.8px">Angular · TypeScript · FastAPI · Go.js · Keycloak · Platform One · Clearance in process</div>
-              <button type="button" class="ax-exp-dossier" onClick="{{ openDossier }}" data-cursor="OPEN ✦" aria-haspopup="dialog" aria-expanded="{{ dossierOpen }}" aria-controls="ax-dossier" style="display:inline-flex;align-items:center;align-self:flex-start;gap:12.8px;margin-top:14.4px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 18px;font:500 10.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:normal;text-align:left" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">Program dossiers — PAiGE · LOGEN · POMML <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transform:rotate(-90deg)"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
             </div>
 
             <div class="ax-exp-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;will-change:transform,opacity">
@@ -1146,79 +1365,6 @@
   </section>
 </div>
 
-<!-- ===== PROGRAM DOSSIERS — Experience deep dive ===== -->
-<sc-if value="{{ dossierOpen }}" hint-placeholder-val="{{ false }}">
-  <div id="ax-dossier" role="dialog" aria-modal="true" aria-labelledby="ax-dossier-title" style="position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:{{ dossierPad }};box-sizing:border-box;background:rgba(7,7,9,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)" onClick="{{ closeDossier }}">
-    <div id="ax-dossier-panel" onClick="{{ stopClose }}" style="position:relative;width:{{ dossierPanelWidth }};height:{{ dossierPanelHeight }};max-width:1040px;max-height:{{ dossierPanelMaxHeight }};display:flex;flex-direction:column;box-sizing:border-box;background:#0a0a0d;border:1px solid rgba(236,231,219,.14);border-radius:{{ dossierRadius }};overflow:hidden;box-shadow:0 28px 90px rgba(0,0,0,.58),0 0 56px rgba(211,176,120,.06);animation:ax-arch .5s cubic-bezier(.16,1,.3,1)">
-      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;top:-1px;left:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
-      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;top:-1px;right:-1px;width:17.6px;height:17.6px;border-top:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
-      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;bottom:-1px;left:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-left:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
-      <span aria-hidden="true" style="display:{{ dossierBrackets }};position:absolute;z-index:4;bottom:-1px;right:-1px;width:17.6px;height:17.6px;border-bottom:1px solid rgba(211,176,120,.7);border-right:1px solid rgba(211,176,120,.7);pointer-events:none"></span>
-
-      <div style="position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;padding:{{ dossierHeaderPad }};background:#09090c;border-bottom:1px solid rgba(211,176,120,.28)">
-        <span id="ax-dossier-title" style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.26em;text-transform:uppercase;color:#d3b078">// Program dossier — public release</span>
-        <button id="ax-dossier-close" type="button" onClick="{{ closeDossier }}" data-cursor="CLOSE ✦" aria-label="Close program dossiers" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;padding:0;cursor:pointer;border:1px solid rgba(236,231,219,.18);border-radius:50%;background:transparent;color:#ece7db;font:400 15px/1 'JetBrains Mono',monospace;transition:color .3s,border-color .3s,background .3s" style-hover="color:#070709;border-color:#d3b078;background:#d3b078">×</button>
-      </div>
-
-      <div style="display:flex;flex-direction:{{ dossierDirection }};flex:1;min-height:0">
-        <div class="ax-dossier-scroll" role="tablist" aria-label="Defense programs" style="position:relative;z-index:2;display:flex;flex-direction:{{ dossierRailDirection }};width:{{ dossierRailWidth }};height:{{ dossierRailHeight }};flex:none;overflow-x:{{ dossierRailOverflowX }};overflow-y:hidden;overscroll-behavior:contain;background:#08080b;border-right:{{ dossierRailBorderRight }};border-bottom:{{ dossierRailBorderBottom }}">
-          <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
-            <button type="button" role="tab" id="ax-dossier-tab-{{ p.slug }}" aria-controls="ax-dossier-panel-{{ p.slug }}" aria-selected="{{ p.active }}" onClick="{{ p.activate }}" data-cursor="SELECT ✦" style="position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5.6px;min-width:{{ dossierTabMinWidth }};min-height:{{ dossierTabMinHeight }};flex:{{ dossierTabFlex }};padding:{{ dossierTabPad }};cursor:pointer;text-align:left;background:{{ p.tabBg }};border:0;border-bottom:1px solid rgba(236,231,219,.09);color:#ece7db;transition:background .35s,color .35s;animation:ax-arch .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:{{ p.delay }}">
-              <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.28em;color:{{ p.indexColor }}">{{ p.index }}</span>
-              <span style="font:500 clamp(18.4px,2.3vw,25.6px)/1 'Cormorant Garamond',serif;letter-spacing:.02em;color:{{ p.nameColor }}">{{ p.name }}</span>
-              <span style="font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:{{ p.branchColor }}">{{ p.branchShort }}</span>
-              <span aria-hidden="true" style="position:absolute;right:{{ dossierStarRight }};top:{{ dossierStarTop }};bottom:{{ dossierStarBottom }};transform:{{ dossierStarTransform }};color:#d3b078;font-size:10.4px;line-height:1;opacity:{{ p.starOpacity }};text-shadow:0 0 12px rgba(211,176,120,.9);transition:opacity .35s">✦</span>
-            </button>
-          </sc-for>
-        </div>
-
-        <div style="position:relative;flex:1;min-width:0;min-height:0;background:#0a0a0d">
-          <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
-            <section id="ax-dossier-panel-{{ p.slug }}" class="ax-dossier-scroll" role="tabpanel" aria-labelledby="ax-dossier-tab-{{ p.slug }}" aria-hidden="{{ p.hidden }}" style="position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:{{ dossierDetailPad }};box-sizing:border-box;opacity:{{ p.op }};pointer-events:{{ p.pe }};transition:opacity .38s ease">
-              <div aria-hidden="true" style="position:absolute;right:clamp(12px,4vw,40px);top:clamp(10px,3vh,28px);font:600 clamp(88px,15vw,160px)/.8 'Cormorant Garamond',serif;color:transparent;-webkit-text-stroke:1px rgba(211,176,120,.1);pointer-events:none;user-select:none">{{ p.index }}</div>
-              <div style="position:relative;z-index:1;max-width:656px">
-                <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.3em;text-transform:uppercase;color:#d3b078;margin-bottom:8px">Program {{ p.index }}</div>
-                <h2 style="margin:0;font:500 clamp(38.4px,6vw,67.2px)/.92 'Cormorant Garamond',serif;letter-spacing:.01em;color:#ece7db">{{ p.name }}</h2>
-                <div style="margin-top:10.4px;font:500 10px/1.65 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.branchLine }}</div>
-
-                <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
-                  <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#d3b078;white-space:nowrap">The program</span>
-                  <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
-                </div>
-                <p style="margin:0;font:300 clamp(13.6px,1.6vw,15.2px)/1.72 Outfit,sans-serif;color:#ffffff">{{ p.description }}</p>
-
-                <div style="display:flex;align-items:center;gap:12.8px;margin:clamp(22.4px,4vh,32px) 0 10.4px">
-                  <span style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;white-space:nowrap">My direct impact — Lead UI Engineer</span>
-                  <span style="height:1px;flex:1;background:rgba(236,231,219,.13)"></span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  <sc-for list="{{ p.impacts }}" as="impact" hint-placeholder-count="3">
-                    <div style="display:flex;gap:10.4px;font:300 clamp(13.2px,1.5vw,14.4px)/1.65 Outfit,sans-serif;color:#ffffff"><span aria-hidden="true" style="color:#d3b078;flex:none">✦</span><span>{{ impact.text }}</span></div>
-                  </sc-for>
-                </div>
-
-                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:clamp(20.8px,4vh,30.4px);background:rgba(236,231,219,.12);border:1px solid rgba(236,231,219,.12)">
-                  <sc-for list="{{ p.stats }}" as="stat" hint-placeholder-count="3">
-                    <div style="min-width:0;padding:clamp(10.4px,2vw,16px);background:#0a0a0d">
-                      <div style="font:500 clamp(17.6px,2.6vw,25.6px)/1 'Cormorant Garamond',serif;color:#ece7db">{{ stat.value }}</div>
-                      <div style="margin-top:6.4px;font:500 10px/1.45 'JetBrains Mono',monospace;letter-spacing:{{ dossierStatLetterSpacing }};text-transform:uppercase;color:#ffffff;overflow-wrap:anywhere">{{ stat.label }}</div>
-                    </div>
-                  </sc-for>
-                </div>
-
-                <div style="margin-top:16px;font:500 10px/1.7 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#ffffff">{{ p.tags }}</div>
-                <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
-                  <a data-cursor="OPEN ✦" href="{{ p.href }}" target="_blank" rel="noopener" style="display:inline-block;margin-top:14.4px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#d3b078;text-decoration:none;border-bottom:1px solid rgba(211,176,120,.4);padding-bottom:3.2px" style-hover="border-color:#d3b078">View the product ↗</a>
-                </sc-if>
-              </div>
-            </section>
-          </sc-for>
-        </div>
-      </div>
-    </div>
-  </div>
-</sc-if>
-
 <!-- ===== CUSTOM CURSOR ===== -->
 <div id="ax-cur-ring" style="position:fixed;left:0;top:0;width:27.2px;height:27.2px;border-radius:999px;border:1px solid rgba(211,176,120,.6);z-index:160;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none"></div>
 <div id="ax-cur-dot" style="position:fixed;left:0;top:0;width:4px;height:4px;border-radius:999px;background:#d3b078;z-index:160;pointer-events:none;transform:translate(-200px,-200px);will-change:transform;display:none;transition:opacity .25s"></div>
@@ -1283,6 +1429,27 @@ class Component extends DCLogic {
     this._expFill = document.getElementById('ax-exp-fill');
     this._expStars = Array.from(document.querySelectorAll('.ax-exp-star'));
     this._expHop = document.getElementById('ax-exp-hop');
+    // ---- Modus Operandi horizontal track ----
+    // The gesture itself is native CSS scroll-snap (see .ax-modus-track). JS only observes
+    // where it landed. Two channels, deliberately separate:
+    //   * continuous — read scrollLeft in the frame loop, write styles directly (_frame).
+    //     Never setState per frame; that would re-render the whole component 60x/sec.
+    //   * discrete   — once the scroll settles, publish dossierOpen for the ARIA/tabindex
+    //     bindings. Debounced, because a flick fires dozens of scroll events.
+    this._modusTrack = document.getElementById('ax-modus-track');
+    this._modusCue = document.querySelector('.ax-modus-cue');
+    this._dossierInner = document.getElementById('ax-dossier-inner');
+    this._modusW = 1;
+    this._modusRaw = -1;
+    this._modusCueOp = '';
+    this._modusInnerSt = '';
+    this._modusLive = null;
+    this._modusReset = false;
+    this._onModusScroll = () => {
+      clearTimeout(this._dossierScrollT);
+      this._dossierScrollT = setTimeout(() => this._syncDossierPosition(), 90);
+    };
+    if (this._modusTrack) this._modusTrack.addEventListener('scroll', this._onModusScroll, { passive: true });
     this._expIdx = -1;
     this._curDot = document.getElementById('ax-cur-dot');
     this._curRing = document.getElementById('ax-cur-ring');
@@ -1335,11 +1502,12 @@ class Component extends DCLogic {
     }, 1000);
 
     this._onNarrow = () => {
-      // Skills-panel layout only. Raised from 760 to 900: between those widths the nine
-      // vertical tab columns are ~60px wide, too thin to set a label like "PERFORMANCE"
-      // at a readable size without breaking it mid-word. The stacked accordion gives the
-      // label the full row instead.
-      const n = innerWidth < 900;
+      // Shared responsive state for JS-driven layouts such as the Program Dossier.
+      // The Skills directory now handles its own breakpoints entirely in CSS.
+      // 760px is not arbitrary: it MUST match the `@media (max-width:760px)` block that
+      // lays the dossier body out as a column. When these two disagreed (this was 900px)
+      // every window between them got a mobile tab rail inside a desktop row layout.
+      const n = innerWidth < 760;
       if (n !== this.state.narrow) this.setState({ narrow: n });
     };
     addEventListener('resize', this._onNarrow);
@@ -1408,8 +1576,9 @@ class Component extends DCLogic {
     if (this._onMove) document.removeEventListener('pointermove', this._onMove);
     if (this._onOver) document.removeEventListener('pointerover', this._onOver);
     if (this._onDossierKey) document.removeEventListener('keydown', this._onDossierKey);
+    if (this._modusTrack && this._onModusScroll) this._modusTrack.removeEventListener('scroll', this._onModusScroll);
     if (this._dossierFocusRaf) cancelAnimationFrame(this._dossierFocusRaf);
-    this._restoreDossierScroll();
+    clearTimeout(this._dossierScrollT);
     document.documentElement.classList.remove('ax-cursor');
   }
 
@@ -1463,6 +1632,9 @@ class Component extends DCLogic {
     this._docScrollH = document.documentElement.scrollHeight;
     this._pinTop = this._expPin.offsetTop;
     this._pinRange = Math.max(1, this._expPin.offsetHeight - this._vh);
+    // one snap screen = one track width. Cached here so the frame loop can normalise
+    // scrollLeft without measuring (clientWidth is a layout read) on every frame.
+    if (this._modusTrack) this._modusW = Math.max(1, this._modusTrack.clientWidth);
     for (const n of this._navLinks) n.top = n.sec ? n.sec.offsetTop : Infinity;
     // only needed by the Skills orbit canvas, which is not currently present in the markup
     if (this._skillsSec && this._orbitCv) {
@@ -1967,6 +2139,77 @@ class Component extends DCLogic {
       // text-shadow is inherited too — same reason as pointer-events above
       s.style.textShadow = active ? '0 0 12px rgba(211,176,120,.9)' : 'none';
     }
+    // ---- Modus Operandi horizontal track ------------------------------------------
+    // Card 01 is the only card with a second screen. Everything here is gated on that
+    // card being the interactive one, so for the rest of the page (and for the other two
+    // cards) this costs one boolean test per frame and reads nothing.
+    if (this._modusTrack) {
+      const modusOn = this._expState[0].pe === 'auto';
+
+      // The rail animates and transitions in only while Modus is the live card. One class
+      // write when it flips — not per frame. This also parks the looping animations, which
+      // _initAnimPause() can't reach (it only scans inline `style` attributes).
+      if (modusOn !== this._modusLive) {
+        this._modusLive = modusOn;
+        if (this._modusCue) this._modusCue.classList.toggle('ax-modus-live', modusOn);
+      }
+
+      if (modusOn) {
+        // READ. scrollLeft is the only measurement; the screen width came from _cacheGeom.
+        // If that ran before the track had been laid out it would have banked 1px, which
+        // would peg t at 1 — re-read once here rather than depend on a later invalidation.
+        if (this._modusW <= 1) this._modusW = Math.max(1, this._modusTrack.clientWidth);
+        const raw = this._modusTrack.scrollLeft;
+        if (raw !== this._modusRaw) {
+          this._modusRaw = raw;
+          const t = Math.min(1, Math.max(0, raw / this._modusW)); // 0 = summary, 1 = dossiers
+
+          // WRITE. Each write is guarded by its own cached last-value, the same discipline
+          // as the layer cross-fade above.
+          // The rail fades out as the gesture pulls the dossier in. Opacity ONLY — it is
+          // absolutely positioned against the summary screen's right edge inside a clipped
+          // track, so translating it sideways would push it out of its own clip box and
+          // shear the panel. The fade alone is what makes the drag feel connected.
+          if (this._modusCue) {
+            const cueOp = Math.max(0, 1 - t * 2.2).toFixed(3);
+            if (cueOp !== this._modusCueOp) { this._modusCueOp = cueOp; this._modusCue.style.opacity = cueOp; }
+          }
+          // The dossier's contents trail its edge slightly, so the panel reads as a surface
+          // being drawn into place. This shifts REAL CONTENT inside a clipped shell, so it
+          // must be exactly zero wherever the track can come to rest — a residual offset
+          // (from a fractional screen width, an interrupted smooth scroll, or a snap that
+          // settles a hair short) would leave the dossier permanently clipped on its left.
+          // Hence the dead zones at both ends rather than a raw (1 - t) ramp.
+          if (this._dossierInner && !this._reduced && !this._low) {
+            const innerSt = (t >= 0.985 || t <= 0.015)
+              ? 'none'
+              : 'translateX(' + ((1 - t) * -40).toFixed(1) + 'px)';
+            if (innerSt !== this._modusInnerSt) {
+              this._modusInnerSt = innerSt;
+              this._dossierInner.style.transform = innerSt;
+            }
+          }
+        }
+      }
+
+      // Once the visitor commits to scrolling on toward Hyperformant, walk the track back
+      // to the summary so card 01 is never left mid-swipe for its next appearance — and so
+      // the cross-fade to card 02 doesn't happen underneath an open dossier. Latched, so
+      // scrolling back up lets them swipe again.
+      const leaving = seg > 0.9;
+      if (leaving && !this._modusReset) {
+        this._modusReset = true;
+        if (this._modusTrack.scrollLeft > 2) {
+          // still fully opaque at 0.9 (the fade starts at 1.06), so glide it back where the
+          // visitor can see it happen; once it's faded there's nothing to watch, so snap.
+          const visible = this._expState[0].op !== '0.000';
+          this._modusTrack.scrollTo({ left: 0, behavior: (visible && !this._reduced) ? 'smooth' : 'auto' });
+        }
+      } else if (!leaving && this._modusReset) {
+        this._modusReset = false;
+      }
+    }
+
     const hopIdx = seg > 2.35 ? 2 : seg > 1.35 ? 1 : seg > 0.35 ? 0 : -1;
     if (hopIdx !== this._expIdx) {
       const tops = [16, 50, 84];
@@ -3219,71 +3462,114 @@ class Component extends DCLogic {
     this._t.push(setTimeout(() => this._shine(), 1650));
   }
 
-  _openDossier(e) {
-    if (this.state.dossierOpen) return;
-    this._dossierTrigger = e && e.currentTarget ? e.currentTarget : document.querySelector('.ax-exp-dossier');
-    const root = document.documentElement;
-    this._dossierPrevOverflow = root.style.overflow;
-    this._dossierPrevPaddingRight = root.style.paddingRight;
-    const scrollbar = Math.max(0, innerWidth - root.clientWidth);
-    root.style.overflow = 'hidden';
-    root.style.paddingRight = scrollbar ? scrollbar + 'px' : this._dossierPrevPaddingRight;
-    this._dossierLocked = true;
-    this.setState({ dossierOpen: true }, () => {
+  // Scroll the track to a screen. Clicking and keying go through the same path the finger
+  // does — the snap container is the single source of truth for horizontal position, and
+  // _syncDossierPosition publishes the result. Nothing here locks the page's own scroll:
+  // the dossier is an inline screen of card 01, not a modal, so vertical scrolling must
+  // keep working the whole time (that is what carries the visitor on to Hyperformant).
+  _gotoModusScreen(i, wantFocus) {
+    const tr = this._modusTrack;
+    if (!tr) return;
+    this._modusW = Math.max(1, tr.clientWidth);
+    this._dossierWantsFocus = i === 1 && !!wantFocus;
+    this._railWantsFocus = i === 0 && !!wantFocus;
+    tr.scrollTo({ left: i * this._modusW, behavior: this._reduced ? 'auto' : 'smooth' });
+    // a snap container that is already at the target fires no scroll event, so the
+    // settle handler would never run — publish directly in that case
+    if (Math.abs(tr.scrollLeft - i * this._modusW) < 2) this._syncDossierPosition();
+  }
+
+  _openDossier() { this._gotoModusScreen(1, true); }
+
+  _closeDossier() { this._gotoModusScreen(0, true); }
+
+  // Called once the horizontal scroll settles (debounced in componentDidMount). Publishes
+  // the landed position into state so the aria-hidden/tabindex/aria-expanded bindings
+  // follow, and moves focus ONLY when the move came from a click or a key — a swipe must
+  // never yank focus out from under the visitor.
+  _syncDossierPosition() {
+    const tr = this._modusTrack;
+    if (!tr) return;
+    const open = tr.scrollLeft > Math.max(1, tr.clientWidth) * 0.5;
+    // The track has come to rest, so both scroll-linked channels get their exact end
+    // values here. _frame's ramps are for the motion between these two states only;
+    // it must never be the thing that decides where a settled panel sits.
+    this._modusW = Math.max(1, tr.clientWidth);
+    if (this._dossierInner) { this._dossierInner.style.transform = 'none'; this._modusInnerSt = 'none'; }
+    if (this._modusCue) {
+      const rest = open ? '0' : '1';
+      this._modusCue.style.opacity = rest;
+      this._modusCueOp = rest;
+    }
+    const wantOpen = this._dossierWantsFocus;
+    const wantRail = this._railWantsFocus;
+    this._dossierWantsFocus = false;
+    this._railWantsFocus = false;
+    const focusAfter = () => {
+      if (!wantOpen && !wantRail) return;
       this._dossierFocusRaf = requestAnimationFrame(() => {
-        const close = document.getElementById('ax-dossier-close');
-        if (close) close.focus();
+        const el = open
+          ? document.getElementById('ax-dossier-back')
+          : document.querySelector('.ax-modus-cue');
+        if (el && document.contains(el) && ((open && wantOpen) || (!open && wantRail))) el.focus();
       });
-    });
+    };
+    if (open !== this.state.dossierOpen) this.setState({ dossierOpen: open }, focusAfter);
+    else focusAfter();
   }
 
-  _restoreDossierScroll() {
-    if (!this._dossierLocked) return;
-    const root = document.documentElement;
-    root.style.overflow = this._dossierPrevOverflow || '';
-    root.style.paddingRight = this._dossierPrevPaddingRight || '';
-    this._dossierLocked = false;
-  }
-
-  _closeDossier() {
-    if (!this.state.dossierOpen) return;
-    const trigger = this._dossierTrigger;
-    this._restoreDossierScroll();
-    this.setState({ dossierOpen: false }, () => {
-      this._dossierFocusRaf = requestAnimationFrame(() => {
-        if (trigger && document.contains(trigger)) trigger.focus();
-      });
-    });
-  }
-
+  // The dossier is a region, not a dialog, so there is no focus trap here — Tab must be
+  // free to leave it and carry on down the page.
   _handleDossierKey(e) {
-    if (!this.state.dossierOpen) return;
     if (e.key === 'Escape') {
+      if (!this.state.dossierOpen) return;
       e.preventDefault();
       this._closeDossier();
       return;
     }
-    if (e.key !== 'Tab') return;
-    const panel = document.getElementById('ax-dossier-panel');
-    if (!panel) return;
-    const focusable = Array.from(panel.querySelectorAll('button:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))
-      .filter((el) => !el.closest('[aria-hidden="true"]'));
-    if (!focusable.length) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    const active = document.activeElement;
+    if (!active || !active.closest) return;
+
+    // Up/Down cycles the three programs when focus is in the tab rail. The markup claims
+    // role="tablist"/role="tab", which is a promise to support exactly this.
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (!active.closest('#ax-dossier-rail')) return;
       e.preventDefault();
+      const n = 3;
+      const next = (this.state.dossierActive + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
+      this.setState({ dossierActive: next }, () => {
+        const tab = document.querySelectorAll('#ax-dossier-rail [role="tab"]')[next];
+        if (tab) tab.focus();
+      });
       return;
     }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!panel.contains(document.activeElement)) {
+
+    // Left/Right moves between the two screens — but only while focus is inside the track,
+    // so arrow keys keep scrolling the page normally everywhere else.
+    if (!active.closest('#ax-modus-track')) return;
+    if (e.key === 'ArrowRight' && !this.state.dossierOpen) {
       e.preventDefault();
-      first.focus();
-    } else if (e.shiftKey && document.activeElement === first) {
+      this._openDossier();
+    } else if (e.key === 'ArrowLeft' && this.state.dossierOpen) {
       e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
+      this._closeDossier();
     }
+  }
+
+  _activateSkill(i) {
+    if (this.state.skillActive === i) return;
+    this.setState({ skillActive: i }, () => {
+      const panel = document.getElementById('ax-skill-detail');
+      if (!panel || this._reduced) return;
+      panel.querySelectorAll('.ax-skill-chip').forEach((chip, ci) => {
+        chip.getAnimations().forEach((animation) => animation.cancel());
+        chip.animate(
+          [{ opacity: 0, transform: 'translateY(7px)' }, { opacity: 1, transform: 'translateY(0)' }],
+          { duration: 360, delay: 55 + ci * 28, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }
+        );
+      });
+    });
   }
 
   renderVals() {
@@ -3302,6 +3588,7 @@ class Component extends DCLogic {
       let n = 0;
       this._skillBase = groups.map((g, gi) => ({
         cat: g[0],
+        index: ('0' + (gi + 1)).slice(-2),
         num: 'V·0' + (gi + 1),
         count: ('0' + g[1].length).slice(-2),
         items: g[1].map((name) => {
@@ -3318,26 +3605,32 @@ class Component extends DCLogic {
     }
     const narrow = this.state.narrow;
     const act = this.state.skillActive;
+    const desktopActiveRow = Math.floor(act / 3) + 1;
+    const mobileActiveRow = Math.floor(act / 2) + 1;
     const skillGroups = this._skillBase.map((g, i) => {
       const on = i === act;
+      const desktopBaseRow = Math.floor(i / 3) + 1;
+      const mobileBaseRow = Math.floor(i / 2) + 1;
       return Object.assign({}, g, {
-        activate: () => { if (this.state.skillActive !== i) this.setState({ skillActive: i }); },
-        flex: narrow ? '0 0 auto' : (on ? '3 1 0%' : '1 1 0%'),
-        // Open-panel height in accordion mode. A single constant has to be sized for the
-        // worst case (a ~360px phone, where the chips of the biggest group need ~11 rows),
-        // which leaves a dead gap on a tablet where the same chips fit in two. Shrink it as
-        // the viewport widens; the floor still clears the tallest group at every width.
-        h: narrow ? (on ? 'clamp(268px,calc(392px - (100vw - 360px) * 0.22),392px)' : '52px') : 'auto',
-        bg: on ? '#0d0d12' : '#0a0a0d',
-        tabOp: on ? '0' : '1',
-        bodyOp: on ? '1' : '0',
-        pe: on ? 'auto' : 'none',
-        tabDir: narrow ? 'row' : 'column',
-        tabPad: narrow ? '0 17.6px' : '16px 1.2px',
-        catSize: narrow ? '10.5px' : 'clamp(10.5px,1.1vw,12px)',
-        catLs: narrow ? '.3em' : '0em',
-        catWs: narrow ? 'nowrap' : 'normal',
-        bodyW: narrow ? '100%' : 'min(352px,100%)'
+        activate: () => this._activateSkill(i),
+        on,
+        pressed: on ? 'true' : 'false',
+        desktopCol: String((i % 3) + 1),
+        desktopRow: String(desktopBaseRow + (desktopBaseRow > desktopActiveRow ? 1 : 0)),
+        mobileCol: i === this._skillBase.length - 1 ? '1 / -1' : String((i % 2) + 1),
+        mobileRow: String(mobileBaseRow + (mobileBaseRow > mobileActiveRow ? 1 : 0)),
+        detailDesktopRow: String(desktopActiveRow + 1),
+        detailMobileRow: String(mobileActiveRow + 1),
+        connectorLeft: (((i % 3) * 100 + 50) / 3).toFixed(4) + '%',
+        connectorMobileLeft: i === this._skillBase.length - 1 ? '50%' : (i % 2 === 0 ? '25%' : '75%'),
+        tileBg: on ? 'linear-gradient(135deg,rgba(211,176,120,.16),rgba(13,13,18,.98) 68%)' : '#0a0a0d',
+        tileShadow: on ? 'inset 0 -2px 0 #d3b078,inset 0 0 28px rgba(211,176,120,.055)' : 'none',
+        titleColor: on ? '#f6e7c4' : '#ece7db',
+        metaColor: on ? '#d3b078' : 'rgba(236,231,219,.58)',
+        ghostColor: on ? 'rgba(211,176,120,.16)' : 'rgba(236,231,219,.045)',
+        arrowColor: on ? '#d3b078' : 'rgba(236,231,219,.35)',
+        arrowGlyph: on ? '↓' : '→',
+        arrowTransform: on ? 'translateY(2px)' : 'translateX(0)'
       });
     });
     const archiveItems = [
@@ -3407,6 +3700,8 @@ class Component extends DCLogic {
         hidden: on ? 'false' : 'true',
         delay: (i * 70) + 'ms',
         hasLink: !!p.href,
+        // only the visible panel of the visible screen is reachable by Tab
+        linkTabIndex: (on && this.state.dossierOpen) ? '0' : '-1',
         tabBg: on ? '#0d0d12' : '#08080b',
         indexColor: on ? '#d3b078' : '#ffffff',
         nameColor: on ? '#ece7db' : '#ffffff',
@@ -3418,8 +3713,6 @@ class Component extends DCLogic {
     return {
       skillGroups,
       skillCount: this._skillCount,
-      skDir: narrow ? 'column' : 'row',
-      skHeight: narrow ? 'auto' : 'clamp(424px,62vh,504px)',
       archiveItems,
       archiveOpen: this.state.archiveOpen,
       archiveLabel: this.state.archiveOpen ? 'Hide the archive' : 'Open the archive — six more works',
@@ -3427,17 +3720,18 @@ class Component extends DCLogic {
       toggleArchive: () => this.setState((s) => ({ archiveOpen: !s.archiveOpen })),
       programs,
       dossierOpen: this.state.dossierOpen,
-      openDossier: (e) => this._openDossier(e),
+      openDossier: () => this._openDossier(),
       closeDossier: () => this._closeDossier(),
-      stopClose: (e) => e.stopPropagation(),
-      dossierPad: narrow ? '0' : 'clamp(16px,4vw,40px)',
-      dossierPanelWidth: narrow ? '100%' : 'min(1040px,100%)',
-      dossierPanelHeight: narrow ? '100%' : 'min(88svh,780px)',
-      dossierPanelMaxHeight: narrow ? 'none' : 'min(88svh,780px)',
-      dossierRadius: narrow ? '0' : '3px',
-      dossierBrackets: narrow ? 'none' : 'block',
-      dossierHeaderPad: narrow ? '11.2px 16px' : '12.8px 19.2px',
-      dossierDirection: narrow ? 'column' : 'row',
+      // Only the screen the track has landed on is exposed to assistive tech and to Tab —
+      // the standard treatment for a two-panel carousel where both panels stay in the DOM.
+      summaryHidden: this.state.dossierOpen ? 'true' : 'false',
+      dossierHidden: this.state.dossierOpen ? 'false' : 'true',
+      summaryTabIndex: this.state.dossierOpen ? '-1' : '0',
+      dossierTabIndex: this.state.dossierOpen ? '0' : '-1',
+      // which PROGRAM is showing (1 of 3) — not which screen. The old hardcoded "02 / 02"
+      // read as a program count and was wrong on both numbers.
+      dossierCount: '0' + (dossierActive + 1) + ' / 03',
+      dossierRailOrientation: narrow ? 'horizontal' : 'vertical',
       dossierRailDirection: narrow ? 'row' : 'column',
       dossierRailWidth: narrow ? '100%' : '232px',
       dossierRailHeight: narrow ? '104px' : 'auto',

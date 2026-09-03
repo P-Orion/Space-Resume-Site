@@ -1,5 +1,48 @@
 # Changelog
 
+## 2026-09-03 — Program Dossiers: finished the horizontal reveal and rebuilt its prompt
+
+- **Made the reveal actually work.** The conversion from a fixed `#ax-dossier` dialog to the
+  inline `#ax-modus-track` snap track had left the JS behind: `_syncDossierPosition()` was
+  called but never defined (a TypeError on every horizontal gesture), and `_openDossier()`
+  was still modal code that locked `<html>` overflow — freezing the page's vertical scroll —
+  without ever scrolling the track, so clicking the prompt did nothing but break the page.
+  Replaced all of it with `_gotoModusScreen(i, wantFocus)` as the one entry point for click
+  and keyboard, plus a real `_syncDossierPosition()` that publishes the landed position.
+- **Rebuilt the prompt as a right-edge panel** (`.ax-modus-cue`, replacing the floating
+  mid-air block): full-height, gold 1px hairline with a travelling light, three ticks for
+  the three programs, and the site's canonical circular gold chevron badge with a pulsing
+  halo so it reads as a button rather than decoration. Copy is `Explore 3 programs` /
+  `Swipe or click`.
+- **Scroll-linked motion.** `_frame()` now reads the track's `scrollLeft` (only while card 01
+  is the live card) and drives the panel's fade/slide-out and a `.ax-dossier-inner` parallax
+  directly, so the drag feels connected instead of binary. Two guarded style writes per
+  frame; parallax is skipped under reduced-motion and on `.ax-tier-low`.
+- **Auto-return.** Once `seg > 0.9` the track walks back to the summary, so card 01 is never
+  left mid-swipe when the visitor scrolls on to Hyperformant. Latched, so scrolling back up
+  lets them swipe again.
+- **Un-collided the ghost `01`.** The prompt and the outlined numeral both sat at
+  `right:0; top:50%`, so the prompt landed dead-centre on the glyph. Card 01's numeral is
+  now offset clear of the panel; cards 02/03 unchanged.
+- **Accessibility.** Added the five bindings the markup referenced but `renderVals()` never
+  supplied (`summaryHidden`, `dossierHidden`, `summaryTabIndex`, `dossierTabIndex`,
+  `p.linkTabIndex`); removed the focus trap (it is a region, not a dialog, so Tab must be
+  able to leave); Escape closes, `←`/`→` move screens while focus is inside the track, and
+  `↑`/`↓` cycle the program tabs (`aria-orientation` now declared). Focus moves only on
+  click/keyboard, never on a swipe.
+- **Fixes found in the same code paths:** `state.narrow` flipped at 900px while its matching
+  CSS flipped at 760px, so every window between them got a mobile tab rail inside a desktop
+  row layout — now both 760px. The dossier head's hardcoded `02 / 02` (wrong next to three
+  programs) is now the program position `01 / 03`. Removed nine orphaned `renderVals` values
+  and the dead `.ax-exp-dossier` height-query rules.
+- Files: `Home page animation redesign/github-export/index.html` (style block, Experience
+  markup, `componentDidMount`, `_cacheGeom`, `_frame`, dossier handlers, `renderVals`);
+  `docs/SITE-GUIDE.md` (four stale dialog references corrected).
+
+## 2026-08-31 — Added Codex project context
+
+- Added `AGENTS.md` so Codex automatically reads and follows `CLAUDE.md`, and documented the bridge in `CLAUDE.md`.
+
 Running log of changes to the site. **Append a new entry at the top after every change.**
 Newest first. Keep entries to a few lines: date, what changed, why, and any file/anchor touched.
 
@@ -11,6 +54,21 @@ Format:
 ```
 
 ---
+
+## 2026-08-31 — Anchored the Skills drawer to its selected category
+
+- Moved the `#ax-skills` detail drawer inside the category grid so it unfolds immediately
+  beneath the selected tile's row instead of remaining below all nine categories.
+- Added responsive row placement, a tile-aligned connector, downward active arrow, and an
+  outward reveal while preserving keyboard, reduced-motion, and mobile behavior.
+
+## 2026-08-31 — Rebuilt Skills as a readable discipline directory
+
+- Replaced the cramped nine-column `#ax-skills` accordion with a responsive 3×3 tile
+  directory and one focused detail panel. Category names now use large editorial type,
+  clearer counts, selected-state contrast, and an animated toolkit reveal.
+- Made all category controls semantic keyboard-focusable buttons, honored reduced motion,
+  and verified selection plus responsive layouts at 390, 760, 1024, and 1440px widths.
 
 ## 2026-08-31 â€” Further emphasized Florida Tech branding
 

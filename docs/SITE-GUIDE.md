@@ -13,8 +13,9 @@ skills are regenerated from source there — this hand-written guide never state
 - **`index.html`** — the entire page. Three zones, top to bottom:
   1. `<head>` + `<helmet>` block: fonts, global CSS, keyframes, responsive media queries
      (lines ~1–53).
-  2. Content markup: intro overlay, fixed background, top bar, the seven sections, and the
-     fixed Program Dossiers dialog mounted after `#ax-page` (lines ~55–1136).
+  2. Content markup: intro overlay, fixed background, top bar, and the seven sections.
+     The Program Dossiers live *inside* Experience card 01 as the second screen of the
+     `#ax-modus-track` horizontal snap track — not as a dialog after `#ax-page`.
   3. `<script type="text/x-dc" data-dc-script>`: all runtime JavaScript — starfield,
      cursor, parallax, scroll-driven experience scene, skills marquee, finale
      (lines ~798–1676).
@@ -135,7 +136,8 @@ the whole file. Keep it in sync when content changes.
    targeting analysis), LOGEN (Navy logistics), and POMML (Air Force learning-management
    system); Angular 19→21 upgrade; Go.js LLM knowledge graph; Keycloak RBAC + CAPCO; visited
    JB Langley-Eustis (363rd ISR Wing). *Angular · TypeScript · FastAPI · Go.js · Keycloak.*
-   Card 01 opens the fixed `#ax-dossier` dialog for the public program deep dives. PAiGE and
+   Card 01 carries a right-edge prompt (`.ax-modus-cue`) that slides the card sideways to
+   `#ax-dossier`, the public program deep dives. PAiGE and
    LOGEN include their Modus Operandi product links; POMML stays deliberately conservative
    until its expansion, audience, and specific impact details are confirmed.
 2. **Hyperformant** — Software Engineer Intern — May 2024–Oct 2024. Production SaaS in
@@ -160,9 +162,15 @@ the whole file. Keep it in sync when content changes.
    (Swapped into this featured slot from the archive in place of "This Very Website" —
    see archive item 1 below.)
 
-### Skills (§III) — marquee list (defined in the script)
-`React, TypeScript, Python, Angular, FastAPI, SQL, MongoDB, Docker, AWS, Azure ML, Figma,
-Next.js, Svelte, TensorFlow, GraphQL, Git, NLP, Tailwind, Keycloak, Supabase`
+### Skills (§III) — interactive discipline directory (defined in `renderVals()`)
+Nine large category buttons form a 3×3 desktop index. Selecting one inserts a full-width
+detail drawer immediately beneath that tile's row, shifts the remaining rows down, and
+aligns a small connector with the selected tile. The grid becomes two columns below
+620px, while the drawer's contents stack below 760px. `skillActive` selects the discipline
+(Agentic AI by default), `_activateSkill()` animates the chips, CSS animates the newly
+mounted drawer, and the category/tool arrays remain in the script.
+The disciplines are Languages, Frameworks, Data & Backend, Cloud & Tools, Design & UI/UX,
+Machine Learning & AI, Agentic AI, Hardware & Prototyping, and Performance.
 
 ### Reference (§VI)
 - **Dr. David Luginbuhl** — Associate Professor, CS & EE, Florida Tech. Email `dluginbuhl@fit.edu`.
@@ -225,9 +233,15 @@ Labeled comment sections inside the script:
 - `// ---- scroll-driven work ----` (~1146) — drives the pinned Experience scene
   (`ax-exp-pin`, 340vh tall), swapping the three `ax-exp-layer`s, plus scroll progress
   (`#ax-progress`) and nav highlighting.
-- Program Dossiers state / focus / scroll-lock handlers live beside `renderVals()`. The dialog
-  locks `<html>` overflow with scrollbar-width compensation (never the fixed-body technique),
-  traps Tab focus, closes on Escape/backdrop, and returns focus to its Experience trigger.
+- Program Dossiers are a **horizontal snap track**, not a dialog. `#ax-modus-track` holds two
+  `.ax-modus-screen`s (summary, dossiers) and native CSS scroll-snap owns the gesture; JS only
+  observes it. `_gotoModusScreen(i, wantFocus)` is the single entry point for click and
+  keyboard, `_syncDossierPosition()` publishes the landed position into `dossierOpen` once the
+  scroll settles (debounced 90ms), and `_frame()` reads `scrollLeft` to drive the prompt's
+  pull-out and the `.ax-dossier-inner` parallax. **It must never lock page scroll** — vertical
+  scrolling is what carries the visitor on to Hyperformant, and `_frame()` returns the track to
+  the summary once `seg > 0.9`. There is no focus trap (it is a region, not a dialog): Escape
+  closes, `←`/`→` move screens while focus is inside the track, `↑`/`↓` cycle the program tabs.
 - Skills marquee names array (~1304) and archive/finale items (~1609, ~1655).
 
 ---
@@ -288,8 +302,8 @@ matching PAiGE / LOGEN / POMML object. Each entry owns its branch lines, public 
 cross-fade, stagger, and link-presence values. Keep the visible Modus Operandi card,
 `#ax-noscript-fallback`, JSON-LD role, `llms.txt`, and this §3 inventory in sync. POMML is
 intentionally limited to confirmed facts — do not infer its expansion, training audience,
-impact bullets, or metrics. The dialog is outside `#ax-page`, so dossier edits must never alter
-`#ax-exp-pin`'s `340vh` scroll math.
+impact bullets, or metrics. The dossiers now live inside `#ax-exp-pin`, so dossier edits must
+never alter its `340vh` scroll math or the `seg` thresholds `_frame()` derives from it.
 
 **Change contact info / résumé:** update the `mailto:`, `tel:`, and LinkedIn `href`s in the
 Contact section (`ax-contact`). Replace `documents/Orion-Powers-Resume.pdf` to swap the
