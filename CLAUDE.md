@@ -1,6 +1,7 @@
 # CLAUDE.md — Space Resume Site
 
-> Auto-loaded by Claude Code at the start of every session. Keep it short; it is a
+> Auto-loaded by Claude Code at the start of every session. Codex is directed by
+> [`AGENTS.md`](AGENTS.md) to read and follow this file too. Keep it short; it is a
 > map and a set of rules, not a full reference. The full reference lives in
 > [`docs/SITE-GUIDE.md`](docs/SITE-GUIDE.md).
 
@@ -18,6 +19,7 @@ Everything else (this file, `docs/`, the root `README.md`) is project tooling th
 
 ```
 Space-Resume-Site/
+├─ AGENTS.md                      ← Codex entry point; loads this guide
 ├─ CLAUDE.md                      ← you are here (project map + rules)
 ├─ docs/
 │  ├─ SITE-GUIDE.md              ← full reference: sections, content, edit cookbook
