@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-17 — Hero CTA buttons: added infill so they read against the starfield
+
+- The three hero buttons ("View the work", "Get in touch", "Résumé ↓") were outline/text-only
+  with no background, making them hard to see against the hero's dark background. Gave each a
+  background fill (solid gold for the primary "View the work", translucent tints for the other
+  two) with matching hover states, keeping the existing gold/ivory palette.
+
 ## 2026-09-03 — Program Dossiers: finished the horizontal reveal and rebuilt its prompt
 
 - **Made the reveal actually work.** The conversion from a fixed `#ax-dossier` dialog to the
