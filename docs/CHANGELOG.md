@@ -9,6 +9,11 @@
 - Added root-level `vercel.json` with `"outputDirectory": "Home page animation redesign/github-export"`
   so Vercel serves that folder as static output, no build command needed (matches the
   "no build step, static HTML/CSS/JS" nature of this project).
+- That alone wasn't enough: the Vercel project's dashboard **Framework Preset** was set to
+  Next.js, so it ran `next build` regardless and failed with "No Next.js version detected"
+  (there's no `package.json`/`next` dependency — this site was never Next.js). Added
+  `"framework": null`, `"buildCommand": null`, `"installCommand": null` to `vercel.json` to
+  override the dashboard preset and force a plain static deploy.
 
 ## 2026-09-23 — Let a phone scroll straight out of the Modus dossier into Hyperformant
 
