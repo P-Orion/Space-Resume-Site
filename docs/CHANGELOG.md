@@ -1,5 +1,500 @@
 # Changelog
 
+## 2026-09-22 — Split the difference on scroll pace, leaning toward the slower side
+
+- User wanted a pace between the last two settings (gain 0.4/cap 52, and gain 0.48/cap
+  64), closer to the slower one. Set `_scrollGain = 0.43`, `_scrollEaseSpeed = 56`.
+- Verified: uniform 430px across Hero/About/Education/Skills for the same scripted wheel
+  input (between the previous 400 and 480 results, as expected), single-notch landing and
+  one-frame reversal responsiveness both still hold.
+
+## 2026-09-22 — Removed the vertical raceway lines from both Starship stages
+
+- Contact-section launch finale (`index.html`, `_stepLaunch` helpers): deleted the single
+  vertical stroke running down the right side of each stage's body.
+  - `_drawStarship`: dropped the "leeward stainless edge" line at `cx + sr * 0.62`
+    (the tile seams that shared its comment stay).
+  - `_drawSuperHeavy`: dropped the thick raceway stroke at `r * 0.5` between the hot-stage
+    ring and the engine skirt.
+- Why: user found the columns odd-looking on both the top and bottom stage. The body
+  gradient, tile/ring seams, grid fins and flaps are untouched.
+
+## 2026-09-22 — Slowed the whole-site scroll pace down, then a bit back up
+
+- User reported Hero/About/Education felt fast and wanted the whole site as slow as the
+  Skills section feels. Verified first with real wheel input via a scripted headless
+  browser at four positions (Hero, About, Education, Skills), each on a fresh page load
+  to avoid the app's own scroll-easing state leaking between measurements: the same wheel
+  input produced the exact same `scrollY` delta everywhere (650px for a fixed 10-tick
+  gesture). The gain/cap were already applying uniformly site-wide — Skills isn't pinned
+  or scroll-jacked, so nothing in this file distinguishes it from Hero/About/Education;
+  the felt difference there is section content/pacing, not a wheel-speed bug.
+- Lowered the pace anyway since that was the actionable ask: `_scrollGain` 0.65 → 0.4 and
+  `_scrollEaseSpeed` 90 → 52. Re-verified uniformity held (400px everywhere) at the new
+  pace.
+- User then said that was too slow — wanted it "a bit" faster, not a lot. Split the
+  difference: `_scrollGain` 0.4 → 0.48, `_scrollEaseSpeed` 52 → 64. Re-verified: uniform
+  480px across all four positions, single-notch landing and one-frame reversal responsiveness
+  both still hold.
+
+## 2026-09-22 — Fixed scrolling sticking whenever the cursor was over the Modus card
+
+- User: with the cursor over the Modus content the scroll "glitches out and stays in about
+  the same place," but at the edge of the screen it scrolls fine.
+- **Two bugs in the capped-wheel scroll, which compounded into that symptom:**
+  1. `_onWheel` handed the gesture off to any element matching
+     `.ax-modus-track, .ax-dossier-scroll` and returned without calling `preventDefault`.
+     But `.ax-modus-track` wraps the *entire* Modus card and is `overflow-y:hidden` — it can
+     never consume a vertical delta. So over the whole card the page fell back to native
+     scrolling, at a different pace to everywhere else (the `_scrollGain` 0.65 never applied).
+  2. `_stepScrollEase` re-synced `_scrollTarget` to `cur` on arrival instead of clearing it,
+     so the target was never null again after the first wheel event and the ease stayed
+     armed permanently. Each native scroll from step 1 was therefore hauled back up to
+     `_scrollEaseSpeed` (90px) on the very next frame, before the next wheel event landed.
+     Net movement ≈ 0 — the "stuck" feel. The same latch would fight any scroll that moves
+     `scrollY` without a wheel event, which is exactly what the function's own comment
+     claimed it did *not* do.
+- **Fix:** the hand-off now tests whether a nested scroller can actually absorb the delta
+  (`_wheelGoesToNestedScroller`: real `overflow-y:auto/scroll`, with room left in the
+  direction of travel) rather than testing for a container by name, and clears
+  `_scrollTarget` when it does hand off. `_stepScrollEase` now nulls the target on arrival.
+  A `closest()` pre-filter keeps the common wheel free of the `scrollHeight` layout read.
+- **Verified** with synthesised wheel gestures at 1440x900: over the card's bullets and at
+  the screen edge now move the page identically (ratio 1.00, both directions), an open
+  dossier panel still scrolls its own 260px internally before handing the remainder to the
+  page, and a horizontal swipe over the card still snaps to the dossier with the page
+  staying put. No console errors.
+
+## 2026-09-22 — Modus cue: one sleek gold arrow, no tick dashes; card fits on phones
+
+Three fixes to the Modus Operandi card (`#ax-exp-pin`, card 01), all user-reported.
+
+**1. The swipe cue's arrow.** Was a solid gold disc (`.ax-modus-cue-badge`, 27.2px circle)
+holding a near-black chevron that slid back and forth on a 2.4s loop, with a 2.8s pulsing
+halo behind the disc. User: "make it 1 gold arrow not a black bouncing one in a gold ball."
+It is now a single 44px-long, 1px-stroke gold arrow drawn by one SVG — no disc, no halo,
+no bounce. The separate `.ax-modus-cue-line` lead-in hairline was folded into the arrow's
+own shaft and removed, so the mark is one object instead of two. Hover went from
+"disc brightens + scales 1.12" to "arrow brightens + slides 5px right."
+Deleted as now-unused: `@keyframes ax-cue-arrow`, `@keyframes ax-cue-halo`,
+`.ax-modus-cue-line`, and the `.ax-modus-live`/reduced-motion hooks that drove them.
+
+**2. The three gold dashes.** `.ax-modus-cue-ticks` (three 12.8px hairlines above the
+"Explore 3 programs" label, staggered on a 3.2s opacity loop, one per dossier) deleted
+outright — markup, base CSS, `@keyframes ax-cue-tick`, the hover rule, and the two
+`display:none` overrides that used to hide them on mobile / short desktop.
+
+**3. The tags footer was getting cut off on phones.** Root cause: the base mobile type
+clamps were all pinned to their *floor* (the `vw` terms are tiny at phone widths), so
+unlike short desktop windows — which already step type and rhythm down via the
+`max-height:800px`/`600px` + `min-width:761px` queries — mobile had no shrink to fall back
+on at all. At 360-390px wide the four bullets wrap to 3-4 lines each, and bullet text, not
+the margins around it, is the dominant cost. Measured before the fix: the tags line ran
+past the bottom of the frame outright on shorter phones (+10px at 360x640, +87px at
+320x568), and on phones tall enough to escape that it still landed inside the 56px
+reserved along the bottom for the cue bar and sat on top of it — including at a perfectly
+ordinary 390x844 iPhone (+14px) and 393x852 (+11px). So this was not an edge-case-only
+bug; it hit the most common phone sizes.
+- Fix: three flat `@media (max-width:760px)` tiers (all phones / below 700px tall / below
+  620px tall) trimming divider gap, meta and role margins, bullet gap and line-height, tags
+  margin, frame padding, and — in tiers 2 and 3 — font size. Flat values, not `vh` ramps,
+  because the dominant variable is discrete wrapped-line count, not a smooth function of
+  height. Dropping bullet font-size is not a new idea here: the existing short-desktop
+  query already goes to 13.6px, and mobile now goes to 13px/11px in the lower two tiers.
+- **Verified** by headless-Chrome measurement of the tags footer against *both* the frame
+  bottom and the cue bar's top edge at 320x480, 320x568, 360x600/640/660/700/760/780,
+  375x600/667, 390x844, 393x852, 412x915 and 430x932 — zero overflow and zero cue overlap
+  at every size, where before the fix 12 of those 14 failed one or both checks. Desktop
+  (17 sizes, 1920x1080 down to 900x780) re-measured unchanged.
+
+## 2026-09-22 — Dialed the fixed scroll back down a notch
+
+- User liked the fix below ("wayy better") but wanted the pace itself a bit slower —
+  not the sluggish/broken feel from before, just less distance per scroll gesture.
+- Added `_scrollGain = 0.65` in `_onWheel`, applied to every wheel delta right before it
+  reaches the target — this is the pace knob (how far one gesture moves the page),
+  separate from `_scrollEaseSpeed` (the ceiling, which still only matters for a delta
+  bigger than one frame can cover). Also lowered `_scrollEaseSpeed` 140 → 90 px/frame
+  (~8400 → ~5400px/s), so a hard sustained flick tops out slower too.
+- Verified: a 100px wheel notch now moves the page 65px (matches the 0.65 gain) and still
+  lands on the very next frame — no lag reintroduced — and reversing direction after a
+  hard flick still changes course on frame 1.
+
+## 2026-09-22 — Found and fixed the real cause of the "hyper slow" scroll
+
+- User reported the previous speed bump barely helped — still "extremely unfunctional."
+  That was a real bug, not a tuning problem: `_stepScrollEase()` called
+  `scrollTo({ top, left, behavior: 'auto' })` every frame. On this page, `behavior: 'auto'`
+  does NOT mean "instant" — per spec it means "defer to the element's `scroll-behavior`
+  CSS," and `html{scroll-behavior:smooth}` is set globally here (for anchor-link jumps).
+  So every one of those per-frame corrections was itself launching a browser-native smooth
+  -scroll animation, which the *next* frame's call (16ms later) immediately restarted
+  before it had gotten anywhere — an endless pile-up of overlapping animations that only
+  ever played their own slow "ease-in" opening beat. Fixed by using `behavior: 'instant'`
+  explicitly, which is unambiguous regardless of the page's CSS.
+- Also replaced the proportional "ease toward target" step (`diff * rate`) with a flat
+  linear clamp (`clamp(diff, -speed, speed)`). The proportional version decayed hard for
+  small deltas — exactly what most real wheel/trackpad input is (a series of small
+  notches, not one long burst) — so ordinary scrolling almost never reached top speed and
+  felt sluggish even before the `behavior` bug. The linear clamp means anything under the
+  per-frame cap lands on the very next frame, same as native; only a delta bigger than the
+  cap gets spread across a couple of extra frames.
+- Raised `_scrollEaseSpeed` 64 → 140 px/frame (~3800 → ~8400px/s at 60fps) and set
+  `_scrollLead` (how far the target may lead the live position) equal to it, so a
+  reversal is caught up within exactly one frame, not several.
+- Verified with scripted wheel events against a local server: a single 100px notch now
+  lands fully on the next frame (previously smeared across a visible decay), a hard
+  sustained flick followed by an immediate reversal changes direction on frame 1, and an
+  extreme single 5000px delta is still correctly capped at 140px for that frame rather
+  than jumping instantly — confirming normal scrolling now feels native while the ceiling
+  still holds for genuinely extreme input.
+
+## 2026-09-22 — Sped up the capped scroll and fixed slow direction reversal
+
+- Follow-up to the wheel-scroll cap below: user reported the capped speed felt way too
+  slow, and reversing direction took forever to take effect.
+- The reversal lag was a real bug, not just a feel issue: `_scrollTarget` accumulated
+  every wheel delta with no limit on how far it could sit ahead of the actual live scroll
+  position. Scroll hard in one direction for a while and the target could end up hundreds
+  of px past where the page visibly was; flicking the other way only nudged that target
+  back a little each tick, so the page kept drifting in the *old* direction until the
+  backlog finally unwound — it looked like the scroll "wouldn't stop."
+- Fix: added `_scrollLead` (`_scrollEaseSpeed / _scrollEaseRate`, the distance one frame's
+  easing can close at top speed) and clamp the target to within that distance of the live
+  `scrollY` on every wheel event, in `_onWheel`. The target can still accumulate across a
+  burst of wheel events (so a hard fling still covers real distance), but it can never
+  run away from the visible position — a reversal is felt within a handful of frames
+  regardless of how long the previous scroll ran.
+- Also raised the speed cap itself: `_scrollEaseSpeed` 34 → 64 (px/frame ceiling, ~2000 →
+  ~3800px/s at 60fps) and `_scrollEaseRate` 0.16 → 0.26 (chases the target harder, less
+  lag behind it). Still well short of native's unbounded fling speed, but no longer reads
+  as sluggish.
+- Verified with the same scripted-wheel-event Playwright approach as before: a sustained
+  synthetic scroll ramped to a steady 64px/frame (matching the new cap exactly), and
+  reversing direction produced a visible decrease in `scrollY` within 3 sampled frames —
+  no lingering drift in the old direction.
+
+## 2026-09-22 — Toned down About Me second-line copy
+
+- User felt "...I like building the whole thing, and building it beautifully" read as
+  gloating. Reworded to swap the self-praise for a concrete detail: "From production DoD
+  software to peer-reviewed machine-learning research — I like building the whole thing,
+  end to end." Updated both duplicated copies in `index.html` (noscript SEO fallback
+  paragraph and the animated About Me paragraph, `data-rv="120"`) to keep them in sync.
+
+## 2026-09-22 — Softened About Me intro copy
+
+- User felt the About Me opener ("...three engineering roles in before I've even finished
+  the degree.") read as too snarky/boastful. Reworded to a plainer, narrative tone: "I'm a
+  Computer Science student at the Florida Institute of Technology, graduating December
+  2026. Along the way, I've worked three engineering roles." Updated both duplicated
+  copies in `index.html` (noscript SEO fallback paragraph and the animated About Me
+  paragraph, `data-rv="0"`) to keep them in sync.
+
+## 2026-09-22 — Capped and smoothed wheel/trackpad scroll speed
+
+- User asked to slow the page's max scroll speed so it can never "get super fast," and
+  feel smoother in general. The page previously relied entirely on native wheel/trackpad
+  scrolling, which has no ceiling — a hard trackpad flick can move `scrollY` thousands of
+  px/s in one jump, which is rough on a heavily scroll-driven page like this one (hero
+  parallax, the Experience pin/rotation, the nav active-link highlight all read `scrollY`
+  once per frame).
+- Added a `wheel` listener (`componentDidMount`, right before the `requestAnimationFrame`
+  loop starts) that intercepts vertical-dominant wheel input, feeds it into a
+  `_scrollTarget`, and lets a new `_stepScrollEase()` chase that target at a clamped max
+  speed (34px/frame ≈ 2000px/s at 60fps, eased in via `diff * 0.16`) — called first thing
+  in `_frame()`, before its one `scrollY` read, so every per-frame animation on the page
+  sees the eased position rather than the raw wheel jump. No matter how hard the wheel or
+  trackpad is flicked, the rendered scroll position can't move faster than that cap and
+  always eases to a stop instead of snapping.
+- Left untouched on purpose: horizontal-dominant wheel gestures (so two-finger horizontal
+  swipes still drive the Modus Operandi card's snap track and the mobile nav strip
+  natively), anything inside `.ax-modus-track` or `.ax-dossier-scroll` (both manage their
+  own native scroll), and `prefers-reduced-motion` visitors (handler no-ops entirely).
+  Keyboard, touch, scrollbar-drag, and anchor-link (`html{scroll-behavior:smooth}`)
+  scrolling all still move `scrollY` directly and are never fought — `_scrollTarget`
+  simply resyncs to wherever they leave it once no wheel-driven ease is in flight.
+- Verified with a scripted Playwright run against a local `python -m http.server`: a
+  single synthetic 4000px wheel flick advanced the page in steady ≤34px steps per frame
+  (never jumped), the page still rendered and transitioned from the intro to the hero
+  normally, and the only console error present (`net::ERR_INVALID_URL` on a `data:` image
+  URI) is pre-existing and unrelated to this change.
+
+## 2026-09-22 — Made the Modus Operandi mobile card scroll instead of clipping
+
+- On phones, the Modus Operandi experience card (`#ax-modus-track` → `.ax-modus-summary`)
+  vertically centers its text block (`justify-content:center`) inside a fixed-height,
+  `overflow:hidden` card. An existing `@media (max-width:760px)` pass already shrank the
+  vertical rhythm (gaps, margins, line-height) to try to make the meta/company/role/four
+  bullets/tags stack fit without clipping, but on real phone viewports it still ran taller
+  than the card. Because the block is *centered*, an overflow that size clips symmetrically
+  off both edges — hiding the company/role header above and the tags/cue below — which read
+  as "nothing but the bullet points," and the swipe cue (pinned `position:absolute;bottom:0`
+  for the "Explore 3 programs" bar) sat on top of whatever bullet landed at the clipped
+  bottom edge.
+- Fix: wrapped the meta/company/role/bullets/tags block in a new `.ax-modus-summary-body`
+  div. On mobile only, that wrapper gets `flex:1;min-height:0;overflow-y:auto` (reusing the
+  `.ax-dossier-scroll` class for the same thin gold scrollbar the program-dossier panels
+  already use) and `.ax-modus-summary` switches from `justify-content:center` to
+  `flex-start`. The swipe-cue button stays a sibling of the wrapper, absolutely positioned
+  against the outer (non-scrolling) card, so it keeps its pinned rail behavior — it's simply
+  no longer competing with centered overflow for the same space. Desktop is untouched: the
+  wrapper has no special styling there, so the existing centered layout renders identically.
+  The existing vh-tuned compression rules for phones/short windows still apply on top of
+  this; the scroll is a safety net for whatever they don't fully absorb, not a replacement
+  for them.
+
+## 2026-09-22 — Restored the "Fig. 01" photo caption, sized to actually fit
+
+- User wanted the caption back after all (the wrap-based fix looked like stacked/broken
+  text), but smaller than both the original and the too-big version. Restored the
+  `Fig. 01` / `Orion — not the constellation` row under the profile photo (`#ax-about`)
+  as a fixed (non-`vw`-scaled) `9.5px`, tightened letter-spacing to `.1em`, and added
+  `white-space:nowrap` so it can no longer silently wrap/overflow — at this size the row
+  comfortably fits the `min(288px,86vw)` photo-caption container on every screen width,
+  phone or desktop.
+
+## 2026-09-22 — Removed the "Fig. 01" photo caption
+
+- Deleted the caption row under the profile photo (`Fig. 01` / `Orion — not the
+  constellation`, `#ax-about` section) entirely rather than continue tuning its sizing —
+  user decided to just drop it after the desktop overflow fix below. No other content
+  referenced it, so no fallback/sync changes needed.
+
+## 2026-09-22 — Fixed the "Fig. 01" photo caption overflowing on desktop
+
+- The caption row under the profile photo (`Fig. 01` / `Orion — not the constellation`,
+  `#ax-about` section) had its font size upsized from a fixed `10px` to
+  `clamp(10px,1.28vw,11.5px)`. The row is a `justify-content:space-between` flex line with
+  no wrap, inside a container capped at `min(288px,86vw)` — effectively a fixed 288px on
+  any screen wider than ~335px. On phones the `1.28vw` term stays pinned at the 10px floor
+  (unchanged from before), but on desktop viewports it immediately clamps to the 11.5px
+  ceiling — ~15% wider text with nowhere to grow, so the two spans no longer fit the fixed
+  288px row and the caption overflowed. Desktop-only bug, as the user suspected. Fixed by
+  adding `flex-wrap:wrap` and a `gap`, plus `text-align:right` on the caption span, so the
+  row wraps to two lines instead of overflowing when the wider desktop text doesn't fit —
+  keeps the bigger text size the user wanted without breaking the layout.
+
+## 2026-09-22 — Title update: Computer Science Networking Society Vice President → President
+
+- "Founder & Vice President" → "Founder & President" for the Computer Science Networking Society
+  leadership entry, in both synced copies (animated `#ax-edu` leadership card and the
+  `#ax-noscript-fallback` mirror). User is now president of the club.
+
+## 2026-09-22 — Added a Hyperformant link to the Work Experience section
+
+- Follow-up to the Projects-card link — added a "Visit Hyperformant ↗" link
+  (`https://hyperformant.co/#hero`) to the Hyperformant entry in the animated Work
+  Experience section (`.ax-exp-tags` block, static markup, not `sc-for`-driven like the
+  dossier programs), styled to match the existing "View the product ↗" link pattern used
+  there for Modus Operandi. Mirrored the same link into the `#ax-noscript-fallback` copy
+  (per the SEO/fallback-sync rule — résumé facts must stay in sync across the animated
+  page and the no-JS fallback) using the same `<a>…</a>.` pattern already used there for
+  the Modus Operandi product-page links.
+
+## 2026-09-22 — Trimmed Professor Recommendation copy, removed em dashes
+
+- User asked to remove em dashes from the Professor Recommendation section and tighten the
+  wording. Fallback intro line ("Dr. David Luginbuhl — Associate Professor...") now uses a comma
+  instead of an em dash. The animated card's testimonial paragraph was tightened and its two
+  em dashes replaced with a colon and a comma+conjunction respectively.
+
+## 2026-09-22 — Corrected Dr. Luginbuhl's department name order
+
+- Professor Recommendation section had "Computer Science & Electrical Engineering" — verified
+  against Florida Tech's official faculty profile (fit.edu/faculty-profiles/l/luginbuhl-david/),
+  which names the department "Electrical Engineering and Computer Science." Fixed in both synced
+  copies (animated `#ax-reference` card and the `#ax-noscript-fallback` mirror). Name, title,
+  email, and phone were already correct; only the department word order was wrong. `llms.txt` and
+  the JSON-LD `@graph` don't mention the professor at all, so nothing to sync there.
+
+## 2026-09-22 — Renamed IEEE Computer Society to Computer Science Networking Society
+
+- Education section's Leadership entry: "IEEE Computer Society" → "Computer Science Networking
+  Society" in both synced copies (animated `#ax-edu` leadership card and the
+  `#ax-noscript-fallback` mirror). Also updated the card's body copy ("Founded Florida Tech's
+  IEEE-CS chapter..." → "...Computer Science Networking Society...").
+- Left the unrelated "IEEE conference format" / "IEEE Format" mentions in the BrainBench project
+  entry untouched — those refer to a publication format, not the club, and weren't part of this
+  rename.
+
+## 2026-09-22 — About Me rewrite + removed "clearance in process" claim
+
+- User confirmed he is not pursuing a DoD security clearance, so removed the "with a DoD
+  security clearance in process" claim everywhere it appeared: the About Me section (animated
+  `#ax-about` and the `#ax-noscript-fallback` mirror), the Modus Operandi experience tags (both
+  the animated `ax-exp-tags` and noscript `.tag` copies), and `llms.txt`.
+- While in there, revised About Me copy: paragraph 1 now reads "...three engineering roles in
+  before I've even finished the degree" (was "...with a DoD security clearance in process").
+  Paragraph 3's closing line now reads "From production DoD software to peer-reviewed
+  machine-learning research — I like building the whole thing, and building it beautifully"
+  (was "...to laser-engraved NFC hardware..."), pointing at the BrainBench research paper
+  instead of the NFC business-card project, since it's a stronger and more verifiable
+  differentiator already established in the Education section. Updated in both synced copies
+  (animated + noscript, per docs/SITE-GUIDE.md §1).
+
+## 2026-09-22 — Hero bio rewrite: dropped buzzword phrasing
+
+- Replaced the "AI-driven decision-support software" bio line with more concrete, less
+  buzzword-dense wording: "I build military-grade, Department of Defense software for the
+  U.S. Air Force and Navy at Modus Operandi. Graduating this fall with a B.S. in Computer
+  Science." Updated in all synced spots (see docs/SITE-GUIDE.md §1): hero `<p>`, the
+  `#ax-noscript-fallback` mirror, `<meta name="description">`, OG/Twitter descriptions,
+  the JSON-LD `Person.description`, and `llms.txt`.
+
+## 2026-09-22 — Hero CTA buttons: sized down slightly
+
+- Follow-up ("a tad smaller") — eased back the previous size bump: font
+  `clamp(16.5px,2.1vw,19px)` → `clamp(14.5px,1.85vw,16.5px)`, padding `17.6px 35.2px` →
+  `15.2px 30.4px`.
+
+## 2026-09-22 — Hero CTA buttons: removed the down-arrow from "Résumé"
+
+- Follow-up — user asked to remove the arrow next to "Résumé". Label is now plain "Résumé"
+  (was "Résumé ↓"); the link still opens the PDF in a new tab as before.
+
+## 2026-09-22 — Hero CTA buttons: bigger, regular-weight text
+
+- Follow-up — user asked for bigger button text that isn't bold. Bumped
+  `clamp(15px,1.9vw,17px)` to `clamp(16.5px,2.1vw,19px)` and dropped weight from 700 to 400
+  (the loaded JetBrains Mono weights are only 400/500, so 700 was being synthetically bolded by
+  the browser anyway). Tightened letter-spacing from `.2em` to `.16em` so the wider regular
+  glyphs at the larger size don't feel loose.
+
+## 2026-09-22 — Linked the Hyperformant Marketing Website Revamp project card
+
+- The "Marketing Website Revamp" entry in the Projects archive (`archiveItems`, tagged
+  W·05 — HYPERFORMANT, 2024) had `href: null`. Set it to `https://hyperformant.co/#hero`
+  so the card renders as a clickable link (the template already conditions on
+  `hasLink: !!p.href`, so no markup changes were needed).
+
+## 2026-09-22 — Hero CTA buttons: bigger label text, dropped the box-shadow glow
+
+- Follow-up — user asked for bigger button text and flagged a "white glow." The glow was the
+  gold `box-shadow` (`rgba(211,176,120,...)`) from the previous pass — at low opacity against
+  the near-black hero background it renders as a pale/whitish halo rather than reading gold, so
+  removed it entirely on rest and hover. Bumped label text from `clamp(12.5px,1.6vw,14px)` to
+  `clamp(15px,1.9vw,17px)` and tightened letter-spacing slightly (`.22em` → `.2em`) to keep it
+  from feeling crowded at the larger size.
+
+## 2026-09-22 — Hero CTA buttons: full gold outline instead of open corner brackets
+
+- Follow-up ("make the corner lines just go all the way around the button... more notable") —
+  swapped the open corner-bracket accents (`style-before`/`style-after` + corner `<span>`s) for
+  a real `border:1.5px solid #d3b078` running the full perimeter, dropped the now-unneeded
+  `position:relative` wrapper and corner spans, raised the fill to `rgba(211,176,120,.12)`, and
+  added a gold-tinted glow shadow (brighter still on hover, with the border lightening to
+  `#f0dcb4`). All three buttons keep the identical-treatment rule from the previous pass.
+
+## 2026-09-22 — Skills directory opens on hover instead of click, with a smooth luxury reveal
+
+- User wanted the Skills section's discipline tabs to reveal their detail panel on hover
+  rather than requiring a click. First pass made the reveal near-instant, but the user then
+  reported it felt "fast and jittery" — softened it into a smoother, more deliberate motion
+  instead.
+- `.ax-skill-tab` (`index.html`, `id="ax-skills"`) gained `onMouseEnter`/`onMouseLeave` wired
+  to two new methods on the component (`_scheduleSkillHover(i)` / `_cancelSkillHover()`,
+  ~line 3564) instead of calling `_activateSkill(i)` directly on hover. `onClick` still calls
+  `_activateSkill(i)` immediately, so touch/keyboard activation is unaffected.
+- The hover path debounces ~110ms before activating, and `onMouseLeave` cancels a pending
+  activation. This isn't just a delay tweak: opening a tile's panel shifts the grid rows below
+  it (the panel is inserted directly under the active tile's row per the existing layout
+  design), so a bare `onMouseEnter` caused a real bug — the mouse passing briefly over
+  intermediate tiles while travelling toward the target fired their hover handlers too,
+  triggering cascading reflows and occasionally leaving the panel showing a different
+  discipline's content than the tile that was actually being hovered, or rendering blank
+  mid-animation. Confirmed both the bug and the fix with Playwright (rapid multi-tile hover
+  transit before settling on a target now always lands on the correct content).
+- Retuned the reveal animation for a "luxury" feel rather than instant/jittery: `ax-skill-unfold`
+  (panel) is now `.48s cubic-bezier(.16,1,.3,1)` (an expo-out ease), `ax-skill-connector-in`
+  (the diamond connector) `.4s` with a `.06s` delay so it trails the panel slightly, and the
+  per-chip stagger in `_activateSkill` (`index.html` ~line 3587) is `340ms` duration with a
+  `90ms` base delay + `26ms` per chip, same expo-out easing throughout.
+
+## 2026-09-22 — Disabled the Contact section's Starship launch/catch finale on mobile
+
+- User asked to stop the rocket launch-and-catch animation from loading on mobile. Gated
+  `_initLaunch()` (`index.html`, near `id="ax-contact"`'s script logic) to bail out when
+  `this._vw < 760` — the same mobile breakpoint used everywhere else on the page (e.g.
+  `_layoutLaunchStage`'s `narrow` check) — so the `IntersectionObserver` that arms the finale
+  is never created on phones. `_launch`/`_launched` stay false, `_stepLaunch` never runs, and
+  the canvas (`#ax-launch-cv`) stays blank; desktop/tablet behavior (≥760px) is unchanged.
+
+## 2026-09-22 — Hero CTA buttons: unified all three to one identical treatment
+
+- Follow-up ("I want them to all have the same design") — the observatory-plaque redesign had
+  given "View the work" a solid-gold filled treatment distinct from the two ghost/outline
+  buttons. Dropped that distinction: all three now share one style (`rgba(211,176,120,.07)`
+  ghost fill, `#ece7db` text, gold corner brackets, same hover fill/shadow) — only the
+  `href`/label differ.
+
+## 2026-09-22 — Bumped small body/label text on desktop by 1.5px, mobile untouched
+
+- User reported desktop text was too small to read comfortably, citing the Leadership card
+  bullets (e.g. "Founded Florida Tech's IEEE-CS chapter…", `font:300 clamp(13px,1.5vw,14.5px)`)
+  as the reference point. Rule: every piece of text whose desktop-rendered size was ≤14.5px got
+  +1.5px added to its own current size; mobile had to stay pixel-identical.
+- This page renders almost all type with `clamp(min, Nvw, max)`, and the mobile breakpoint
+  (`max-width:760px`) is small enough relative to every existing `vw` coefficient that the
+  clamp's `min` term is what actually shows on phones, while `max` is what shows on desktop —
+  confirmed with Playwright (`getComputedStyle` at 375px vs 1440px matches the clamp's min/max
+  exactly). That made the edit mechanical: for any `clamp(...)` whose max was ≤14.5px, only the
+  max was bumped (e.g. `clamp(13px,1.5vw,14.5px)` → `clamp(13px,1.5vw,16px)`); the min and the
+  vw term were left alone, so mobile is untouched by construction.
+- For text that had no `clamp()` at all (a flat `Npx`, same on every screen), converted it to
+  `clamp(Npx, (N/7.8)vw, (N+1.5)px)` — the coefficient is picked so the vw term stays below the
+  min at ≤760px width (mobile keeps the original size exactly) and clears the new max well before
+  typical desktop widths. Applied via a one-off script (`fontshort_re`/`fixedsize_re`/
+  `clamp_prefix_re` over the file) rather than by hand, since ~110 declarations qualified;
+  verified the diff line-by-line afterward.
+- Explicitly excluded from the size bump: single-glyph decorative elements (the `✦` star
+  markers, arrow glyphs) — these aren't reader text, and several are absolutely-positioned/
+  centered in a way that assumes their current size. Also left alone: anything already >14.5px
+  on desktop (nothing there was "too small"), and the short-window-height overrides under
+  `@media (max-height:800px)/(max-height:600px) and (min-width:761px)` for the Experience pin,
+  since their vh-based clamps are deliberately tied to the base clamp's value at specific window
+  heights (per the existing comment above them) and none of their own min/max values were ≤14.5px
+  on a normal-height desktop.
+- Verified with a throwaway Playwright script (`getComputedStyle` on the IEEE Computer Society
+  header, its bullet paragraph, and the Contact card's "Location" label) at 1440×900 and 375×812:
+  desktop sizes all moved to exactly old+1.5px, mobile sizes were byte-identical to before the
+  change.
+
+## 2026-09-22 — Hero CTA buttons: redesigned from scratch as "observatory plaque" style
+
+- Third pass on the hero buttons — after two contrast/brightness tweaks the user still wasn't
+  happy and asked for a from-scratch luxury redesign. Mocked up three directions (hairline
+  foil serif, gold pill + ghost, corner-bracket "observatory plaque") and had the user pick;
+  they chose the corner-bracket style for tying into the constellation/star-chart motif.
+- Rebuilt all three buttons: sharp rectangles, no full border, open gold corner brackets at
+  each corner (two via `style-before`/`style-after` — first use of that pattern in this file —
+  two via explicit absolutely-positioned `<span>` children, since a pseudo-element gets only
+  one `::before` and one `::after` each). Bold uppercase JetBrains Mono (700 weight, 12.5px,
+  .22em tracking). Primary "View the work" is solid `#d3b078` gold with dark low-opacity
+  brackets; "Get in touch" and "Résumé ↓" are near-transparent ghosts with full-opacity gold
+  brackets, differentiated by a slightly warmer tint on Résumé. Kept `data-mag`'s magnetic
+  hover pull and left `transform` out of `style-hover` for the same reason as the prior pass.
+- `style-before`/`style-after` work exactly like the existing `style-hover` convention — the DC
+  runtime treats any `style-<pseudo>` attribute generically (`support.js`'s `collectProps`,
+  `key.startsWith("style-")`), generating a real `::<pseudo>` rule via `createPseudoSheet`. The
+  attribute value must include `content:''` explicitly — nothing adds it automatically.
+
+## 2026-09-22 — Hero CTA buttons: bolder text, stronger contrast, more "clickable"
+
+- Follow-up to the 2026-09-17 infill pass — buttons were still hard to read/notice. Bumped
+  label text from 11px/weight 500 to 13px/weight 700 (tightened letter-spacing slightly to
+  compensate), increased padding, and added a drop shadow to each (gold-tinted glow on the
+  primary "View the work", dark shadow on the other two). Raised the background/border opacity
+  on "Get in touch" and "Résumé ↓" substantially since they were nearly invisible against the
+  starfield. Hover states got matching shadow bumps. Left `transform` out of the hover states
+  deliberately — these links carry `data-mag`, whose per-frame magnetic-hover JS
+  (`this._mags` loop near line 1822) writes `el.style.transform` directly and would fight any
+  CSS-hover transform.
+- **Same day, second pass ("make the buttons brighter"):** lightened the primary gold from
+  `#d3b078` to `#e6c68f` with a stronger glow shadow; raised "Get in touch"'s fill/border
+  opacity further (`.22`/`.75`, text to pure white) and "Résumé ↓"'s gold tint to `.32`/border
+  `.85`, with brighter hover states on both.
+
 ## 2026-09-17 — Hero CTA buttons: added infill so they read against the starfield
 
 - The three hero buttons ("View the work", "Get in touch", "Résumé ↓") were outline/text-only

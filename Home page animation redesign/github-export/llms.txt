@@ -1,8 +1,8 @@
 # Orion Powers
 
-> Software engineer building AI-driven decision-support software for the U.S. Air Force and Navy at Modus Operandi. Computer Science student at the Florida Institute of Technology, graduating December 2026. Based in Melbourne, Florida.
+> Software engineer building military-grade, Department of Defense software for the U.S. Air Force and Navy at Modus Operandi. Computer Science student at the Florida Institute of Technology, graduating December 2026. Based in Melbourne, Florida.
 
-Three professional engineering roles across defense (DoD), SaaS, and applied machine learning. Core areas: full-stack web development (React, Angular, TypeScript, FastAPI), machine learning (Azure ML, local LLMs via Ollama), and hardware prototyping (NFC, 3D printing, laser cutting). A DoD security clearance is in process. This file follows the [llms.txt](https://llmstxt.org) convention for AI agents and assistants — for the full interactive presentation, see the homepage.
+Three professional engineering roles across defense (DoD), SaaS, and applied machine learning. Core areas: full-stack web development (React, Angular, TypeScript, FastAPI), machine learning (Azure ML, local LLMs via Ollama), and hardware prototyping (NFC, 3D printing, laser cutting). This file follows the [llms.txt](https://llmstxt.org) convention for AI agents and assistants — for the full interactive presentation, see the homepage.
 
 ## Background
 

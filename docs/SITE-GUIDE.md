@@ -139,7 +139,11 @@ the whole file. Keep it in sync when content changes.
    Card 01 carries a right-edge prompt (`.ax-modus-cue`) that slides the card sideways to
    `#ax-dossier`, the public program deep dives. PAiGE and
    LOGEN include their Modus Operandi product links; POMML stays deliberately conservative
-   until its expansion, audience, and specific impact details are confirmed.
+   until its expansion, audience, and specific impact details are confirmed. Its
+   meta/company/role/bullets/tags stack is wrapped in `.ax-modus-summary-body`
+   (`.ax-dossier-scroll` for the thin gold scrollbar) — on phones (`max-width:760px`) that
+   wrapper is `overflow-y:auto` so a too-tall stack scrolls instead of clipping under the
+   swipe cue; see the exception noted in the vertical-budget note below.
 2. **Hyperformant** — Software Engineer Intern — May 2024–Oct 2024. Production SaaS in
    React/TS; 3D marketing site (Figma/Spline → Svelte/Webflow). *React · TypeScript · Svelte · Supabase.*
 3. **RARE T Holdings** — Software Engineer — Dec 2022–Jun 2023. Azure ML invoice reading;
@@ -283,6 +287,15 @@ continuously rather than snapping at the breakpoint. **If you add a fifth bullet
 job title, re-check the fit** (measure card height vs. `#ax-exp-layers` height at ~1366x768
 and ~1280x660) and retune those two blocks rather than letting the tail clip. The frame's
 `padding-top` floor of `72px` is deliberate: it clears the 66px fixed `#ax-topbar`.
+
+**Exception — card 01 on phones:** cards 2/3 and the desktop layout still follow "clipped,
+not scrolled" as above. Card 01's own text stack, though, is wrapped in
+`.ax-modus-summary-body` and made `overflow-y:auto` below `max-width:760px` (see Experience
+§IV above), because on real phones the `@media (max-width:760px)` rhythm-compression block
+alone wasn't reliably enough to fit meta + company + role + four bullets + tags inside the
+card without running under the swipe cue. Keep that wrapper (and its mobile `overflow-y:auto`)
+when editing card 01 — don't refactor it back to bare sibling divs, or the clipping/overlap
+bug it fixes comes back on phones.
 
 **Add / edit a project:** the three project cards live in the Projects section (`ax-work`,
 §V), each a `.ax-proj` grid with three sibling children — `.ax-proj-title` (eyebrow + `<h3>`),

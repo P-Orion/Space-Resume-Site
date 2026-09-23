@@ -5,23 +5,23 @@
 > straight from source, so they cannot drift. Narrative/judgment lives in
 > [`SITE-GUIDE.md`](SITE-GUIDE.md).
 
-- **Generated:** 2026-09-17
+- **Generated:** 2026-09-23
 - **Source:** `Home page animation redesign/github-export/index.html`
-- **Lines:** 3757   ·   **Last modified:** 2026-09-17   ·   **Content hash:** `dc9b44aa1167`
+- **Lines:** 3913   ·   **Last modified:** 2026-09-23   ·   **Content hash:** `a4a3f7851a19`
 
 ## Sections (by `data-screen-label`)
 
 | Line | id | Screen label |
 |-----:|----|--------------|
-| 513 | `ax-intro` | Intro |
-| 590 | `ax-hero` | Hero |
-| 675 | `ax-about` | About |
-| 730 | `ax-edu` | Education |
-| 863 | `ax-skills` | Skills |
-| 935 | `ax-exp-pin` | Experience |
-| 1097 | `ax-work` | Projects |
-| 1195 | `ax-reference` | Reference |
-| 1249 | `ax-contact` | Contact |
+| 551 | `ax-intro` | Intro |
+| 628 | `ax-hero` | Hero |
+| 713 | `ax-about` | About |
+| 768 | `ax-edu` | Education |
+| 901 | `ax-skills` | Skills |
+| 973 | `ax-exp-pin` | Experience |
+| 1136 | `ax-work` | Projects |
+| 1234 | `ax-reference` | Reference |
+| 1288 | `ax-contact` | Contact |
 
 ## Nav order (top bar)
 
