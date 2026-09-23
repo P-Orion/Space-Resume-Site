@@ -142,8 +142,14 @@ the whole file. Keep it in sync when content changes.
    until its expansion, audience, and specific impact details are confirmed. Its
    meta/company/role/bullets/tags stack is wrapped in `.ax-modus-summary-body`
    (`.ax-dossier-scroll` for the thin gold scrollbar) — on phones (`max-width:760px`) that
-   wrapper is `overflow-y:auto` so a too-tall stack scrolls instead of clipping under the
-   swipe cue; see the exception noted in the vertical-budget note below.
+   wrapper is `flex:0 1 auto;overflow-y:auto` (sized to its own content, only shrinking and
+   scrolling internally when it has to) and the swipe-cue button switches from its desktop
+   `position:absolute` rail to `position:static`, becoming a normal flex child that flows
+   immediately after the body. That combination is deliberate: an earlier version made the
+   body `flex:1` (stretch to fill the card) while the cue stayed pinned to the card's
+   absolute bottom edge, which left a dead gap between them on tall phone screens where the
+   text alone didn't fill the card. See the exception noted in the vertical-budget note
+   below.
 2. **Hyperformant** — Software Engineer Intern — May 2024–Oct 2024. Production SaaS in
    React/TS; 3D marketing site (Figma/Spline → Svelte/Webflow). *React · TypeScript · Svelte · Supabase.*
 3. **RARE T Holdings** — Software Engineer — Dec 2022–Jun 2023. Azure ML invoice reading;
@@ -290,12 +296,17 @@ and ~1280x660) and retune those two blocks rather than letting the tail clip. Th
 
 **Exception — card 01 on phones:** cards 2/3 and the desktop layout still follow "clipped,
 not scrolled" as above. Card 01's own text stack, though, is wrapped in
-`.ax-modus-summary-body` and made `overflow-y:auto` below `max-width:760px` (see Experience
-§IV above), because on real phones the `@media (max-width:760px)` rhythm-compression block
-alone wasn't reliably enough to fit meta + company + role + four bullets + tags inside the
-card without running under the swipe cue. Keep that wrapper (and its mobile `overflow-y:auto`)
-when editing card 01 — don't refactor it back to bare sibling divs, or the clipping/overlap
-bug it fixes comes back on phones.
+`.ax-modus-summary-body` and made `flex:0 1 auto;overflow-y:auto` below `max-width:760px`
+(see Experience §IV above), because on real phones the `@media (max-width:760px)`
+rhythm-compression block alone wasn't reliably enough to fit meta + company + role + four
+bullets + tags inside the card without running under the swipe cue. The cue itself
+(`.ax-modus-cue`) also switches to `position:static` on phones, so it flows as a normal flex
+child directly after that body instead of staying pinned to the card's absolute bottom edge
+— pinning it to the edge while the body was `flex:1` (an earlier version of this fix) left a
+dead gap on tall phone screens where the text didn't fill the card. Keep both pieces (the
+`overflow-y:auto` wrapper sized with `flex:0 1 auto`, and the static-positioned in-flow cue)
+together when editing card 01 — don't refactor either back to the old absolute/stretch
+arrangement, or the clipping/gap bugs they fix come back on phones.
 
 **Add / edit a project:** the three project cards live in the Projects section (`ax-work`,
 §V), each a `.ax-proj` grid with three sibling children — `.ax-proj-title` (eyebrow + `<h3>`),
@@ -436,6 +447,28 @@ shifts every particle. See the 2026-08-19 changelog entry.
 - **Heavy inline styles + `style-hover`/`data-nav` custom attributes** are interpreted by
   the DC runtime, not standard HTML — don't "clean them up" into stylesheets.
 - **Reduced motion** is respected via `@media (prefers-reduced-motion: reduce)`.
+- **The page must never scroll horizontally — guard this when adding wide/rotating boxes.**
+  Only the deliberate inner rails scroll sideways: `.ax-modus-track` (Modus Operandi program
+  swipe), `#ax-dossier-rail`, and the mobile `#ax-nav`. Each is its own scroll container.
+  `body{overflow-x:clip}` stops an overflowing box being *seen*, but it does **not** stop
+  Chrome for Android sizing the **layout viewport** to the measured content width — when that
+  happens the whole page can be dragged sideways and every centered section renders
+  off-center. Two non-obvious traps:
+  - A **rotating square** overflows far wider than it looks. The About astrolabe rings are
+    squares with `border-radius:999px` spinning under `ax-rot`; a rotated square's bounding
+    box grows up to 1.41× its width even though the drawn circle never moves, so the overflow
+    pulses with the animation and no fixed width fixes it. That's why `#ax-about` carries
+    `overflow-x:clip` as a backstop, and why the rings are capped via `--ax-orbit-d` /
+    `--ax-orbit-step` (widest ring pinned to 88vw below ~470px, crossing over to the original
+    32px step above it). Keep both — the cap keeps the circles *visible*, the clip keeps them
+    from widening the viewport.
+  - Use `overflow-x:clip`, never `hidden`, on a section: `hidden` forces `overflow-y` to
+    `auto` and turns the section into its own scroll box. And never put either on `<html>`
+    (see the comment above `body` in `index.html`) — it freezes `window.scrollY` at 0 and
+    silently kills every scroll-driven effect.
+  - Don't reach for a page-level `touch-action:pan-y` to "just disable" side-swiping: a
+    `pan-y` ancestor also blocks horizontal panning inside the nested rails above, breaking
+    the Modus swipe. Fix the overflowing box instead.
 - **The page is pre-scaled to 80% — match it when you add markup.** The site is authored so
   that its default rendering equals what Chrome showed at 80% zoom. Every `px` in a
   size-bearing property (`font`/`font-size`, `width`/`height` family, `padding`, `margin`,

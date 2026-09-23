@@ -289,6 +289,20 @@
      topbar nav highlight, progress bar) — see docs/CHANGELOG.md. */
   html{scroll-behavior:smooth;width:100%}
   body{margin:0;background:#070709;overflow-x:clip;width:100%}
+  /* Sideways panning: the page must never scroll horizontally — only the deliberate
+     inner rails do (.ax-modus-track, #ax-dossier-rail, #ax-nav), each its own scroll
+     container. body{overflow-x:clip} stops the spill being SEEN, but Chrome for Android
+     still widens the layout viewport to whatever the content measures, so an overflowing
+     box let the whole page be dragged sideways and pushed every centered section
+     off-center. The About astrolabe did exactly that: its rings are SQUARES with
+     border-radius:999px spinning under ax-rot, and a rotating square's bounding box
+     swells up to 1.41x its width even though the drawn circle never moves — so the
+     overflow pulsed with the animation and no width alone could size it away. Clipping
+     the section kills that contribution outright; the --ax-orbit-* cap next to the rings
+     keeps the visible circles inside the screen so nothing is actually cut. Use clip,
+     never hidden: hidden would force overflow-y to auto and make the section its own
+     scroll box. */
+  #ax-about{overflow-x:clip}
   ::selection{background:#d3b078;color:#070709}
   html.ax-cursor, html.ax-cursor *{cursor:none}
   #ax-nav::-webkit-scrollbar{display:none}
@@ -734,17 +748,23 @@
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,256px),1fr));gap:clamp(35.2px,6vw,70.4px);align-items:start">
         <div data-rv="0" style="justify-self:center;position:relative;width:min(288px,86vw)">
-          <!-- astrolabe orbital rings -->
-          <div aria-hidden="true" style="position:absolute;left:50%;top:calc(min(288px, 86vw) / 2);width:0;height:0;pointer-events:none">
-            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(min(288px, 86vw) + 25.6px);height:calc(min(288px, 86vw) + 25.6px);border-radius:999px;border:1.5px solid rgba(211,176,120,.36);filter:drop-shadow(0 0 6px rgba(211,176,120,.55)) drop-shadow(0 0 15px rgba(211,176,120,.28));animation:ax-rot 70s linear infinite">
+          <!-- astrolabe orbital rings. The two outer rings are sized off --ax-orbit-step, which
+               is capped so the widest ring (d + 25.6px + 4 steps) can never exceed 88vw, leaving room
+               for the satellite dots that ride the rim. That cap
+               is load-bearing on phones: an element wider than the screen makes Chrome for Android
+               widen the LAYOUT viewport to fit it, so the whole page could be panned sideways and
+               every centered section sat off-center. body{overflow-x:clip} hides the spill but does
+               not stop that expansion — only keeping the boxes inside the viewport does. -->
+          <div aria-hidden="true" style="--ax-orbit-d:min(288px, 86vw);--ax-orbit-step:min(clamp(18px, 5.5vw, 32px), calc((88vw - var(--ax-orbit-d) - 25.6px) / 4));position:absolute;left:50%;top:calc(var(--ax-orbit-d) / 2);width:0;height:0;pointer-events:none">
+            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(var(--ax-orbit-d) + 25.6px);height:calc(var(--ax-orbit-d) + 25.6px);border-radius:999px;border:1.5px solid rgba(211,176,120,.36);filter:drop-shadow(0 0 6px rgba(211,176,120,.55)) drop-shadow(0 0 15px rgba(211,176,120,.28));animation:ax-rot 70s linear infinite">
               <span style="position:absolute;left:50%;top:0;width:28.8px;height:28.8px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(211,176,120,.55),rgba(211,176,120,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:50%;top:0;width:7.2px;height:7.2px;transform:translate(-50%,-50%);border-radius:999px;background:#f6dfa8;box-shadow:0 0 10px 2px rgba(246,223,168,.95),0 0 28px 6px rgba(211,176,120,.55)"></span>
             </span>
-            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(min(288px, 86vw) + 25.6px + 2 * clamp(18px, 5.5vw, 32px));height:calc(min(288px, 86vw) + 25.6px + 2 * clamp(18px, 5.5vw, 32px));border-radius:999px;border:1.5px dashed rgba(211,176,120,.28);filter:drop-shadow(0 0 5px rgba(211,176,120,.4)) drop-shadow(0 0 12px rgba(211,176,120,.2));animation:ax-rot-r 93s linear infinite">
+            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(var(--ax-orbit-d) + 25.6px + 2 * var(--ax-orbit-step));height:calc(var(--ax-orbit-d) + 25.6px + 2 * var(--ax-orbit-step));border-radius:999px;border:1.5px dashed rgba(211,176,120,.28);filter:drop-shadow(0 0 5px rgba(211,176,120,.4)) drop-shadow(0 0 12px rgba(211,176,120,.2));animation:ax-rot-r 93s linear infinite">
               <span style="position:absolute;left:50%;top:100%;width:30.4px;height:30.4px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(211,176,120,.5),rgba(211,176,120,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:50%;top:100%;color:#f6dfa8;font-size:12px;line-height:1;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(246,223,168,.9),0 0 24px rgba(211,176,120,.6)">✦</span>
             </span>
-            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(min(288px, 86vw) + 25.6px + 4 * clamp(18px, 5.5vw, 32px));height:calc(min(288px, 86vw) + 25.6px + 4 * clamp(18px, 5.5vw, 32px));border-radius:999px;border:1px solid rgba(211,176,120,.18);filter:drop-shadow(0 0 4px rgba(211,176,120,.3));animation:ax-rot 136s linear infinite">
+            <span class="ax-anim" style="position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:calc(var(--ax-orbit-d) + 25.6px + 4 * var(--ax-orbit-step));height:calc(var(--ax-orbit-d) + 25.6px + 4 * var(--ax-orbit-step));border-radius:999px;border:1px solid rgba(211,176,120,.18);filter:drop-shadow(0 0 4px rgba(211,176,120,.3));animation:ax-rot 136s linear infinite">
               <span style="position:absolute;left:85.355%;top:14.645%;width:20.8px;height:20.8px;transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(236,231,219,.45),rgba(236,231,219,0) 68%);filter:blur(1px)"></span>
               <span style="position:absolute;left:85.355%;top:14.645%;width:4.8px;height:4.8px;transform:translate(-50%,-50%);border-radius:999px;background:#ece7db;box-shadow:0 0 8px 1.5px rgba(236,231,219,.9),0 0 18px 3px rgba(236,231,219,.5)"></span>
             </span>

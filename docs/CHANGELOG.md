@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-09-23 — Stopped the page panning sideways on phones
+
+- Report: on a phone, swiping near the left/right edge dragged the whole page sideways and
+  left every centered section sitting off-center.
+- Root cause was the About section's astrolabe rings, and it had two layers:
+  1. **Size.** The rings were `portrait + 25.6px + 4 * clamp(18px, 5.5vw, 32px)` wide. On a
+     390px phone that's ~399px — already wider than the screen.
+  2. **The spin.** Each ring is a *square* `<span>` with `border-radius:999px` rotating under
+     `ax-rot`/`ax-rot-r`. A rotating square's bounding box grows up to 1.41x its width even
+     though the drawn circle never moves, so the overflow *pulsed with the animation*. No
+     fixed width could size that away — which is why the symptom felt intermittent.
+- Why `body{overflow-x:clip}` wasn't already enough: it stops the spill being *seen*, but
+  Chrome for Android still sizes the **layout viewport** to whatever the content measures.
+  The ICB widened to ~413px on a 390px screen, so the page became draggable and everything
+  centered rendered off-center. Measured directly: `documentElement.scrollWidth` was 396–413
+  against a 390px `clientWidth`.
+- Fix, two layers:
+  - The three rings now derive from `--ax-orbit-d` / `--ax-orbit-step` declared on their
+    container. The step is `min(clamp(18px, 5.5vw, 32px), calc((88vw - d - 25.6px) / 4))`, so
+    the widest ring is pinned to 88vw on narrow screens and crosses over to the original 32px
+    step at ~470px wide — the two formulas meet exactly there, so there's no visual jump.
+  - `#ax-about{overflow-x:clip}` as a hard backstop, so that section can never contribute
+    horizontal scrollable overflow regardless of rotation phase. `clip`, not `hidden`:
+    `hidden` would force `overflow-y` to `auto` and make the section its own scroll box.
+- Deliberate horizontal rails are untouched and still scroll: `.ax-modus-track` (Modus
+  Operandi program swipe), `#ax-dossier-rail`, and the mobile `#ax-nav`. No `touch-action`
+  was added at page level precisely because `pan-y` on an ancestor would have broken those
+  nested rails.
+- Verified with headless Chrome across 320/340/360/375/390/412/414/430/450/480/540/600/768/
+  834/1024/1280/1440px, each sampled at 9 scroll depths x 3 time samples to catch the rings
+  mid-rotation: horizontal pan is 0px at every phone width (the 1-3px seen at a few
+  tablet/desktop widths is sub-pixel rounding — `window.scrollX` stays 0 and
+  `scrollWidth == clientWidth` at rest). Scroll machinery compared against the pre-change
+  build at three depths: identical `scrollY`, progress-bar transform and nav highlight.
+- Known limit: at 320px there is genuinely no room left (the innermost ring is
+  `86vw + 25.6px` = 94% of the screen on its own), so the three rings compress nearly on top
+  of each other. It renders fine and, more importantly, no longer overflows. Also note
+  `overflow:clip` needs Safari 16+; the page already depended on it for `body`, and below
+  that the vw cap alone holds down to ~360px.
+
 ## 2026-09-22 — Moved the Modus Operandi mobile swipe cue to flow under the content
 
 - Follow-up to the Modus Operandi mobile-scroll fix: the user checked the live mobile
