@@ -1518,6 +1518,96 @@ class Component extends DCLogic {
       this._dossierScrollT = setTimeout(() => this._syncDossierPosition(), 90);
     };
     if (this._modusTrack) this._modusTrack.addEventListener('scroll', this._onModusScroll, { passive: true });
+
+    // ---- phones: hand a drag back to the page once the panel it started in is spent ----
+    // A touch device latches a gesture to whichever scroller claims its first move and
+    // never re-targets it. The dossier's detail panel is two-plus screens tall on a phone,
+    // so a visitor reading it hit the panel's bottom and the REST of that swipe went
+    // nowhere — they had to lift and swipe again before the page would carry them on to
+    // Hyperformant. One dead gesture in the middle of a read is what made the card feel
+    // like it trapped you.
+    //
+    // These listeners are passive on purpose, and that is safe for the same reason this
+    // is needed at all: at the panel's boundary nothing native is moving — the panel is
+    // done and the page was never latched — so driving the document here collides with
+    // nothing. preventDefault wouldn't be available anyway, because once native scrolling
+    // has begun the browser stops making touchmove cancelable.
+    //
+    // Narrow only. The desktop wheel path (_onWheel) already hands off through
+    // _nestedScrollerFor, and a mouse has no gesture to latch in the first place.
+    this._touchNest = null;    // the scroller this gesture began in; null = leave it alone
+    this._touchY = 0;
+    this._touchTook = false;   // latched once the page is ours for the rest of the drag
+    this._touchV = 0;
+    this._touchT = 0;
+    this._coastRaf = 0;
+    this._stopCoast = () => { if (this._coastRaf) { cancelAnimationFrame(this._coastRaf); this._coastRaf = 0; } };
+    // behavior MUST be 'instant' here for the same reason _stepScrollEase spells out:
+    // html{scroll-behavior:smooth} turns a plain scrollTo into an animation, and one per
+    // touchmove would pile up dozens of overlapping ones.
+    this._pageScrollBy = (dy) => {
+      const max = Math.max(0, (this._docScrollH || document.documentElement.scrollHeight) - (this._vh || innerHeight));
+      const cur = scrollY;
+      const next = Math.max(0, Math.min(max, cur + dy));
+      if (Math.abs(next - cur) < 0.5) return false;
+      scrollTo({ top: next, left: scrollX, behavior: 'instant' });
+      return true;
+    };
+    this._onTouchStart = (e) => {
+      this._stopCoast();
+      this._scrollTarget = null;   // a finger always wins over a stale wheel ease
+      this._touchNest = null;
+      this._touchTook = false;
+      if (!this.state.narrow || e.touches.length !== 1) return;
+      this._touchNest = this._nestedScrollerFor(e.target);
+      this._touchY = e.touches[0].clientY;
+      this._touchV = 0;
+      this._touchT = e.timeStamp;
+    };
+    this._onTouchMove = (e) => {
+      if (!this._touchNest || e.touches.length !== 1) return;
+      const y = e.touches[0].clientY;
+      const dy = this._touchY - y;            // finger up => positive => page goes down
+      if (!dy) return;
+      if (!this._touchTook) {
+        // Still the panel's gesture for as long as it can absorb this direction. Measured
+        // per move rather than once at touchstart because the panel is scrolling natively
+        // underneath us the whole time — its end is a moving target within one drag.
+        const n = this._touchNest;
+        const room = n.scrollHeight - n.clientHeight;
+        if (room > 1 && (dy > 0 ? n.scrollTop < room - 1 : n.scrollTop > 1)) { this._touchY = y; return; }
+        this._touchTook = true;
+      }
+      this._touchY = y;
+      const dt = e.timeStamp - this._touchT;
+      if (dt > 0) { this._touchV = dy / dt; this._touchT = e.timeStamp; }
+      this._pageScrollBy(dy);
+    };
+    this._onTouchEnd = () => {
+      const took = this._touchTook;
+      this._touchNest = null;
+      this._touchTook = false;
+      // Coast on release, so the handoff reads as the same flick carrying on rather than
+      // the page dying under the finger. Nothing clever: the browser's own fling is gone
+      // the moment we take the gesture over, so this stands in for it.
+      // The 0.90 decay is the knob for how far a release travels: the coast covers roughly
+      // v0/(1-decay) px in total, so 0.90 ≈ ten frames' worth. Anything slacker overshot
+      // Hyperformant entirely and dropped the visitor into RARE T.
+      if (!took || this._reduced || Math.abs(this._touchV) < 0.25) return;
+      let v = Math.max(-3, Math.min(3, this._touchV)) * 14;   // px/ms -> px per frame
+      const step = () => {
+        v *= 0.90;
+        if (Math.abs(v) < 0.5 || !this._pageScrollBy(v)) { this._coastRaf = 0; return; }
+        this._coastRaf = requestAnimationFrame(step);
+      };
+      this._coastRaf = requestAnimationFrame(step);
+    };
+    if (this._modusTrack) {
+      this._modusTrack.addEventListener('touchstart', this._onTouchStart, { passive: true });
+      this._modusTrack.addEventListener('touchmove', this._onTouchMove, { passive: true });
+      this._modusTrack.addEventListener('touchend', this._onTouchEnd, { passive: true });
+      this._modusTrack.addEventListener('touchcancel', this._onTouchEnd, { passive: true });
+    }
     this._expIdx = -1;
     this._curDot = document.getElementById('ax-cur-dot');
     this._curRing = document.getElementById('ax-cur-ring');
@@ -1696,6 +1786,13 @@ class Component extends DCLogic {
     if (this._onOver) document.removeEventListener('pointerover', this._onOver);
     if (this._onDossierKey) document.removeEventListener('keydown', this._onDossierKey);
     if (this._modusTrack && this._onModusScroll) this._modusTrack.removeEventListener('scroll', this._onModusScroll);
+    if (this._modusTrack && this._onTouchStart) {
+      this._modusTrack.removeEventListener('touchstart', this._onTouchStart);
+      this._modusTrack.removeEventListener('touchmove', this._onTouchMove);
+      this._modusTrack.removeEventListener('touchend', this._onTouchEnd);
+      this._modusTrack.removeEventListener('touchcancel', this._onTouchEnd);
+    }
+    if (this._stopCoast) this._stopCoast();
     if (this._dossierFocusRaf) cancelAnimationFrame(this._dossierFocusRaf);
     clearTimeout(this._dossierScrollT);
     document.documentElement.classList.remove('ax-cursor');
@@ -1924,25 +2021,36 @@ class Component extends DCLogic {
     scrollTo({ top: cur + step, left: scrollX, behavior: 'instant' });
   }
 
-  // True when some ancestor of `el` is a real scroll container with room left in the
-  // direction of `dy`. Only then does the wheel belong to it rather than to the page.
+  // The nearest ancestor of `el` that is a real vertical scroll container with room left —
+  // and, when `dy` is passed, room left in that direction. Null means the gesture belongs
+  // to the page. Both input paths go through this: the wheel handler asks with a direction
+  // (does this wheel belong to the page?), the touch handoff asks without one (which
+  // scroller did this finger land in?).
   //
   // The `closest` line is a pure fast path: scrollHeight/clientHeight force a layout flush,
   // and the wheel handler is deliberately free of those (note how it reads the cached
   // _docScrollH rather than the live one). Every wheel outside these two regions — which is
   // nearly all of them — therefore costs one selector match and nothing else. A new nested
   // scroller that isn't listed here just scrolls the page instead; add it to the list.
-  _wheelGoesToNestedScroller(el, dy) {
-    if (!el || !el.closest || !el.closest('.ax-dossier-scroll, .ax-modus-summary-body')) return false;
+  // #ax-dossier-rail carries .ax-dossier-scroll but is overflow-y:hidden, so it is skipped
+  // by the overflowY test below and a vertical drag over the phone tab strip just scrolls
+  // the page — which is what you want there.
+  _nestedScrollerFor(el, dy) {
+    if (!el || !el.closest || !el.closest('.ax-dossier-scroll, .ax-modus-summary-body')) return null;
     for (let n = el; n && n.nodeType === 1 && n !== document.body; n = n.parentElement) {
       const room = n.scrollHeight - n.clientHeight;
       if (room <= 1) continue;
       const top = n.scrollTop;
-      if (dy > 0 ? top >= room - 1 : top <= 1) continue;
+      if (dy != null && (dy > 0 ? top >= room - 1 : top <= 1)) continue;
       const oy = getComputedStyle(n).overflowY;
-      if (oy === 'auto' || oy === 'scroll') return true;
+      if (oy === 'auto' || oy === 'scroll') return n;
     }
-    return false;
+    return null;
+  }
+
+  // True when the wheel belongs to a nested scroller rather than to the page.
+  _wheelGoesToNestedScroller(el, dy) {
+    return !!this._nestedScrollerFor(el, dy);
   }
 
   _frame(now) {
@@ -2363,13 +2471,24 @@ class Component extends DCLogic {
       // to the summary so card 01 is never left mid-swipe for its next appearance — and so
       // the cross-fade to card 02 doesn't happen underneath an open dossier. Latched, so
       // scrolling back up lets them swipe again.
-      const leaving = seg > 0.9;
+      //
+      // WHEN that happens differs by input, because what the visitor is doing differs.
+      // On a desktop the rewind is deliberate feedback — the dossier is still fully opaque
+      // at seg 0.9 (the fade only starts at 1.06), so it glides back where you can see it.
+      // On a phone the same moment is the middle of the visitor's own flick out of the
+      // card: a smooth sideways animation on a mandatory-snap container, the cross-fade,
+      // and the settle handler's re-render all landed on one frame while their finger was
+      // still moving, and a fast swipe then interrupted the animation partway and left the
+      // track resting between screens. That pile-up is the stutter. So on narrow screens
+      // the rewind waits until card 01 is fully transparent and then happens instantly —
+      // there is nothing left to watch by then, and nothing left to fight.
+      const narrow = this.state.narrow;
+      const faded = this._expState[0].op === '0.000';   // card 0 only reaches this at seg >= 1.06
+      const leaving = narrow ? faded : seg > 0.9;
       if (leaving && !this._modusReset) {
         this._modusReset = true;
         if (this._modusTrack.scrollLeft > 2) {
-          // still fully opaque at 0.9 (the fade starts at 1.06), so glide it back where the
-          // visitor can see it happen; once it's faded there's nothing to watch, so snap.
-          const visible = this._expState[0].op !== '0.000';
+          const visible = !narrow && !faded;
           this._modusTrack.scrollTo({ left: 0, behavior: (visible && !this._reduced) ? 'smooth' : 'auto' });
         }
       } else if (!leaving && this._modusReset) {

@@ -1,5 +1,61 @@
 # Changelog
 
+## 2026-09-23 — Let a phone scroll straight out of the Modus dossier into Hyperformant
+
+- Report: on a phone, once you swiped into the Modus Operandi program dossiers you couldn't
+  scroll down to the next company. It "tries to shift you back to the Modus page then
+  Hyperformant quickly, but it's glitchy." Desktop was fine and is untouched.
+- Two separate causes, both phone-only. Reproduced in mobile Chromium (iPhone 13 profile)
+  with synthetic touch drags — three full 380px drags were needed to get from the dossier to
+  card 02, and the track rewound mid-flick:
+
+  | drag | page y | seg | track scrollLeft | panel scrollTop |
+  |------|--------|-----|------------------|-----------------|
+  | 1    | 6220   | 0.02| 325              | 365 / 491       |
+  | 2    | 6220   | 0.02| 325              | 491 (at end)    |
+  | 3    | 6585   | 0.71| 325              | 491             |
+  | 4    | 6950   | 1.39| 0 (rewound)      | 491             |
+
+  1. **A dead gesture at the panel's boundary.** A touch device latches a gesture to
+     whichever scroller claims its first move and never re-targets it. The dossier detail
+     panel is 861px of content in a 370px box on a phone, so after it bottomed out the rest
+     of that swipe went nowhere (drag 2 above: panel hits 491, page doesn't move at all) —
+     you had to lift and swipe *again*.
+  2. **The rewind fired in the middle of the flick.** `_frame` rewound the snap track to the
+     summary at `seg > 0.9`, where card 01 is still ~53% opaque, using `behavior:'smooth'`.
+     On a phone that put a sideways animation on a `scroll-snap-type: x mandatory` container,
+     the card cross-fade, and `_syncDossierPosition`'s `setState` re-render all on the same
+     frames as the visitor's own moving finger — and a fast swipe interrupted the animation
+     partway, leaving the track resting between screens.
+- Fixes, both in `index.html`, both gated on `state.narrow` (`innerWidth < 760`):
+  - **Touch handoff.** New passive `touchstart`/`touchmove`/`touchend`/`touchcancel`
+    listeners on `#ax-modus-track`. While the scroller the finger landed in can still absorb
+    the drag direction they do nothing; the moment it can't, they take the gesture over and
+    drive the document with the remaining travel, then coast on release (0.90 per-frame
+    decay) so it reads as one continuous flick. Passive is safe *because* of the bug being
+    fixed: at that boundary nothing native is moving, so there is nothing to collide with —
+    and `preventDefault` wasn't available anyway, since the browser stops making `touchmove`
+    cancelable once native scrolling has begun.
+  - **Rewind timing.** On narrow screens the rewind now waits until card 01 is fully
+    transparent (`op === '0.000'`, i.e. `seg >= 1.06`) and then happens instantly. Nothing
+    to watch by then, nothing to fight. Desktop keeps `seg > 0.9` + `behavior:'smooth'`
+    verbatim — there the glide *is* the feedback, and a mouse has no gesture to latch.
+  - `_wheelGoesToNestedScroller` was split into `_nestedScrollerFor(el, dy)` (returns the
+    scroller; `dy` optional) plus a one-line wrapper, so the wheel path and the touch path
+    share one definition of "which nested scroller owns this". Wheel semantics are
+    unchanged, including its no-layout-read `closest()` fast path.
+- After: drag 1 scrolls the panel, drag 2 finishes the panel **and** carries the page
+  (y 6220 → 6530), drag 3 lands in card 03 with the track already rewound to 0 while card 01
+  is at opacity 0 — the rewind is never seen. Scrolling back up returns to the Modus summary,
+  not a half-open dossier.
+- Desktop regression-checked at 1440x900: the rewind still glides visibly
+  (scrollLeft 887 → 832 → 209 → 0 while card 01 sits at 0.334 opacity), and a wheel over the
+  dossier still scrolls the panel first (0 → 260) and then hands off to the page. No console
+  errors on either profile.
+- `#ax-dossier-rail` carries `.ax-dossier-scroll` but is `overflow-y:hidden`, so it is
+  skipped by the helper's `overflowY` test — a vertical drag over the phone tab strip scrolls
+  the page, which is what you want there.
+
 ## 2026-09-23 — Stopped the page panning sideways on phones
 
 - Report: on a phone, swiping near the left/right edge dragged the whole page sideways and

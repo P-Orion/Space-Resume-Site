@@ -7,21 +7,21 @@
 
 - **Generated:** 2026-09-23
 - **Source:** `Home page animation redesign/github-export/index.html`
-- **Lines:** 3922   ·   **Last modified:** 2026-09-23   ·   **Content hash:** `291829820a95`
+- **Lines:** 4061   ·   **Last modified:** 2026-09-23   ·   **Content hash:** `e10f725e1687`
 
 ## Sections (by `data-screen-label`)
 
 | Line | id | Screen label |
 |-----:|----|--------------|
-| 560 | `ax-intro` | Intro |
-| 637 | `ax-hero` | Hero |
-| 722 | `ax-about` | About |
-| 777 | `ax-edu` | Education |
-| 910 | `ax-skills` | Skills |
-| 982 | `ax-exp-pin` | Experience |
-| 1145 | `ax-work` | Projects |
-| 1243 | `ax-reference` | Reference |
-| 1297 | `ax-contact` | Contact |
+| 574 | `ax-intro` | Intro |
+| 651 | `ax-hero` | Hero |
+| 736 | `ax-about` | About |
+| 797 | `ax-edu` | Education |
+| 930 | `ax-skills` | Skills |
+| 1002 | `ax-exp-pin` | Experience |
+| 1165 | `ax-work` | Projects |
+| 1263 | `ax-reference` | Reference |
+| 1317 | `ax-contact` | Contact |
 
 ## Nav order (top bar)
 
