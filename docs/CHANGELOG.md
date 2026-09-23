@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-23 — Replace the site résumé with the latest supplied PDF
+
+- Replaced `documents/Orion-Powers-Resume.pdf` with the supplied
+  `Orion-Powers-Resume (11).pdf` so every résumé link—including “Download PDF” and
+  “View Online”—now serves the latest résumé.
+- Kept the deployed filename stable, so existing direct résumé URLs and all current site
+  links continue to work without markup changes.
+
 ## 2026-09-23 — Add vercel.json so Vercel deploys find the site
 
 - Repo root has no `package.json`/`vercel.json`, and the deployable site lives nested in
