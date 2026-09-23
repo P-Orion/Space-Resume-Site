@@ -376,14 +376,20 @@
   @media (max-width:760px){
     /* no room for a side panel on a phone: it lies down into a full-width bottom bar,
        label and badge on one row. Same elements, same hit target. */
-    .ax-modus-summary{padding-right:0;padding-bottom:56px;justify-content:flex-start}
+    .ax-modus-summary{padding-right:0;justify-content:center}
     /* the summary's text block can run taller than the card on a phone (four wrapped
        bullets), so it scrolls internally instead of being clipped by the vertical
-       centering above — the swipe cue stays outside it, pinned to the card's own
-       bottom edge, since it's absolutely positioned against .ax-modus-screen, not
-       against this inner scroller. */
-    .ax-modus-summary-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:16px}
-    .ax-modus-cue{top:auto;left:0;right:0;bottom:0;width:auto;height:auto;border-left:0;border-top:1px solid rgba(211,176,120,.45);background:linear-gradient(0deg,rgba(211,176,120,.1),rgba(211,176,120,0));padding:11.2px 0 4.8px}
+       centering above. The cue is taken out of absolute positioning here and becomes
+       a normal flex child that flows immediately after the text (`flex:none` so it
+       stays sized to its own content instead of stretching) — on a tall phone screen
+       the text alone doesn't fill the card, and pinning the cue to the card's bottom
+       edge left a dead gap between it and the content; flowing it right after the
+       body keeps the two visually attached regardless of card height. `flex:0 1 auto`
+       (not `flex:1`) on the body keeps it sized to its own content so it doesn't
+       stretch to fill the leftover space and push the cue away — it only shrinks
+       (and scrolls) when body + cue together are taller than the card. */
+    .ax-modus-summary-body{flex:0 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:16px}
+    .ax-modus-cue{position:static;flex:none;width:auto;height:auto;border-left:0;border-top:1px solid rgba(211,176,120,.45);background:linear-gradient(0deg,rgba(211,176,120,.1),rgba(211,176,120,0));padding:11.2px 0 4.8px;margin-top:16px}
     .ax-modus-cue-run{left:0;top:0;width:56px;height:1px;background:linear-gradient(90deg,rgba(211,176,120,0),#f6e7c4 55%,rgba(211,176,120,0));animation-name:ax-rail-runx}
     .ax-modus-cue-in{flex-direction:row;align-items:center;justify-content:flex-end;gap:11.2px;height:auto;transform:translateY(8px)}
     .ax-modus-live .ax-modus-cue-in{transform:none}
@@ -489,6 +495,9 @@
      below 620px tall (iPhone SE and shorter). Verified with headless-Chrome measurement of the
      tags footer against both the frame and the cue bar at 14 widths/heights from 320x480 to
      430x932 - zero overflow and zero cue overlap at every size tested. */
+  @media (max-width:760px){
+    #ax-resume-actions{justify-content:center !important}
+  }
   @media (max-width:760px){
     #ax-exp-pin [data-div]{margin-bottom:clamp(28px,11vh,88px) !important}
     #ax-exp-pin .ax-exp-meta{margin-bottom:clamp(3px,1.3vh,8px) !important}
@@ -1380,7 +1389,7 @@
             <div style="font:500 clamp(10.5px,1.35vw,12px) 'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:#d3b078;margin-bottom:9.6px">02 — The one-pager</div>
             <div style="font:500 clamp(19.2px,2.6vw,27.2px)/1.1 'Cormorant Garamond',serif;color:#ece7db;margin-bottom:12.8px">Download My Résumé</div>
             <p style="margin:0 0 20.8px;font:300 clamp(14px,1.79vw,15.5px)/1.7 Outfit,sans-serif;color:#ffffff">Experience, skills, and projects — condensed to a single professional page.</p>
-            <div style="display:flex;flex-wrap:wrap;gap:9.6px;margin-bottom:20.8px">
+            <div id="ax-resume-actions" style="display:flex;flex-wrap:wrap;gap:9.6px;margin-bottom:20.8px">
               <a data-cursor="SAVE ✦" href="documents/Orion-Powers-Resume.pdf" download style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:#d3b078;color:#070709;text-decoration:none;border-radius:3px;font:500 clamp(10.5px,1.35vw,12px) 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:background .3s,transform .3s" style-hover="background:#f0dcb4;transform:translateY(-2px)">Download PDF <span style="font-size:10.4px">↓</span></a>
               <a data-cursor="OPEN ✦" href="documents/Orion-Powers-Resume.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:11.2px 19.2px;background:transparent;color:#ece7db;text-decoration:none;border-radius:3px;border:1px solid rgba(236,231,219,.24);font:500 clamp(10.5px,1.35vw,12px) 'JetBrains Mono',monospace;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s" style-hover="border-color:rgba(211,176,120,.7);color:#d3b078">View Online <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#d3b078" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
             </div>

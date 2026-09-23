@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-09-22 — Moved the Modus Operandi mobile swipe cue to flow under the content
+
+- Follow-up to the Modus Operandi mobile-scroll fix: the user checked the live mobile
+  layout on a tall phone (iPhone 15/16-Pro-Max-class screen) and the "Explore 3 programs"
+  bar was sitting far below the text with a big dead gap in between, instead of right under
+  it. Cause: `.ax-modus-summary-body` was `flex:1`, which (via the `flex` shorthand's
+  `flex-basis:0%`) forces a flex item to grow and fill 100% of the leftover column space
+  regardless of its own content size — on a short card that's fine, but on a tall card with
+  short content it stretched the body far past what the text needed, and the cue (pinned
+  `position:absolute;bottom:0` against the outer, non-scrolling card) stayed glued to the
+  actual bottom of that now-oversized box, stranding it below a wall of empty space.
+- Fix: `.ax-modus-summary-body` is now `flex:0 1 auto` (sized to its own content, only
+  shrinking when it has to) instead of `flex:1`, and `.ax-modus-cue` is `position:static`
+  on mobile instead of absolute — it's a normal flex child now, so it flows immediately
+  after the body no matter how tall the card is. `.ax-modus-summary` stays
+  `justify-content:center`, so when body+cue together are shorter than the card the leftover
+  space splits evenly above/below the pair (previously a dead zone below); when they're
+  taller than the card (e.g. phone landscape), the body's `overflow-y:auto` still kicks in
+  and the cue stays attached right under the visible/scrolled portion. Verified across four
+  mobile viewports (a tall Pro-Max-class portrait screen, iPhone SE, a 320×480 phone, and
+  667×320 landscape) — the gap is gone on tall screens and the scroll fallback still engages
+  correctly on the cramped ones.
+
+## 2026-09-22 — Centered the résumé download/view buttons on phone only
+
+- `index.html`: gave the "Download PDF" / "View Online" button row in the Contact
+  section an id (`ax-resume-actions`) and added a `@media (max-width:760px)` rule
+  centering it (`justify-content:center`). Desktop/tablet layout (left-aligned) is
+  unchanged.
+
 ## 2026-09-22 — Split the difference on scroll pace, leaning toward the slower side
 
 - User wanted a pace between the last two settings (gain 0.4/cap 52, and gain 0.48/cap
