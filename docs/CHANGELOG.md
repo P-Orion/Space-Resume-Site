@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-23 — Add vercel.json so Vercel deploys find the site
+
+- Repo root has no `package.json`/`vercel.json`, and the deployable site lives nested in
+  `Home page animation redesign/github-export/` (a path with spaces). Without pointing
+  Vercel at that folder, `vercel build` has nothing to detect/serve at the repo root —
+  build fails or deploys an empty/404 site.
+- Added root-level `vercel.json` with `"outputDirectory": "Home page animation redesign/github-export"`
+  so Vercel serves that folder as static output, no build command needed (matches the
+  "no build step, static HTML/CSS/JS" nature of this project).
+
 ## 2026-09-23 — Let a phone scroll straight out of the Modus dossier into Hyperformant
 
 - Report: on a phone, once you swiped into the Modus Operandi program dossiers you couldn't
