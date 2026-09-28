@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-28 — Hero "View the work" button now jumps to Experience, not Projects
+
+- Changed the hero CTA link (`index.html`, `#ax-hero-inner`) from `href="#ax-work"`
+  (the Projects section) to `href="#ax-exp-pin"` (the Work Experience section), so it
+  lands where a visitor expects "the work" to mean employment history.
+- `#ax-work` is still used by the top nav "Projects" link — unchanged.
+
 ## 2026-09-23 — Replace the site résumé with the latest supplied PDF
 
 - Replaced `documents/Orion-Powers-Resume.pdf` with the supplied

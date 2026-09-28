@@ -5,9 +5,9 @@
 > straight from source, so they cannot drift. Narrative/judgment lives in
 > [`SITE-GUIDE.md`](SITE-GUIDE.md).
 
-- **Generated:** 2026-09-23
+- **Generated:** 2026-09-28
 - **Source:** `Home page animation redesign/github-export/index.html`
-- **Lines:** 4061   ·   **Last modified:** 2026-09-23   ·   **Content hash:** `e10f725e1687`
+- **Lines:** 4061   ·   **Last modified:** 2026-09-28   ·   **Content hash:** `bbead863aa17`
 
 ## Sections (by `data-screen-label`)
 
