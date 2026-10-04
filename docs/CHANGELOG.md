@@ -2259,3 +2259,10 @@ canvas back would bring it straight back. `docs/SITE-GUIDE.md` still documents i
   stable anchors, and record changes. No changes to the site itself.
 
 <!-- Add new entries above this line -->
+
+## 2026-10-03 — Document the portfolio for engineering reviewers
+
+- Replaced the short root README with a project overview, engineering highlights,
+  architecture, local preview commands, deployment details, and maintenance guidance.
+- Linked the primary portfolio at orionpowers.com and the GitHub Pages preview.
+- Documentation-only update; deployable page structure and assets are unchanged.
