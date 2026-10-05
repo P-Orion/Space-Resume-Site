@@ -100,6 +100,10 @@
   ]
 }
 </script>
+<!-- Cookieless analytics: production domains only; preferences and event helpers
+     load first so the before-send filter applies to the initial pageview too. -->
+<script src="./analytics.js" defer></script>
+<script id="ax-umami-script" defer src="https://cloud.umami.is/script.js" data-website-id="42017213-ae64-42c4-b077-65d0951d3c68" data-domains="orionpowers.com,www.orionpowers.com" data-do-not-track="true" data-exclude-hash="true" data-performance="true" data-before-send="axAnalyticsBeforeSend"></script>
 <script src="./support.js" defer></script>
 </head>
 <body>
@@ -246,7 +250,7 @@
 <p><a href="mailto:orionthanhpowers@gmail.com">orionthanhpowers@gmail.com</a> · <a href="tel:+15022328043">+1 (502) 232-8043</a> · <a href="https://linkedin.com/in/orion-powers" target="_blank" rel="noopener">linkedin.com/in/orion-powers</a> · <a href="documents/Orion-Powers-Resume.pdf">Résumé (PDF)</a></p>
 </section>
 </main>
-<footer><p class="meta">© Orion Powers · Melbourne, Florida</p></footer>
+<footer><p class="meta">© Orion Powers · Melbourne, Florida · <a href="privacy.html">Privacy &amp; analytics</a></p></footer>
 </div>
 <script>
 (function(){
@@ -1234,7 +1238,7 @@
 
       <!-- ARCHIVE TOGGLE -->
       <div style="display:flex;justify-content:center;margin:clamp(14.4px,4vh,32px) 0 0">
-        <button onClick="{{ toggleArchive }}" style="display:inline-flex;align-items:center;gap:12.8px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 18px;font:500 clamp(11px,1.41vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:normal;text-align:left" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">{{ archiveLabel }}<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transition:transform .35s cubic-bezier(.16,1,.3,1);transform:{{ chevronRotate }}"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
+        <button id="ax-archive-toggle" onClick="{{ toggleArchive }}" style="display:inline-flex;align-items:center;gap:12.8px;cursor:pointer;background:rgba(211,176,120,.08);border:1px solid rgba(211,176,120,.4);border-radius:999px;padding:10.4px 12px 10.4px 18px;font:500 clamp(11px,1.41vw,12.5px) 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e7d9bf;transition:background .3s,color .3s,border-color .3s;white-space:normal;text-align:left" style-hover="background:rgba(211,176,120,.16);border-color:rgba(211,176,120,.75);color:#f3ead7">{{ archiveLabel }}<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d3b078;color:#070709;flex:none"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transition:transform .35s cubic-bezier(.16,1,.3,1);transform:{{ chevronRotate }}"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button>
       </div>
 
       <sc-if value="{{ archiveOpen }}" hint-placeholder-val="{{ false }}">
@@ -1428,6 +1432,7 @@
 
     <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12.8px;flex-wrap:wrap;padding:20.8px 0;border-top:1px solid rgba(236,231,219,.1);max-width:944px;margin:clamp(38.4px,7vh,67.2px) auto 0;width:100%">
       <span style="font:500 clamp(10px,1.28vw,11.5px) 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff">© MMXXVI Orion Powers</span>
+      <a href="privacy.html" style="font:500 clamp(10px,1.28vw,11.5px) 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#ece7db;text-decoration:underline;text-underline-offset:4px" style-hover="color:#d3b078">Privacy &amp; analytics</a>
       <span style="font:500 clamp(10px,1.28vw,11.5px) 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:#ffffff">Melbourne, Florida · 28.08°N 80.60°W</span>
     </div>
   </section>
@@ -3664,6 +3669,8 @@ class Component extends DCLogic {
       this._t.push(setTimeout(() => this._fireWelcomeStar(), instant ? 200 : 500));
       this._heroEnter(instant);
       this._revealTopbar();
+      // Observe rendered sections only once the intro releases the page.
+      if (window.axAnalytics) window.axAnalytics.observeSections();
     };
     if (!show) { finish(true); return; }
 

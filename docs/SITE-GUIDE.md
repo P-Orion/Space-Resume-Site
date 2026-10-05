@@ -23,6 +23,10 @@ skills are regenerated from source there — this hand-written guide never state
   block, pulls React + ReactDOM + Babel from `unpkg.com` at runtime, and renders.
   **Generated — never edit.**
 - **`image-slot.js`** — drag-and-drop image placeholder component used by the DC runtime.
+- **`analytics.js`** — cookieless Umami event helpers and the before-send privacy filter.
+  Loaded before the hosted tracker in `<head>`; see §10 for domains, events, and validation.
+- **`privacy.html`** — standalone privacy notice linked from both portfolio footers.
+  Contains no analytics script, third-party display resources, or on-page opt-out control.
 - Rendering model: this is a **DC (design-canvas) artifact export**. The `data-props`
   attribute on the script tag exposes editor toggles (see §5).
 - Content normally stays in markup, with two deliberate data-array exceptions in
@@ -217,7 +221,7 @@ once it cleared the cards) — see CHANGELOG 2026-07-16.
   live hero — regenerate by screenshotting the hero at that viewport if the hero changes).
 - Root-level discoverability files (served at the site root, **not** referenced from the page):
   `robots.txt` (allows all crawlers incl. the named AI bots; points to the sitemap),
-  `sitemap.xml` (single-page site — one `<loc>`, update `<lastmod>` on meaningful changes),
+  `sitemap.xml` (portfolio and privacy notice; update `<lastmod>` on meaningful changes),
   `llms.txt` ([llmstxt.org](https://llmstxt.org) AI-agent summary — mirror of the résumé facts;
   keep in sync with the page content the same way as the noscript fallback below).
 - `documents/`: `Orion-Powers-Resume.pdf`.
@@ -493,3 +497,69 @@ shifts every particle. See the 2026-08-19 changelog entry.
   - A few px values live in **JS**, not markup, and are easy to miss: `renderVals()`'s
     `skHeight`, `bodyW`, the mobile accordion `h` and `tabPad`, plus `_glint`'s `width:140px`
     (coupled to its `offsetWidth - 140`). Scale these by hand.
+
+---
+
+## 10. Cookieless analytics (Umami Cloud)
+
+The `<head>` loads `analytics.js` first, then the user's hosted tracker at
+`https://cloud.umami.is/script.js` with website ID
+`42017213-ae64-42c4-b077-65d0951d3c68`. Analytics is restricted to
+`orionpowers.com` and `www.orionpowers.com`; localhost, GitHub Pages beta URLs,
+and preview deployments are excluded. Update both the script's `data-domains`
+and the helper's `domains` set if the production domain changes. No build step
+or backend is needed. The current Umami script sends to `gateway.umami.is/api/send`.
+
+Umami supplies pageviews, visitor/session estimates, approximate geography,
+referrers, browser/device/screen/language information, and page performance
+measurements (`data-performance="true"`). The free Hobby plan currently has
+100,000 events per month and six months of data retention; check account usage
+and current provider pricing before assuming those limits are permanent.
+
+Custom events (names shown in Umami's Events view):
+
+| Event | Properties / meaning |
+|---|---|
+| `section_view` | `section`: hero, about, education, skills, experience, projects, reference, contact; once per section per page load |
+| `section_link_click` | Destination `section` for nav/hero links |
+| `resume_click` | `section`, `action`: view or download; measures a click, not completed reading/downloading |
+| `email_click`, `phone_click` | Portfolio `section`; measures a click, not a sent message/call |
+| `linkedin_click` | `section`, destination hostname |
+| `project_click`, `outbound_click` | `section`, destination hostname |
+| `skill_select` | Public skill category selected by click |
+| `dossier_open`, `program_select` | Experience section / public program slug selected by click |
+| `archive_toggle` | Projects archive button clicked (`#ax-archive-toggle`) |
+
+Clicks are observed with a document capture listener without preventing navigation
+or changing DC/React event handlers; delegation covers the dynamically opened archive.
+`_runIntro()` starts `axAnalytics.observeSections()` when the intro releases the page.
+An IntersectionObserver with a central viewport band counts tall sections such as
+the 340vh Experience scene. No analytics runs inside the animation frame loop.
+Events waiting for a slow tracker are queued in memory only (up to 30), then
+flushed on script load; a blocked/failed tracker never interrupts the portfolio.
+
+`axAnalyticsBeforeSend` filters automatic and custom payloads: strips URL anchors
+and all query parameters except the five `utm_*` campaign keys, whose values must
+be short alphanumeric/hyphen/underscore labels; reduces referrers to their origin.
+Use general labels like `utm_source=nfc&utm_medium=card&utm_campaign=networking`.
+Never encode names, emails, phone numbers, or individual-recipient IDs in campaign
+labels. Custom events use public site labels/hostnames rather than email addresses,
+phone numbers, full outgoing URLs, visitor identities, or contact-form contents.
+No `umami.identify()`, recording, advertising integration, or persistent custom
+visitor ID is used. Umami's own `umami.disabled` preference, Do Not Track, and
+Global Privacy Control are honored; blocked storage conservatively disables sending.
+
+The footer notice (`privacy.html`) explains collection, provider/retention, browser
+privacy signals, and a contact channel for objections. At the user's request it
+has no consent popup or on-page opt-out button. This implementation is not a
+universal legal-compliance determination: consent exceptions and objection
+requirements still depend on the operator's and audience's jurisdictions.
+
+Validate under HTTP and verify desktop/mobile layouts. For payload checks, use
+the real hosted tracker with a local simulation of the production hostname and
+intercept `/api/send` before any network request reaches Umami. Confirm campaign
+sanitization, section deduplication, link navigation, re-rendered archive buttons,
+and zero measurements on preview domains or with privacy signals/disabled storage.
+This avoids adding development traffic to the user's live dashboard. Once deployed,
+visit `orionpowers.com` in a browser allowing analytics and inspect Umami's realtime
+view and Events report; ad blockers and privacy settings can exclude visits.

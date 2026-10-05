@@ -7,6 +7,8 @@ A single-page animated portfolio. Pure static site — HTML, CSS, and JavaScript
 - `index.html` — the whole page (markup + styles + animation logic)
 - `support.js` — the tiny runtime that renders the page (loads React/Babel from a public CDN at runtime)
 - `image-slot.js` — the drag-and-drop image placeholder component used in the Work section
+- `analytics.js` — cookieless Umami events and payload filtering (production domains only)
+- `privacy.html` — privacy notice linked from the portfolio footer
 - `images/` — photos, seals, and project thumbnails
 - `documents/` — the résumé PDF
 
@@ -52,6 +54,16 @@ Then enable Pages in **Settings → Pages** as in step 4–6 above.
 In **Settings → Pages → Custom domain**, enter your domain and add the DNS records GitHub shows you. GitHub provisions HTTPS automatically.
 
 ## Notes
+
+- Analytics is connected to the owner's Umami Cloud website for `orionpowers.com` / `www.orionpowers.com`.
+  After deploying, open the site's dashboard in [Umami Cloud](https://cloud.umami.is/).
+  Pageviews, approximate location, referrals, device details, and performance are measured;
+  résumé/contact/project clicks, section views, and interactive directory selections appear
+  in Events. Local and preview traffic is excluded. Browser privacy signals and ad blockers
+  may exclude visits. See `docs/SITE-GUIDE.md` §10 in the repository for maintenance details.
+- The site has no consent popup or on-page opt-out button. Privacy information and a contact
+  channel are available at `privacy.html`. Consent exemptions and objection requirements
+  depend on jurisdiction; the presence of a cookieless tracker alone is not a legal guarantee.
 
 - An internet connection is required on first load — React and Babel are pulled from `unpkg.com`.
 - Images dropped into the image slots are stored in the visitor's browser only; to ship fixed project screenshots, replace the slots with `<img>` tags pointing at files in `images/`.

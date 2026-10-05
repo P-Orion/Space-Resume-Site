@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-10-05 — Add free, cookieless Umami analytics
+
+- Connected the user's Umami Cloud website ID in `index.html`, limited to
+  `orionpowers.com` / `www.orionpowers.com` so local/preview traffic is excluded.
+- Added `analytics.js` with delegated résumé, email, phone, LinkedIn, project,
+  section-link, skills, dossier, and archive click events. Section views use an
+  IntersectionObserver after the intro releases the rendered page, with once-per-load
+  deduplication and a viewport band that accommodates the tall Experience scene.
+  Enabled Umami's page performance measurements; failures/blocked tracking leave
+  navigation and the animation runtime working.
+- Filtered payload URLs to supported short UTM labels and referrer origins; custom
+  events contain public section/category/program labels and destination hostnames,
+  not email addresses, phone numbers, or full outbound URLs. No visitor identity,
+  session recording, advertising integration, or custom persistent ID is collected.
+  Browser Do Not Track / Global Privacy Control and Umami's disabled preference are
+  honored; unavailable preference storage conservatively suppresses measurements.
+- Added `privacy.html` and links in both rendered/fallback footers. At the user's
+  request, omitted the on-page opt-out button and consent popup; retained browser
+  privacy signals and a contact channel. The notice explains collection and the
+  current six-month free-plan retention. Jurisdiction-specific consent/objection
+  requirements are not resolved solely by choosing cookieless analytics.
+- Added the stable `ax-archive-toggle` anchor, updated the deployment README and
+  site guide, added the privacy URL to the XML sitemap, and refreshed the generated
+  site map. The generated `support.js` runtime is unchanged.
+- Verified desktop/mobile rendering and footer/notice layouts in Chromium. Intercepted
+  payloads from the actual Umami tracker in a local production-domain simulation:
+  confirmed campaign sanitization, all eight section views without duplicates,
+  résumé actions, contact/project events, re-rendered archive handling, and unchanged
+  link behavior. Confirmed zero measurements with browser privacy signals, disabled
+  preferences/storage, and preview domains; a blocked tracker leaves the site working.
+  Development checks sent no events to the user's live dashboard.
+
 ## 2026-09-28 — Hero "View the work" button now jumps to Experience, not Projects
 
 - Changed the hero CTA link (`index.html`, `#ax-hero-inner`) from `href="#ax-work"`
