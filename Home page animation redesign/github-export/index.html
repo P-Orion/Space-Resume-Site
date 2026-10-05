@@ -474,16 +474,24 @@
      in, and the sticky frame clips anything that doesn't fit. Card 01 is the tallest (four
      bullets), so on short windows it used to run past the bottom of the frame. Step the
      type and vertical rhythm down with viewport height instead of letting the tail clip. */
-  @media (max-height:800px) and (min-width:761px){
-    /* the vh terms are picked to equal the base clamp values exactly at 800px tall, so the
-       card scales down continuously as the window shortens rather than snapping at the
-       breakpoint */
+  /* Last-resort guard for any height the tiers below miss: `safe` centering keeps the top
+     of the card pinned in view instead of overflowing both ends, and the body scrolls
+     rather than clipping its tail. When the card fits (the normal case) neither engages. */
+  @media (min-width:761px){
+    #ax-exp-pin .ax-modus-summary{justify-content:safe center}
+    #ax-exp-pin .ax-modus-summary-body{min-height:0;overflow-y:auto}
+  }
+  @media (max-height:900px) and (min-width:761px){
+    /* The card needs ~585px at full size but the frame only gives it ~0.75vh - 80px, so
+       common laptop sizes (1366x768, 1536x864) clipped it top and bottom. The vh terms
+       land on the base clamp values at ~900px tall, so the card scales down continuously
+       as the window shortens rather than snapping at the breakpoint. */
     #ax-exp-pin .ax-exp-meta{margin-bottom:9.6px !important}
-    #ax-exp-pin .ax-exp-co{font-size:clamp(33.6px,8.8vh,70.4px) !important}
-    #ax-exp-pin .ax-exp-role{font-size:clamp(15.2px,2.8vh,22.4px) !important;margin:6.4px 0 15.2px !important}
-    #ax-exp-pin .ax-exp-bullets{gap:8px !important}
-    #ax-exp-pin .ax-exp-bullet{font-size:clamp(15.2px,2.3vh,18.4px) !important;line-height:1.62 !important}
-    #ax-exp-pin .ax-exp-tags{margin-top:16px !important}
+    #ax-exp-pin .ax-exp-co{font-size:clamp(33.6px,7.8vh,70.4px) !important}
+    #ax-exp-pin .ax-exp-role{font-size:clamp(15.2px,2.5vh,22.4px) !important;margin:6.4px 0 clamp(11.2px,1.7vh,19.2px) !important}
+    #ax-exp-pin .ax-exp-bullets{gap:clamp(5.6px,1.05vh,9.6px) !important}
+    #ax-exp-pin .ax-exp-bullet{font-size:clamp(14.4px,2.05vh,18.4px) !important;line-height:1.56 !important}
+    #ax-exp-pin .ax-exp-tags{margin-top:clamp(11.2px,2.3vh,20.8px) !important}
     /* the vertical spine label runs ~210px and the hint ~140px; shed the hint first so the
        label and arrow always fit the shortened rail rather than overflowing it */
     #ax-exp-pin .ax-modus-cue-hint{display:none !important}

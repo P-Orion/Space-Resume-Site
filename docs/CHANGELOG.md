@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-05 — Fix Modus Operandi card clipping top and bottom on laptop screens
+
+- The Experience card 01 (Modus Operandi) needs ~585px at full type size, but at common
+  desktop heights (1366x768, 1536x864, ~1280x800) its frame is only ~495–570px. Because
+  the card is vertically centered, the overflow clipped both the date line and the tech
+  tags. The old short-window tier only started at 800px tall and barely shrank the type.
+- `index.html` (`#ax-exp-pin` styles): raised that tier from `max-height:800px` to
+  `max-height:900px` and made title/role/bullet sizes and gaps vh-proportional, landing on
+  the base values at ~900px tall so there's no visible snap. Added a desktop-only guard
+  (`justify-content:safe center` + scrollable `.ax-modus-summary-body`) so any future
+  overflow keeps the top visible instead of clipping both ends.
+- Verified with headless Chrome at 17 sizes (360x640 → 1920x1080): zero clipping; phone
+  and ≥901px-tall layouts measure identically to before.
+
 ## 2026-10-05 — Add free, cookieless Umami analytics
 
 - Connected the user's Umami Cloud website ID in `index.html`, limited to
