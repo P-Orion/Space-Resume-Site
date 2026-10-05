@@ -7,7 +7,7 @@
 
 - **Generated:** 2026-10-05
 - **Source:** `Home page animation redesign/github-export/index.html`
-- **Lines:** 4076   ·   **Last modified:** 2026-10-05   ·   **Content hash:** `2695ac5ac314`
+- **Lines:** 4082   ·   **Last modified:** 2026-10-05   ·   **Content hash:** `b95c0dacbc33`
 
 ## Sections (by `data-screen-label`)
 

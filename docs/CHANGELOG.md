@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-05 — Deep links like `/#ax-contact` now land on their section
+
+- The page is rendered by the DC runtime after load, so the browser's native jump to a URL
+  hash found no element and visitors from links such as the GitHub profile's "Contact"
+  (`https://orionpowers.com/#ax-contact`) were left on the hero.
+- `index.html` (`_runIntro`): when the hash names an existing element, skip the intro and
+  scroll it into view once the page is released. Plain visits are unchanged.
+- Verified with Playwright against a local server: `/#ax-contact` opens on Contact
+  (section top at 0px); `/` still starts at the top with the intro.
+
 ## 2026-10-05 — Fix Modus Operandi card clipping top and bottom on laptop screens
 
 - The Experience card 01 (Modus Operandi) needs ~585px at full type size, but at common

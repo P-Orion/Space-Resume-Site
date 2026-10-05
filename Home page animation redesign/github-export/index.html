@@ -3662,7 +3662,12 @@ class Component extends DCLogic {
   }
 
   _runIntro() {    const ov = document.getElementById('ax-intro');
-    const show = (this.props.showIntro ?? true) && !this._reduced && scrollY < 40;
+    // Deep links (e.g. orionpowers.com/#ax-contact from the GitHub profile) arrive before the
+    // runtime has rendered the target, so the browser's own jump finds nothing. Skip the
+    // intro for them and scroll once the page is released.
+    let deep = null;
+    try { deep = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null; } catch (e) {}
+    const show = (this.props.showIntro ?? true) && !this._reduced && scrollY < 40 && !deep;
     this._introBusy = show;
     const finish = (instant) => {
       if (this._introDone) return;
@@ -3679,6 +3684,7 @@ class Component extends DCLogic {
       this._revealTopbar();
       // Observe rendered sections only once the intro releases the page.
       if (window.axAnalytics) window.axAnalytics.observeSections();
+      if (deep) requestAnimationFrame(() => deep.scrollIntoView({ behavior: 'instant', block: 'start' }));
     };
     if (!show) { finish(true); return; }
 
